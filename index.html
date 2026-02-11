@@ -1,0 +1,509 @@
+<!--
+  Project: ARK [Pulse Drop] v3.0 | Created by Solo Alchemist | ARK
+  Monetization: Reward Ads + Skin Shop + Coin System + Leaderboard
+-->
+<!doctype html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="ARK Pulse Drop — Premium rhythm timing game" />
+    <meta name="theme-color" content="#07080c" />
+    <title>ARK — Pulse Drop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #07080c;
+            --panel: rgba(255, 255, 255, .06);
+            --text: rgba(255, 255, 255, .92);
+            --muted: rgba(255, 255, 255, .50);
+            --good: #62ffb3;
+            --perfect: #7fe0ff;
+            --ok: #ffd36a;
+            --bad: #ff5d7a;
+            --accent: #8c7bff
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: radial-gradient(ellipse 140% 80% at 50% 0%, rgba(140, 123, 255, .08), transparent), var(--bg)
+        }
+
+        * {
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .wrap {
+            width: min(520px, 100vw);
+            height: min(920px, 100vh);
+            position: relative;
+            padding: 12px
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 32px;
+            background: radial-gradient(1200px 900px at 50% 25%, rgba(140, 123, 255, .14), transparent 60%), radial-gradient(900px 700px at 15% 75%, rgba(127, 224, 255, .08), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, 0));
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 30px 80px rgba(0, 0, 0, .55);
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap"><canvas id="c"></canvas></div>
+    <script src="js/audio.js"></script>
+    <script src="js/ads.js"></script>
+    <script src="js/shop.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script>
+        (() => {
+            'use strict';
+            const C = document.getElementById('c'), X = C.getContext('2d');
+            let W, H;
+            function resize() { const d = Math.min(devicePixelRatio || 1, 2), r = C.getBoundingClientRect(); W = r.width; H = r.height; C.width = W * d; C.height = H * d; X.setTransform(d, 0, 0, d, 0, 0) }
+            addEventListener('resize', resize); resize();
+
+            // ─── States ───────────────────────────────────
+            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, NAME: 5 };
+            let state = S.MENU, t = 0, score = 0, combo = 0, maxCombo = 0, level = 1, lives = 5, bpm = 66;
+            let hi = +(localStorage.getItem('arkPD_hi') || 0);
+            let fb = '', fbC = '', fbT = 0, spT = '', spTm = 0, cShk = 0;
+            let particles = [], ripples = [], bgP = [];
+            let menuT = 0, goT = 0, earnedCoins = 0;
+            let shopScroll = 0, shopTarget = 0, boardData = [];
+            let nameInput = '', nameInputActive = false, nameCursor = 0;
+
+            // ─── Helpers ──────────────────────────────────
+            function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.lineTo(x + w - r, y); X.quadraticCurveTo(x + w, y, x + w, y + r); X.lineTo(x + w, y + h - r); X.quadraticCurveTo(x + w, y + h, x + w - r, y + h); X.lineTo(x + r, y + h); X.quadraticCurveTo(x, y + h, x, y + h - r); X.lineTo(x, y + r); X.quadraticCurveTo(x, y, x + r, y); X.closePath() }
+            function pill(x, y, w, h, f = 'rgba(255,255,255,.06)') { X.save(); rr(x, y, w, h, h / 2); X.fillStyle = f; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke(); X.restore() }
+            function eOB(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2) }
+            function hexRGB(hex) { return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] }
+            function spd() { return 1 + (level - 1) * .12 }
+            function thr() { const b = Math.max(.035, .08 - (level - 1) * .004); return { p: b, g: b * 3, o: b * 6 } }
+            function pv(time) { return (1 - Math.cos(time * Math.PI * 2 * spd())) * .5 }
+
+            // Rainbow color
+            function rainbowColor(t) {
+                const r = Math.sin(t) * .5 + .5, g = Math.sin(t + 2.094) * .5 + .5, b = Math.sin(t + 4.189) * .5 + .5;
+                return `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`;
+            }
+
+            // ─── Particles ────────────────────────────────
+            function burst(x, y, color, n = 15) { for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n + Math.random() * .3, s = 1.5 + Math.random() * 3.5; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, decay: .012 + Math.random() * .015, size: 2 + Math.random() * 3, color }) } }
+            function ripple(x, y, c) { ripples.push({ x, y, r: 10, mx: 120 + Math.random() * 60, life: 1, c }) }
+            function initBg() { bgP = []; for (let i = 0; i < 35; i++)bgP.push({ x: Math.random() * W, y: Math.random() * H, sz: .5 + Math.random() * 1.5, sp: .1 + Math.random() * .3, op: .15 + Math.random() * .25, ph: Math.random() * Math.PI * 2 }) }
+
+            // ─── Hit Zones (buttons) ──────────────────────
+            let buttons = [];
+            function addBtn(id, x, y, w, h) { buttons.push({ id, x, y, w, h }) }
+            function hitBtn(px, py) { return buttons.find(b => px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) }
+            function clearBtns() { buttons = [] }
+
+            // ─── Draw: Background particles ──────────────
+            function drawBg() { bgP.forEach(p => { p.y -= p.sp; p.ph += .01; if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W } const ox = Math.sin(p.ph) * 15; X.beginPath(); X.arc(p.x + ox, p.y, p.sz, 0, Math.PI * 2); X.fillStyle = `rgba(255,255,255,${p.op * (.5 + .5 * Math.sin(p.ph))})`; X.fill() }) }
+
+            // ─── Draw: Particles & Ripples ────────────────
+            function drawFX() {
+                ripples.forEach((rp, i) => { rp.r += (rp.mx - rp.r) * .06; rp.life -= .025; if (rp.life <= 0) { ripples.splice(i, 1); return } const [r, g, b] = hexRGB(rp.c); X.beginPath(); X.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); X.strokeStyle = `rgba(${r},${g},${b},${rp.life * .35})`; X.lineWidth = 2 * rp.life; X.stroke() });
+                particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vx *= .97; p.vy *= .97; p.life -= p.decay; if (p.life <= 0) { particles.splice(i, 1); return } const [r, g, b] = hexRGB(p.color); X.beginPath(); X.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); X.fillStyle = `rgba(${r},${g},${b},${p.life * .7})`; X.fill() });
+            }
+
+            // ─── Draw: Menu ───────────────────────────────
+            function drawMenu(dt) {
+                clearBtns(); menuT += dt; drawBg();
+                const cx = W / 2, cy = H * .32;
+                // Title
+                X.save(); X.translate(cx, cy); const sc = 1 + Math.sin(menuT * 1.5) * .02; X.scale(sc, sc);
+                X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.6)'; X.fillText('A R K', 0, -40);
+                X.font = '700 36px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)'; X.shadowBlur = 30; X.shadowColor = 'rgba(140,123,255,.4)'; X.fillText('Pulse Drop', 0, 0); X.shadowBlur = 0; X.restore();
+
+                // Ring anim
+                const rr2 = 50 + Math.sin(menuT * 2) * 15;
+                X.beginPath(); X.arc(cx, cy + 55, rr2, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(127,224,255,${.4 + Math.sin(menuT * 2) * .2})`; X.lineWidth = 3; X.shadowBlur = 20; X.shadowColor = 'rgba(127,224,255,.4)'; X.stroke(); X.shadowBlur = 0;
+                X.beginPath(); X.arc(cx, cy + 55, 4, 0, Math.PI * 2); X.fillStyle = 'rgba(127,224,255,.8)'; X.fill();
+
+                // TAP TO START
+                const a = .4 + Math.sin(menuT * 3) * .3;
+                X.font = '500 15px Outfit'; X.fillStyle = `rgba(255,255,255,${a})`; X.fillText('TAP TO START', cx, cy + 140);
+
+                if (hi > 0) { X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(`BEST  ${hi}`, cx, cy + 165) }
+
+                // Coins display
+                X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆ ' + SkinShop.getCoins(), W - 28, 38);
+
+                // Bottom buttons
+                const btnW = W * .38, btnH = 46, btnY = H * .78, gap = 14;
+                const bx1 = (W - btnW * 2 - gap) / 2, bx2 = bx1 + btnW + gap;
+
+                // Shop button
+                rr(bx1, btnY, btnW, btnH, 14); X.fillStyle = 'rgba(140,123,255,.12)'; X.fill(); X.strokeStyle = 'rgba(140,123,255,.25)'; X.lineWidth = 1; X.stroke();
+                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#8c7bff'; X.fillText('💎 SHOP', bx1 + btnW / 2, btnY + 29);
+                addBtn('shop', bx1, btnY, btnW, btnH);
+
+                // Leaderboard button
+                rr(bx2, btnY, btnW, btnH, 14); X.fillStyle = 'rgba(98,255,179,.08)'; X.fill(); X.strokeStyle = 'rgba(98,255,179,.2)'; X.lineWidth = 1; X.stroke();
+                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3'; X.fillText('🏆 RANK', bx2 + btnW / 2, btnY + 29);
+                addBtn('board', bx2, btnY, btnW, btnH);
+
+                // Equipped skin
+                const sk = SkinShop.getCurrentSkin();
+                X.font = '400 11px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.25)';
+                X.fillText(`Skin: ${sk.name}`, cx, H - 32);
+                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.12)'; X.fillText('v3.0 — ARK', cx, H - 14);
+            }
+
+            // ─── Draw: Game ───────────────────────────────
+            function drawGame(dt) {
+                drawBg();
+                const cx = W / 2, cy = H * .44, sk = SkinShop.getCurrentSkin();
+                const baseR = Math.min(W, H) * .20, n = pv(t), r = baseR * (.35 + .65 * n);
+                const ringColor = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
+
+                // Target ring
+                X.beginPath(); X.arc(cx, cy, baseR * .35, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(255,255,255,${.06 + (n < .1 ? (.1 - n) * 1.5 : 0)})`; X.lineWidth = 2; X.setLineDash([4, 8]); X.stroke(); X.setLineDash([]);
+
+                // Glow
+                const gg = X.createRadialGradient(cx, cy, r - 10, cx, cy, r + 40);
+                const [gr, ggr, gb] = hexRGB(sk.rainbow ? '#ffffff' : sk.ring);
+                gg.addColorStop(0, `rgba(${gr},${ggr},${gb},${.08 + n * .06})`); gg.addColorStop(1, `rgba(${gr},${ggr},${gb},0)`);
+                X.fillStyle = gg; X.beginPath(); X.arc(cx, cy, r + 40, 0, Math.PI * 2); X.fill();
+
+                // Main ring
+                X.beginPath(); X.arc(cx, cy, r, 0, Math.PI * 2);
+                X.strokeStyle = ringColor; X.lineWidth = n < .08 ? 10 : 6; X.shadowBlur = 25 + (1 - n) * 15; X.shadowColor = ringColor; X.stroke(); X.shadowBlur = 0;
+
+                // Center
+                X.beginPath(); X.arc(cx, cy, 3 + (1 - n) * 3, 0, Math.PI * 2); X.fillStyle = ringColor; X.shadowBlur = 10; X.shadowColor = ringColor; X.fill(); X.shadowBlur = 0;
+
+                drawFX();
+
+                // HUD
+                X.font = '700 26px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText(score.toString(), cx, 46);
+                X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText('SCORE', cx, 21);
+
+                // Level pill
+                pill(18, 18, 56, 24); X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = ringColor; X.fillText('LV ' + level, 46, 34);
+
+                // Lives
+                pill(W - 74, 18, 56, 24); let hStr = ''; for (let i = 0; i < 5; i++)hStr += i < lives ? '♥' : '♡';
+                X.font = '500 11px Outfit'; X.fillStyle = lives <= 2 ? '#ff5d7a' : 'rgba(255,255,255,.6)'; X.fillText(hStr, W - 46, 34);
+
+                // Coins
+                X.font = '600 11px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆' + SkinShop.getCoins(), W - 20, 62);
+
+                // Combo
+                if (combo > 1) {
+                    const shX = cShk > 0 ? (Math.random() - .5) * cShk * 4 : 0; cShk *= .9;
+                    X.font = '700 15px Outfit'; X.textAlign = 'center'; X.fillStyle = combo >= 10 ? '#ffd36a' : combo >= 5 ? '#62ffb3' : 'rgba(255,255,255,.6)';
+                    X.fillText(`${combo}x COMBO`, cx + shX, 65)
+                }
+
+                // Feedback
+                if (fbT > 0) {
+                    fbT -= dt; const pr = Math.max(0, fbT / 1.2), sc2 = eOB(Math.min(1, (1.2 - fbT) * 4)), yo = (1 - pr) * -20;
+                    X.save(); X.translate(cx, cy + 75 + yo); X.scale(sc2, sc2); X.font = '800 24px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC; X.globalAlpha = pr; X.shadowBlur = 15; X.shadowColor = fbC; X.fillText(fb, 0, 0); X.shadowBlur = 0; X.restore(); X.globalAlpha = 1;
+                    if (spTm > 0) { spTm -= dt; X.font = '600 14px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .6})`; X.textAlign = 'center'; X.fillText(spT, cx, cy + 100 + (1 - spTm / .8) * -12) }
+                }
+
+                // Timing bar
+                const bW = W * .55, bH = 5, bX = (W - bW) / 2, bY = H - 58;
+                rr(bX, bY, bW, bH, 3); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill();
+                const dPos = bX + n * bW; X.beginPath(); X.arc(dPos, bY + bH / 2, 4, 0, Math.PI * 2);
+                const th2 = thr(); X.fillStyle = n < th2.p ? '#7fe0ff' : n < th2.g ? '#62ffb3' : n < th2.o ? '#ffd36a' : 'rgba(255,255,255,.3)';
+                X.shadowBlur = 6; X.shadowColor = X.fillStyle; X.fill(); X.shadowBlur = 0;
+
+                X.font = '300 10px Outfit'; X.textAlign = 'left'; X.fillStyle = 'rgba(255,255,255,.18)'; X.fillText(`BEST ${hi}`, 24, H - 22);
+                X.textAlign = 'right'; X.fillText(`MAX ×${maxCombo}`, W - 24, H - 22);
+            }
+
+            // ─── Draw: Game Over ──────────────────────────
+            function drawGameOver(dt) {
+                clearBtns(); goT += dt; const cx = W / 2;
+                X.fillStyle = `rgba(7,8,12,${Math.min(.65, goT * .8)})`; X.fillRect(0, 0, W, H);
+                const fade = Math.min(1, goT * 2);
+
+                const cW = W * .82, cH = 300, cX = (W - cW) / 2, cY = H * .2;
+                X.save(); X.globalAlpha = fade;
+                rr(cX, cY, cW, cH, 24); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+
+                X.font = '800 28px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('GAME OVER', cx, cY + 48);
+
+                X.font = '300 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText('FINAL SCORE', cx, cY + 76);
+                X.font = '700 44px Outfit'; X.fillStyle = '#7fe0ff'; X.shadowBlur = 20; X.shadowColor = 'rgba(127,224,255,.3)'; X.fillText(score.toString(), cx, cY + 122); X.shadowBlur = 0;
+
+                if (score >= hi && score > 0) { X.font = '600 12px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('★ NEW BEST! ★', cx, cY + 143) }
+
+                // Earned coins
+                X.font = '600 14px Outfit'; X.fillStyle = '#ffd36a'; X.fillText(`◆ +${earnedCoins} coins earned`, cx, cY + 170);
+
+                // Stats
+                const sY = cY + 200;
+                [['LEVEL', level], ['MAX COMBO', '×' + maxCombo], ['BEST', hi]].forEach(([l, v], i) => {
+                    const sx = cX + (cW / 3) * i + cW / 6;
+                    X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(l, sx, sY);
+                    X.font = '600 18px Outfit'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(v.toString(), sx, sY + 22)
+                });
+
+                // Restart
+                const rY = cY + cH - 30;
+                const ra = .3 + Math.sin(goT * 3) * .25;
+                X.font = '500 14px Outfit'; X.fillStyle = `rgba(255,255,255,${ra})`; X.fillText('TAP TO RESTART', cx, rY);
+                addBtn('restart', cX, rY - 20, cW, 40);
+
+                X.restore();
+            }
+
+
+            // ─── Draw: Shop ───────────────────────────────
+            function drawShop(dt) {
+                clearBtns(); drawBg();
+                const cx = W / 2;
+                X.font = '700 24px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('💎 SKIN SHOP', cx, 48);
+                X.font = '600 14px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('◆ ' + SkinShop.getCoins(), cx, 72);
+
+                shopScroll += (shopTarget - shopScroll) * .12;
+                const skins = SkinShop.getSkins();
+                const cardH = 68, gap = 10, startY = 100;
+
+                skins.forEach((sk, i) => {
+                    const y = startY + i * (cardH + gap) - shopScroll;
+                    if (y < 70 || y > H - 30) return;
+
+                    const owned = SkinShop.isUnlocked(sk.id), eq = SkinShop.getEquippedId() === sk.id;
+                    rr(24, y, W - 48, cardH, 16);
+                    X.fillStyle = eq ? 'rgba(140,123,255,.1)' : 'rgba(255,255,255,.04)'; X.fill();
+                    X.strokeStyle = eq ? 'rgba(140,123,255,.3)' : 'rgba(255,255,255,.06)'; X.lineWidth = 1; X.stroke();
+
+                    // Color swatch
+                    const swC = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
+                    X.beginPath(); X.arc(56, y + cardH / 2, 14, 0, Math.PI * 2); X.fillStyle = swC; X.globalAlpha = .3; X.fill(); X.globalAlpha = 1;
+                    X.beginPath(); X.arc(56, y + cardH / 2, 10, 0, Math.PI * 2); X.strokeStyle = swC; X.lineWidth = 3; X.shadowBlur = 10; X.shadowColor = swC; X.stroke(); X.shadowBlur = 0;
+
+                    // Name
+                    X.font = '600 14px Outfit'; X.textAlign = 'left'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText(sk.name, 82, y + 28);
+                    X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)'; X.fillText(sk.desc, 82, y + 46);
+
+                    // Action button
+                    const bW2 = 72, bH2 = 30, bX2 = W - 48 - bW2 - 10, bY2 = y + (cardH - bH2) / 2;
+                    if (eq) {
+                        rr(bX2, bY2, bW2, bH2, 8); X.fillStyle = 'rgba(140,123,255,.15)'; X.fill();
+                        X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = '#8c7bff'; X.fillText('EQUIPPED', bX2 + bW2 / 2, bY2 + 20);
+                    } else if (owned) {
+                        rr(bX2, bY2, bW2, bH2, 8); X.fillStyle = 'rgba(98,255,179,.1)'; X.fill(); X.strokeStyle = 'rgba(98,255,179,.25)'; X.lineWidth = 1; X.stroke();
+                        X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3'; X.fillText('EQUIP', bX2 + bW2 / 2, bY2 + 20);
+                        addBtn('equip_' + sk.id, bX2, bY2, bW2, bH2);
+                    } else {
+                        const canBuy = SkinShop.getCoins() >= sk.price;
+                        rr(bX2, bY2, bW2, bH2, 8); X.fillStyle = canBuy ? 'rgba(255,211,106,.12)' : 'rgba(255,255,255,.03)'; X.fill();
+                        X.strokeStyle = canBuy ? 'rgba(255,211,106,.25)' : 'rgba(255,255,255,.06)'; X.lineWidth = 1; X.stroke();
+                        X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = canBuy ? '#ffd36a' : 'rgba(255,255,255,.3)'; X.fillText('◆' + sk.price, bX2 + bW2 / 2, bY2 + 20);
+                        if (canBuy) addBtn('buy_' + sk.id, bX2, bY2, bW2, bH2);
+                    }
+                });
+
+                // Back button
+                rr(24, H - 64, W - 48, 42, 12); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText('← BACK', cx, H - 37);
+                addBtn('back', 24, H - 64, W - 48, 42);
+            }
+
+            // ─── Draw: Leaderboard ────────────────────────
+            function drawBoard(dt) {
+                clearBtns(); drawBg();
+                const cx = W / 2;
+                X.font = '700 24px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('🏆 LEADERBOARD', cx, 48);
+
+                const name = Leaderboard.getPlayerName();
+                X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
+                X.fillText(name ? `Player: ${name}` : 'Set your name to rank!', cx, 70);
+
+                // Name set button
+                if (!name) {
+                    const nbW = 120, nbH = 34, nbX = (W - nbW) / 2, nbY = 80;
+                    rr(nbX, nbY, nbW, nbH, 10); X.fillStyle = 'rgba(140,123,255,.1)'; X.fill(); X.strokeStyle = 'rgba(140,123,255,.25)'; X.lineWidth = 1; X.stroke();
+                    X.font = '600 12px Outfit'; X.fillStyle = '#8c7bff'; X.fillText('SET NAME', cx, nbY + 22);
+                    addBtn('set_name', nbX, nbY, nbW, nbH);
+                }
+
+                // Entries
+                const startY = name ? 100 : 130;
+                boardData.forEach((e, i) => {
+                    const y = startY + i * 46; if (y > H - 80) return;
+                    const isMe = e.name === name;
+                    rr(24, y, W - 48, 40, 10); X.fillStyle = isMe ? 'rgba(140,123,255,.08)' : 'rgba(255,255,255,.03)'; X.fill();
+
+                    // Rank
+                    const medals = ['🥇', '🥈', '🥉'];
+                    X.font = '700 14px Outfit'; X.textAlign = 'center'; X.fillStyle = i < 3 ? '#ffd36a' : 'rgba(255,255,255,.5)';
+                    X.fillText(i < 3 ? medals[i] : (i + 1).toString(), 50, y + 26);
+
+                    // Name
+                    X.font = isMe ? '600 13px Outfit' : '400 13px Outfit'; X.textAlign = 'left'; X.fillStyle = isMe ? '#8c7bff' : 'rgba(255,255,255,.7)';
+                    X.fillText(e.name, 78, y + 26);
+
+                    // Score
+                    X.font = '600 14px Outfit'; X.textAlign = 'right'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(e.score.toString(), W - 50, y + 26);
+                });
+
+                if (boardData.length === 0) { X.font = '400 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.25)'; X.textAlign = 'center'; X.fillText('No scores yet. Play to rank!', cx, H * .45) }
+
+                // Back
+                rr(24, H - 64, W - 48, 42, 12); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText('← BACK', cx, H - 37);
+                addBtn('back', 24, H - 64, W - 48, 42);
+            }
+
+            // ─── Draw: Name Input ─────────────────────────
+            function drawNameInput(dt) {
+                clearBtns();
+                X.fillStyle = 'rgba(7,8,12,.85)'; X.fillRect(0, 0, W, H);
+                const cx = W / 2, cy = H * .4;
+                const cW2 = W * .8, cH2 = 180, cX2 = (W - cW2) / 2;
+                rr(cX2, cy - 40, cW2, cH2, 20); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1; X.stroke();
+
+                X.font = '600 16px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('Enter Your Name', cx, cy);
+
+                // Input field
+                const iW = cW2 - 48, iH = 36, iX = cX2 + 24, iY = cy + 16;
+                rr(iX, iY, iW, iH, 10); X.fillStyle = 'rgba(255,255,255,.08)'; X.fill(); X.strokeStyle = 'rgba(140,123,255,.4)'; X.lineWidth = 1; X.stroke();
+
+                nameCursor += dt;
+                const cursor = Math.sin(nameCursor * 4) > .2 ? '|' : '';
+                X.font = '500 15px Outfit'; X.textAlign = 'center'; X.fillStyle = nameInput ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.3)';
+                X.fillText(nameInput ? (nameInput + cursor) : 'Type name...' + cursor, cx, iY + 24);
+
+                // Confirm
+                const cbW = 100, cbH = 36, cbX = (W - cbW) / 2, cbY = cy + 70;
+                rr(cbX, cbY, cbW, cbH, 10); X.fillStyle = nameInput.length > 0 ? 'rgba(98,255,179,.12)' : 'rgba(255,255,255,.03)'; X.fill();
+                X.strokeStyle = nameInput.length > 0 ? 'rgba(98,255,179,.3)' : 'rgba(255,255,255,.06)'; X.lineWidth = 1; X.stroke();
+                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = nameInput.length > 0 ? '#62ffb3' : 'rgba(255,255,255,.25)'; X.fillText('CONFIRM', cx, cbY + 23);
+                if (nameInput.length > 0) addBtn('confirm_name', cbX, cbY, cbW, cbH);
+
+                addBtn('back', 0, 0, 50, 50);
+            }
+
+            // ─── Input ────────────────────────────────────
+            function handleTap(px, py) {
+                Audio.init();
+                const btn = hitBtn(px, py);
+
+                if (state === S.NAME) {
+                    if (btn?.id === 'confirm_name' && nameInput.length > 0) {
+                        Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD;
+                        Leaderboard.getTopScores(10).then(d => { boardData = d });
+                    }
+                    return;
+                }
+
+                if (state === S.MENU) {
+                    if (btn?.id === 'shop') { Audio.ui(); state = S.SHOP; shopScroll = 0; shopTarget = 0; return }
+                    if (btn?.id === 'board') { Audio.ui(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); return }
+                    // Start game
+                    state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1; lives = 5; t = 0; bpm = 66; fbT = 0;
+                    particles = []; ripples = []; initBg(); return;
+                }
+
+                if (state === S.SHOP) {
+                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
+                    if (btn?.id.startsWith('buy_')) { const id = btn.id.slice(4); const r = SkinShop.buySkin(id); if (r.ok) { Audio.buy(); SkinShop.equipSkin(id) } return }
+                    if (btn?.id.startsWith('equip_')) { const id = btn.id.slice(6); SkinShop.equipSkin(id); Audio.ui(); return }
+                    return;
+                }
+
+                if (state === S.BOARD) {
+                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
+                    if (btn?.id === 'set_name') { Audio.ui(); state = S.NAME; nameInput = ''; nameInputActive = true; return }
+                    return;
+                }
+
+                if (state === S.OVER) {
+                    if (btn?.id === 'restart' && goT > .8) { state = S.MENU; goT = 0; menuT = 0; return }
+                    return;
+                }
+
+                // ── Playing tap ──
+                const n = pv(t), th2 = thr(), cx = W / 2, cy = H * .44;
+                if (n < th2.p) {
+                    score += 15 + combo * 2; combo++; maxCombo = Math.max(maxCombo, combo); fb = 'PERFECT!'; fbC = '#7fe0ff'; fbT = 1.2; spT = `+${15 + (combo - 1) * 2}`; spTm = .8; cShk = 1; Audio.perfect(); burst(cx, cy, '#7fe0ff', 20); ripple(cx, cy, '#7fe0ff'); ripple(cx, cy, '#7fe0ff')
+                } else if (n < th2.g) {
+                    score += 10 + combo; combo++; maxCombo = Math.max(maxCombo, combo); fb = 'GOOD!'; fbC = '#62ffb3'; fbT = 1; spT = `+${10 + (combo - 1)}`; spTm = .8; Audio.good(); burst(cx, cy, '#62ffb3', 12); ripple(cx, cy, '#62ffb3')
+                } else if (n < th2.o) {
+                    score += 3; combo = 0; fb = 'OK'; fbC = '#ffd36a'; fbT = .8; spT = '+3'; spTm = .6; Audio.ok(); burst(cx, cy, '#ffd36a', 6)
+                } else {
+                    combo = 0; lives--; fb = 'MISS'; fbC = '#ff5d7a'; fbT = .8; spT = ''; Audio.miss(); cShk = 2;
+                    if (lives <= 0) {
+                        state = S.OVER; goT = 0; earnedCoins = SkinShop.calcEarnedCoins(score, maxCombo, level); SkinShop.addCoins(earnedCoins); Audio.coin();
+                        if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()) }
+                        if (Leaderboard.hasName()) Leaderboard.submitScore(score, level, maxCombo); Audio.gameOver(); return
+                    }
+                }
+
+                // Level up
+                const needed = 80 + (level - 1) * 40;
+                if (score >= needed * level) { level++; bpm = 66 + (level - 1) * 6; Audio.levelUp(); fb = 'LEVEL ' + level; const sk = SkinShop.getCurrentSkin(); fbC = sk.ring; fbT = 2; burst(cx, cy, fbC, 30) }
+            }
+
+            C.addEventListener('click', e => { const r = C.getBoundingClientRect(); handleTap(e.clientX - r.left, e.clientY - r.top) });
+            C.addEventListener('touchstart', e => { e.preventDefault(); const tc = e.touches[0], r = C.getBoundingClientRect(); handleTap(tc.clientX - r.left, tc.clientY - r.top) }, { passive: false });
+
+            // Keyboard for name input
+            addEventListener('keydown', e => {
+                if (state !== S.NAME) return;
+                if (e.key === 'Backspace') { nameInput = nameInput.slice(0, -1); return }
+                if (e.key === 'Enter' && nameInput.length > 0) { Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); return }
+                if (e.key.length === 1 && nameInput.length < 12) nameInput += e.key;
+            });
+
+            // Shop scroll
+            C.addEventListener('wheel', e => { if (state === S.SHOP) { shopTarget = Math.max(0, shopTarget + e.deltaY * .5) } }, { passive: true });
+
+            // ─── Loop ─────────────────────────────────────
+            let last = performance.now();
+            function loop(now) {
+                const dt = Math.min((now - last) / 1000, .05); last = now; resize(); X.clearRect(0, 0, W, H);
+                switch (state) {
+                    case S.MENU: drawMenu(dt); break;
+                    case S.PLAY: t += dt * spd(); drawGame(dt); break;
+                    case S.OVER: drawGame(dt); drawGameOver(dt); break;
+                    case S.SHOP: drawShop(dt); break;
+                    case S.BOARD: drawBoard(dt); break;
+                    case S.NAME: drawNameInput(dt); break;
+                }
+                requestAnimationFrame(loop);
+            }
+            initBg(); requestAnimationFrame(loop);
+        })();
+    </script>
+</body>
+
+</html>
