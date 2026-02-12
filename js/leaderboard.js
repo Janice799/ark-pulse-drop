@@ -78,7 +78,19 @@ const Leaderboard = (() => {
         return idx === -1 ? entries.length + 1 : idx + 1;
     }
 
-    return { submitScore, getTopScores, setPlayerName, getPlayerName, hasName, getPlayerRank };
+    function clearAll() {
+        entries = [];
+        localStorage.removeItem(STORAGE_KEY);
+    }
+
+    function deleteByIndex(index) {
+        if (index >= 0 && index < entries.length) {
+            entries.splice(index, 1);
+            _save();
+        }
+    }
+
+    return { submitScore, getTopScores, setPlayerName, getPlayerName, hasName, getPlayerRank, clearAll, deleteByIndex };
 })();
 
 window.Leaderboard = Leaderboard;

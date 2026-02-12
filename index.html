@@ -1,5 +1,6 @@
 <!--
-  Project: ARK [Pulse Drop] v3.0 | Created by Solo Alchemist | ARK
+  Project: ARK [Pulse Drop] v4.0 "NEON ASCEND" | Created by Solo Alchemist | ARK
+  Phase 1: Neon Grid + Dual Orbit Ring + Glassmorphism UI + Enhanced Judgment FX
   Monetization: Reward Ads + Skin Shop + Coin System + Leaderboard
 -->
 <!doctype html>
@@ -15,8 +16,8 @@
         rel="stylesheet" />
     <style>
         :root {
-            --bg: #07080c;
-            --panel: rgba(255, 255, 255, .06);
+            --bg: #05060a;
+            --panel: rgba(255, 255, 255, .04);
             --text: rgba(255, 255, 255, .92);
             --muted: rgba(255, 255, 255, .50);
             --good: #62ffb3;
@@ -37,7 +38,7 @@
         html,
         body {
             height: 100%;
-            background: var(--bg);
+            background: #05060a;
             color: var(--text);
             font-family: 'Outfit', system-ui, sans-serif;
             -webkit-font-smoothing: antialiased
@@ -48,7 +49,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: radial-gradient(ellipse 140% 80% at 50% 0%, rgba(140, 123, 255, .08), transparent), var(--bg)
+            background: radial-gradient(ellipse 140% 80% at 50% 0%, rgba(140, 123, 255, .05), transparent), #05060a
         }
 
         * {
@@ -68,8 +69,8 @@
             height: 100%;
             display: block;
             border-radius: 32px;
-            background: radial-gradient(1200px 900px at 50% 25%, rgba(140, 123, 255, .14), transparent 60%), radial-gradient(900px 700px at 15% 75%, rgba(127, 224, 255, .08), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, 0));
-            box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 30px 80px rgba(0, 0, 0, .55);
+            background: linear-gradient(180deg, rgba(5, 6, 10, 1) 0%, rgba(8, 10, 18, 1) 100%);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, .04), 0 0 60px rgba(140, 123, 255, .06), 0 30px 80px rgba(0, 0, 0, .55);
             cursor: pointer;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent
@@ -92,7 +93,7 @@
             addEventListener('resize', resize); resize();
 
             // ─── States ───────────────────────────────────
-            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, NAME: 5 };
+            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, NAME: 5, DIFF: 6 };
             let state = S.MENU, t = 0, score = 0, combo = 0, maxCombo = 0, level = 1, lives = 5, bpm = 66;
             let hi = +(localStorage.getItem('arkPD_hi') || 0);
             let fb = '', fbC = '', fbT = 0, spT = '', spTm = 0, cShk = 0;
@@ -101,13 +102,29 @@
             let shopScroll = 0, shopTarget = 0, boardData = [];
             let nameInput = '', nameInputActive = false, nameCursor = 0;
 
+            // ─── v4.0 NEON ASCEND ────────────────────────
+            let gridOffset = 0, orbitAngle = 0;
+            let vignetteT = 0, screenFlashT = 0, screenFlashC = '#7fe0ff';
+
+            // ─── v4.0 Phase 2: Difficulty / Fever / Accuracy ──
+            let difficulty = 1; // 0=EASY, 1=NORMAL, 2=HARD
+            const DIFF_CFG = [
+                { name: 'EASY', emoji: '🌿', color: '#62ffb3', lives: 7, bpmBase: 56, thrMult: 1.4, scoreMult: 0.8 },
+                { name: 'NORMAL', emoji: '⚡', color: '#7fe0ff', lives: 5, bpmBase: 66, thrMult: 1.0, scoreMult: 1.0 },
+                { name: 'HARD', emoji: '🔥', color: '#ff5d7a', lives: 3, bpmBase: 80, thrMult: 0.7, scoreMult: 1.5 }
+            ];
+            let feverMode = false, feverT = 0;
+            let accP = 0, accG = 0, accO = 0, accM = 0; // accuracy counters
+            let rollScore = 0; // rolling score animation for game over
+
             // ─── Helpers ──────────────────────────────────
             function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.lineTo(x + w - r, y); X.quadraticCurveTo(x + w, y, x + w, y + r); X.lineTo(x + w, y + h - r); X.quadraticCurveTo(x + w, y + h, x + w - r, y + h); X.lineTo(x + r, y + h); X.quadraticCurveTo(x, y + h, x, y + h - r); X.lineTo(x, y + r); X.quadraticCurveTo(x, y, x + r, y); X.closePath() }
             function pill(x, y, w, h, f = 'rgba(255,255,255,.06)') { X.save(); rr(x, y, w, h, h / 2); X.fillStyle = f; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke(); X.restore() }
             function eOB(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2) }
             function hexRGB(hex) { return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] }
-            function spd() { return 1 + (level - 1) * .12 }
-            function thr() { const b = Math.max(.035, .08 - (level - 1) * .004); return { p: b, g: b * 3, o: b * 6 } }
+            function spd() { return (1 + (level - 1) * .12) * (difficulty === 2 ? 1.15 : difficulty === 0 ? 0.85 : 1) }
+            function thr() { const b = Math.max(.035, .08 - (level - 1) * .004) * DIFF_CFG[difficulty].thrMult; return { p: b, g: b * 3, o: b * 6 } }
+            function scoreMult() { return DIFF_CFG[difficulty].scoreMult * (feverMode ? 1.5 : 1) }
             function pv(time) { return (1 - Math.cos(time * Math.PI * 2 * spd())) * .5 }
 
             // Rainbow color
@@ -119,7 +136,278 @@
             // ─── Particles ────────────────────────────────
             function burst(x, y, color, n = 15) { for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n + Math.random() * .3, s = 1.5 + Math.random() * 3.5; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, decay: .012 + Math.random() * .015, size: 2 + Math.random() * 3, color }) } }
             function ripple(x, y, c) { ripples.push({ x, y, r: 10, mx: 120 + Math.random() * 60, life: 1, c }) }
-            function initBg() { bgP = []; for (let i = 0; i < 35; i++)bgP.push({ x: Math.random() * W, y: Math.random() * H, sz: .5 + Math.random() * 1.5, sp: .1 + Math.random() * .3, op: .15 + Math.random() * .25, ph: Math.random() * Math.PI * 2 }) }
+            function initBg() { bgP = []; for (let i = 0; i < 35; i++)bgP.push({ x: Math.random() * W, y: Math.random() * H, sz: .5 + Math.random() * 1.5, sp: .1 + Math.random() * .3, op: .12 + Math.random() * .18, ph: Math.random() * Math.PI * 2 }) }
+
+            // ─── v4.0 Glassmorphism Panel ─────────────────
+            function glassPanel(x, y, w, h, r = 20, tint = [140, 123, 255], op = 0.07) {
+                X.save();
+                rr(x, y, w, h, r); X.fillStyle = `rgba(${tint[0]},${tint[1]},${tint[2]},${op})`; X.fill();
+                const gd = X.createLinearGradient(x, y, x, y + h * 0.5);
+                gd.addColorStop(0, 'rgba(255,255,255,.06)'); gd.addColorStop(1, 'rgba(255,255,255,0)');
+                rr(x, y, w, h, r); X.fillStyle = gd; X.fill();
+                rr(x, y, w, h, r); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                X.restore();
+            }
+
+            // ─── v4.0 Neon Grid ───────────────────────────
+            function drawNeonGrid(intensity = 0.3, beat = 0) {
+                const cx = W / 2, hy = H * 0.36;
+                const sk = SkinShop.getCurrentSkin();
+                const col = sk.rainbow ? '#8c7bff' : sk.ring;
+                const [r, g, b] = hexRGB(col);
+                gridOffset = (gridOffset + 0.003 * (state === S.PLAY ? spd() : 0.7)) % 1;
+                for (let i = 0; i <= 16; i++) {
+                    const raw = (i / 16 + gridOffset) % 1;
+                    const y = hy + (H - hy) * Math.pow(raw, 1.8);
+                    const a = Math.pow(raw, 0.5) * intensity * (0.6 + beat * 0.4);
+                    if (a < 0.005) continue;
+                    X.beginPath(); X.moveTo(0, y); X.lineTo(W, y);
+                    X.strokeStyle = `rgba(${r},${g},${b},${Math.min(a, 0.28)})`;
+                    X.lineWidth = 1 + beat * 0.5; X.stroke();
+                }
+                for (let i = -10; i <= 10; i++) {
+                    const xB = cx + i * (W * 0.06), xT = cx + i * 3;
+                    const a = (1 - Math.abs(i) / 10) * intensity * 0.4;
+                    if (a < 0.005) continue;
+                    X.beginPath(); X.moveTo(xB, H); X.lineTo(xT, hy);
+                    X.strokeStyle = `rgba(${r},${g},${b},${Math.min(a, 0.16)})`;
+                    X.lineWidth = 1; X.stroke();
+                }
+                const hg = X.createLinearGradient(0, hy - 20, 0, hy + 20);
+                hg.addColorStop(0, `rgba(${r},${g},${b},0)`);
+                hg.addColorStop(0.5, `rgba(${r},${g},${b},${intensity * 0.12 + beat * 0.06})`);
+                hg.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                X.fillStyle = hg; X.fillRect(0, hy - 20, W, 40);
+            }
+
+            // ─── v4.0 Orbit Ring ──────────────────────────
+            function drawOrbitRing(cx, cy, baseR, dt) {
+                const sk = SkinShop.getCurrentSkin();
+                const rc = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
+                const [r, g, b] = hexRGB(rc);
+                const oR = baseR * 0.55;
+                orbitAngle += dt * (1.2 + Math.min(combo, 30) * 0.04);
+                X.beginPath(); X.arc(cx, cy, oR, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(${r},${g},${b},0.04)`; X.lineWidth = 1;
+                X.setLineDash([3, 8]); X.stroke(); X.setLineDash([]);
+                for (let i = 0; i < 3; i++) {
+                    const ang = orbitAngle + (Math.PI * 2 / 3) * i;
+                    for (let s = 0; s < 8; s++) {
+                        const a1 = ang - (Math.PI * 0.3 * s / 8);
+                        const a2 = ang - (Math.PI * 0.3 * (s + 1) / 8);
+                        X.beginPath(); X.arc(cx, cy, oR, a2, a1);
+                        X.strokeStyle = `rgba(${r},${g},${b},${(1 - s / 8) * 0.2})`;
+                        X.lineWidth = 2.5 - s * 0.25; X.stroke();
+                    }
+                    const ox = cx + Math.cos(ang) * oR, oy = cy + Math.sin(ang) * oR;
+                    X.beginPath(); X.arc(ox, oy, 2.5, 0, Math.PI * 2);
+                    X.fillStyle = rc; X.shadowBlur = 10; X.shadowColor = rc;
+                    X.fill(); X.shadowBlur = 0;
+                }
+            }
+
+            // ─── v4.0 Post-FX ─────────────────────────────
+            function drawPostFX(dt) {
+                if (vignetteT > 0) {
+                    vignetteT -= dt * 2.5;
+                    const grad = X.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.7);
+                    grad.addColorStop(0, 'rgba(0,0,0,0)');
+                    grad.addColorStop(1, `rgba(255,50,80,${vignetteT * 0.22})`);
+                    X.fillStyle = grad; X.fillRect(0, 0, W, H);
+                }
+                if (screenFlashT > 0) {
+                    screenFlashT -= dt * 5;
+                    const [fr, fg, fb] = hexRGB(screenFlashC);
+                    X.fillStyle = `rgba(${fr},${fg},${fb},${screenFlashT * 0.06})`;
+                    X.fillRect(0, 0, W, H);
+                }
+            }
+
+            // ─── v4.0 Draw: Difficulty Select ─────────────
+            function drawDifficulty(dt) {
+                clearBtns(); menuT += dt;
+                drawNeonGrid(0.2, Math.sin(menuT * 2) * 0.5 + 0.5);
+                drawBg();
+                const cx = W / 2;
+
+                glassPanel(cx - W * 0.4, H * 0.12, W * 0.8, 80, 20, [140, 123, 255], 0.05);
+                X.font = '800 22px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)';
+                X.shadowBlur = 20; X.shadowColor = 'rgba(140,123,255,.4)';
+                X.fillText('SELECT DIFFICULTY', cx, H * 0.12 + 35);
+                X.shadowBlur = 0;
+                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
+                X.fillText('Choose your challenge level', cx, H * 0.12 + 58);
+
+                const cardW = W * 0.75, cardH = 110, startY = H * 0.28, gap = 16;
+                DIFF_CFG.forEach((d, i) => {
+                    const y = startY + i * (cardH + gap);
+                    const isSelected = difficulty === i;
+                    glassPanel((W - cardW) / 2, y, cardW, cardH, 18, hexRGB(d.color), isSelected ? 0.12 : 0.05);
+
+                    // Emoji + Name
+                    X.font = '700 28px Outfit'; X.textAlign = 'center'; X.fillStyle = d.color;
+                    X.fillText(d.emoji, cx, y + 32);
+                    X.font = '700 18px Outfit'; X.fillText(d.name, cx, y + 56);
+
+                    // Stats
+                    X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
+                    const info = `Lives: ${d.lives}  |  Speed: ${d.bpmBase} BPM  |  Score: ×${d.scoreMult}`;
+                    X.fillText(info, cx, y + 78);
+
+                    // Select indicator
+                    if (isSelected) {
+                        X.font = '600 10px Outfit'; X.fillStyle = d.color;
+                        X.fillText('▶ SELECTED', cx, y + 96);
+                    }
+                    addBtn('diff_' + i, (W - cardW) / 2, y, cardW, cardH);
+                });
+
+                // Start button
+                const bY = startY + 3 * (cardH + gap) + 8;
+                glassPanel((W - cardW) / 2, bY, cardW, 50, 14, hexRGB(DIFF_CFG[difficulty].color), 0.1);
+                X.font = '700 16px Outfit'; X.textAlign = 'center'; X.fillStyle = DIFF_CFG[difficulty].color;
+                X.shadowBlur = 10; X.shadowColor = DIFF_CFG[difficulty].color;
+                X.fillText('▶  START GAME', cx, bY + 32); X.shadowBlur = 0;
+                addBtn('start_game', (W - cardW) / 2, bY, cardW, 50);
+
+                // Back
+                glassPanel(24, H - 64, W - 48, 42, 12);
+                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText('← BACK', cx, H - 37);
+                addBtn('back', 24, H - 64, W - 48, 42);
+            }
+
+            // ─── v4.0 Draw: Fever Overlay ─────────────────
+            function drawFeverOverlay(dt) {
+                if (!feverMode) return;
+                feverT += dt;
+                // Rainbow edge glow
+                const gL = X.createLinearGradient(0, 0, 0, H);
+                const gR = X.createLinearGradient(W, 0, W, H);
+                for (let i = 0; i <= 4; i++) {
+                    const c = rainbowColor(feverT * 3 + i * 1.5);
+                    gL.addColorStop(i / 4, c); gR.addColorStop(i / 4, c);
+                }
+                X.globalAlpha = 0.06 + Math.sin(feverT * 6) * 0.03;
+                X.fillStyle = gL; X.fillRect(0, 0, 8, H);
+                X.fillStyle = gR; X.fillRect(W - 8, 0, 8, H);
+                // Top/bottom chromatic bars
+                X.fillStyle = gL; X.fillRect(0, 0, W, 4);
+                X.fillRect(0, H - 4, W, 4);
+                X.globalAlpha = 1;
+                // FEVER badge
+                X.save(); X.translate(W / 2, 85);
+                const fs = 1 + Math.sin(feverT * 8) * 0.05;
+                X.scale(fs, fs);
+                X.font = '800 12px Outfit'; X.textAlign = 'center';
+                X.fillStyle = rainbowColor(feverT * 4);
+                X.shadowBlur = 15; X.shadowColor = X.fillStyle;
+                X.fillText('🔥 FEVER ×1.5', 0, 0);
+                X.shadowBlur = 0; X.restore();
+            }
+
+            // ─── v4.0 Phase 3: Achievements ──────────────
+            const ACHIEVEMENTS = [
+                { id: 'first_perfect', name: 'First Light', desc: 'Get your first PERFECT', icon: '✨', color: '#7fe0ff' },
+                { id: 'combo_10', name: 'Chain Reaction', desc: 'Reach 10x Combo', icon: '⚡', color: '#ffd36a' },
+                { id: 'combo_25', name: 'Unstoppable', desc: 'Reach 25x Combo', icon: '💥', color: '#ff5d7a' },
+                { id: 'score_200', name: 'Rising Star', desc: 'Score 200 points', icon: '⭐', color: '#62ffb3' },
+                { id: 'score_500', name: 'Neon Master', desc: 'Score 500 points', icon: '💎', color: '#8c7bff' },
+                { id: 'fever_first', name: 'Fever Time!', desc: 'Activate Fever Mode', icon: '🌈', color: '#ff9d5c' },
+                { id: 'hard_200', name: 'Iron Will', desc: 'Score 200+ on HARD', icon: '🏆', color: '#ff5d7a' },
+                { id: 'flawless', name: 'Flawless', desc: 'Finish with 0 MISS', icon: '💫', color: '#7fe0ff' }
+            ];
+            let unlockedAch = new Set(JSON.parse(localStorage.getItem('arkPD_ach') || '[]'));
+            let achQueue = []; // popup queue
+            let achPopT = 0, achPopCurrent = null;
+
+            function saveAch() { localStorage.setItem('arkPD_ach', JSON.stringify([...unlockedAch])) }
+            function unlockAch(id) {
+                if (unlockedAch.has(id)) return;
+                unlockedAch.add(id); saveAch();
+                const a = ACHIEVEMENTS.find(a => a.id === id);
+                if (a) achQueue.push(a);
+            }
+            function checkAchievements(isGameOver = false) {
+                if (accP >= 1) unlockAch('first_perfect');
+                if (maxCombo >= 10) unlockAch('combo_10');
+                if (maxCombo >= 25) unlockAch('combo_25');
+                if (score >= 200) unlockAch('score_200');
+                if (score >= 500) unlockAch('score_500');
+                if (feverMode) unlockAch('fever_first');
+                if (difficulty === 2 && score >= 200) unlockAch('hard_200');
+                if (isGameOver && accM === 0 && (accP + accG + accO) > 0) unlockAch('flawless');
+            }
+
+            // Achievement popup drawing
+            function drawAchPopup(dt) {
+                // Process queue
+                if (!achPopCurrent && achQueue.length > 0) {
+                    achPopCurrent = achQueue.shift();
+                    achPopT = 3.0; // 3 seconds display
+                }
+                if (!achPopCurrent) return;
+                achPopT -= dt;
+                if (achPopT <= 0) { achPopCurrent = null; return; }
+
+                const a = achPopCurrent;
+                const fadeIn = Math.min(1, (3.0 - achPopT) * 4);
+                const fadeOut = Math.min(1, achPopT * 3);
+                const alpha = Math.min(fadeIn, fadeOut);
+                const slideY = (1 - fadeIn) * -30;
+
+                X.save();
+                X.globalAlpha = alpha;
+                const pW = W * 0.7, pH = 52, pX = (W - pW) / 2, pY = H * 0.06 + slideY;
+                glassPanel(pX, pY, pW, pH, 14, hexRGB(a.color), 0.12);
+
+                // Icon
+                X.font = '700 20px Outfit'; X.textAlign = 'left'; X.fillStyle = a.color;
+                X.fillText(a.icon, pX + 14, pY + 30);
+                // Title
+                X.font = '700 12px Outfit'; X.fillStyle = a.color;
+                X.shadowBlur = 8; X.shadowColor = a.color;
+                X.fillText('ACHIEVEMENT UNLOCKED', pX + 44, pY + 18);
+                X.shadowBlur = 0;
+                // Name
+                X.font = '600 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
+                X.fillText(a.name + ' — ' + a.desc, pX + 44, pY + 38);
+
+                X.restore();
+            }
+
+            // ─── v4.0 Phase 3: Wave Announcement ─────────
+            let waveAnnT = 0, waveAnnLevel = 0;
+            function triggerWave(lv) { waveAnnT = 2.5; waveAnnLevel = lv; }
+            function drawWaveAnn(dt) {
+                if (waveAnnT <= 0) return;
+                waveAnnT -= dt;
+                const cx = W / 2, cy = H * 0.32;
+                const fadeIn = Math.min(1, (2.5 - waveAnnT) * 5);
+                const fadeOut = Math.min(1, waveAnnT * 2);
+                const alpha = Math.min(fadeIn, fadeOut);
+                const sc = 0.5 + fadeIn * 0.5;
+
+                X.save();
+                X.globalAlpha = alpha;
+                X.translate(cx, cy); X.scale(sc, sc);
+
+                // Ring burst
+                const ringR = 40 + (1 - fadeOut) * 60;
+                X.beginPath(); X.arc(0, 0, ringR, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(140,123,255,${alpha * 0.4})`;
+                X.lineWidth = 3; X.shadowBlur = 20; X.shadowColor = 'rgba(140,123,255,.5)';
+                X.stroke(); X.shadowBlur = 0;
+
+                // WAVE text
+                X.font = '300 14px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.7)';
+                X.fillText('W A V E', 0, -14);
+                X.font = '800 48px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)';
+                X.shadowBlur = 30; X.shadowColor = 'rgba(140,123,255,.6)';
+                X.fillText(waveAnnLevel.toString(), 0, 32);
+                X.shadowBlur = 0;
+
+                X.restore();
+            }
 
             // ─── Hit Zones (buttons) ──────────────────────
             let buttons = [];
@@ -138,72 +426,89 @@
 
             // ─── Draw: Menu ───────────────────────────────
             function drawMenu(dt) {
-                clearBtns(); menuT += dt; drawBg();
-                const cx = W / 2, cy = H * .32;
+                clearBtns(); menuT += dt;
+                drawNeonGrid(0.22, Math.sin(menuT * 2) * 0.5 + 0.5);
+                drawBg();
+                const cx = W / 2, cy = H * .30;
+
+                // v4.0 Glassmorphism title card
+                glassPanel(cx - W * 0.4, cy - 68, W * 0.8, 135, 24, [140, 123, 255], 0.05);
+
                 // Title
                 X.save(); X.translate(cx, cy); const sc = 1 + Math.sin(menuT * 1.5) * .02; X.scale(sc, sc);
-                X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.6)'; X.fillText('A R K', 0, -40);
-                X.font = '700 36px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)'; X.shadowBlur = 30; X.shadowColor = 'rgba(140,123,255,.4)'; X.fillText('Pulse Drop', 0, 0); X.shadowBlur = 0; X.restore();
+                X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.6)'; X.fillText('A R K', 0, -38);
+                X.font = '700 38px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)'; X.shadowBlur = 40; X.shadowColor = 'rgba(140,123,255,.5)'; X.fillText('Pulse Drop', 0, 2); X.shadowBlur = 0;
+                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(140,123,255,.45)'; X.fillText('v4.0 — NEON ASCEND', 0, 26);
+                X.restore();
 
-                // Ring anim
+                // Ring anim with orbit
                 const rr2 = 50 + Math.sin(menuT * 2) * 15;
-                X.beginPath(); X.arc(cx, cy + 55, rr2, 0, Math.PI * 2);
-                X.strokeStyle = `rgba(127,224,255,${.4 + Math.sin(menuT * 2) * .2})`; X.lineWidth = 3; X.shadowBlur = 20; X.shadowColor = 'rgba(127,224,255,.4)'; X.stroke(); X.shadowBlur = 0;
-                X.beginPath(); X.arc(cx, cy + 55, 4, 0, Math.PI * 2); X.fillStyle = 'rgba(127,224,255,.8)'; X.fill();
+                X.beginPath(); X.arc(cx, cy + 80, rr2, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(127,224,255,${.4 + Math.sin(menuT * 2) * .2})`; X.lineWidth = 3; X.shadowBlur = 25; X.shadowColor = 'rgba(127,224,255,.4)'; X.stroke(); X.shadowBlur = 0;
+                X.beginPath(); X.arc(cx, cy + 80, 4, 0, Math.PI * 2); X.fillStyle = 'rgba(127,224,255,.8)'; X.fill();
+                drawOrbitRing(cx, cy + 80, rr2 * 2.2, dt);
 
                 // TAP TO START
                 const a = .4 + Math.sin(menuT * 3) * .3;
-                X.font = '500 15px Outfit'; X.fillStyle = `rgba(255,255,255,${a})`; X.fillText('TAP TO START', cx, cy + 140);
-
-                if (hi > 0) { X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(`BEST  ${hi}`, cx, cy + 165) }
+                X.font = '500 15px Outfit'; X.textAlign = 'center'; X.fillStyle = `rgba(255,255,255,${a})`; X.fillText('TAP TO START', cx, cy + 160);
+                if (hi > 0) { X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(`BEST  ${hi}`, cx, cy + 185) }
 
                 // Coins display
                 X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆ ' + SkinShop.getCoins(), W - 28, 38);
 
-                // Bottom buttons
-                const btnW = W * .38, btnH = 46, btnY = H * .78, gap = 14;
+                // v4.0 Glassmorphism bottom buttons
+                const btnW = W * .38, btnH = 48, btnY = H * .78, gap = 14;
                 const bx1 = (W - btnW * 2 - gap) / 2, bx2 = bx1 + btnW + gap;
 
-                // Shop button
-                rr(bx1, btnY, btnW, btnH, 14); X.fillStyle = 'rgba(140,123,255,.12)'; X.fill(); X.strokeStyle = 'rgba(140,123,255,.25)'; X.lineWidth = 1; X.stroke();
-                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#8c7bff'; X.fillText('💎 SHOP', bx1 + btnW / 2, btnY + 29);
+                glassPanel(bx1, btnY, btnW, btnH, 14, [140, 123, 255], 0.08);
+                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#8c7bff'; X.fillText('💎 SHOP', bx1 + btnW / 2, btnY + 30);
                 addBtn('shop', bx1, btnY, btnW, btnH);
 
-                // Leaderboard button
-                rr(bx2, btnY, btnW, btnH, 14); X.fillStyle = 'rgba(98,255,179,.08)'; X.fill(); X.strokeStyle = 'rgba(98,255,179,.2)'; X.lineWidth = 1; X.stroke();
-                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3'; X.fillText('🏆 RANK', bx2 + btnW / 2, btnY + 29);
+                glassPanel(bx2, btnY, btnW, btnH, 14, [98, 255, 179], 0.06);
+                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3'; X.fillText('🏆 RANK', bx2 + btnW / 2, btnY + 30);
                 addBtn('board', bx2, btnY, btnW, btnH);
 
                 // Equipped skin
                 const sk = SkinShop.getCurrentSkin();
-                X.font = '400 11px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.25)';
+                X.font = '400 11px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.22)';
                 X.fillText(`Skin: ${sk.name}`, cx, H - 32);
-                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.12)'; X.fillText('v3.0 — ARK', cx, H - 14);
+                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(140,123,255,.2)'; X.fillText('v4.0 NEON ASCEND — ARK', cx, H - 14);
             }
 
             // ─── Draw: Game ───────────────────────────────
             function drawGame(dt) {
-                drawBg();
                 const cx = W / 2, cy = H * .44, sk = SkinShop.getCurrentSkin();
                 const baseR = Math.min(W, H) * .20, n = pv(t), r = baseR * (.35 + .65 * n);
                 const ringColor = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
+                const beatSync = 1 - n;
+
+                // v4.0 Neon grid synced to beat (boosted in fever)
+                drawNeonGrid(0.18 + combo * 0.004 + (feverMode ? 0.15 : 0), beatSync);
+                drawBg();
+
+                // v4.0 Orbit ring (dual ring system)
+                drawOrbitRing(cx, cy, baseR, dt);
+
+                // Fever check
+                if (combo >= 15 && !feverMode) { feverMode = true; feverT = 0; }
+                if (feverMode && combo < 15) feverMode = false;
 
                 // Target ring
                 X.beginPath(); X.arc(cx, cy, baseR * .35, 0, Math.PI * 2);
                 X.strokeStyle = `rgba(255,255,255,${.06 + (n < .1 ? (.1 - n) * 1.5 : 0)})`; X.lineWidth = 2; X.setLineDash([4, 8]); X.stroke(); X.setLineDash([]);
 
-                // Glow
-                const gg = X.createRadialGradient(cx, cy, r - 10, cx, cy, r + 40);
+                // Enhanced glow
+                const gg = X.createRadialGradient(cx, cy, r - 10, cx, cy, r + 50);
                 const [gr, ggr, gb] = hexRGB(sk.rainbow ? '#ffffff' : sk.ring);
-                gg.addColorStop(0, `rgba(${gr},${ggr},${gb},${.08 + n * .06})`); gg.addColorStop(1, `rgba(${gr},${ggr},${gb},0)`);
-                X.fillStyle = gg; X.beginPath(); X.arc(cx, cy, r + 40, 0, Math.PI * 2); X.fill();
+                gg.addColorStop(0, `rgba(${gr},${ggr},${gb},${.10 + n * .08})`); gg.addColorStop(1, `rgba(${gr},${ggr},${gb},0)`);
+                X.fillStyle = gg; X.beginPath(); X.arc(cx, cy, r + 50, 0, Math.PI * 2); X.fill();
 
-                // Main ring
+                // Main ring (enhanced glow)
                 X.beginPath(); X.arc(cx, cy, r, 0, Math.PI * 2);
-                X.strokeStyle = ringColor; X.lineWidth = n < .08 ? 10 : 6; X.shadowBlur = 25 + (1 - n) * 15; X.shadowColor = ringColor; X.stroke(); X.shadowBlur = 0;
+                X.strokeStyle = ringColor; X.lineWidth = n < .08 ? 10 : 6; X.shadowBlur = 30 + (1 - n) * 20; X.shadowColor = ringColor; X.stroke(); X.shadowBlur = 0;
 
-                // Center
-                X.beginPath(); X.arc(cx, cy, 3 + (1 - n) * 3, 0, Math.PI * 2); X.fillStyle = ringColor; X.shadowBlur = 10; X.shadowColor = ringColor; X.fill(); X.shadowBlur = 0;
+                // Center dot
+                X.beginPath(); X.arc(cx, cy, 3 + (1 - n) * 3, 0, Math.PI * 2); X.fillStyle = ringColor; X.shadowBlur = 12; X.shadowColor = ringColor; X.fill(); X.shadowBlur = 0;
 
                 drawFX();
 
@@ -221,19 +526,58 @@
                 // Coins
                 X.font = '600 11px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆' + SkinShop.getCoins(), W - 20, 62);
 
-                // Combo
+                // Combo (enhanced glow for high combos)
                 if (combo > 1) {
                     const shX = cShk > 0 ? (Math.random() - .5) * cShk * 4 : 0; cShk *= .9;
-                    X.font = '700 15px Outfit'; X.textAlign = 'center'; X.fillStyle = combo >= 10 ? '#ffd36a' : combo >= 5 ? '#62ffb3' : 'rgba(255,255,255,.6)';
-                    X.fillText(`${combo}x COMBO`, cx + shX, 65)
+                    X.font = '700 15px Outfit'; X.textAlign = 'center';
+                    X.fillStyle = combo >= 10 ? '#ffd36a' : combo >= 5 ? '#62ffb3' : 'rgba(255,255,255,.6)';
+                    if (combo >= 10) { X.shadowBlur = 8; X.shadowColor = '#ffd36a'; }
+                    X.fillText(`${combo}x COMBO`, cx + shX, 65); X.shadowBlur = 0;
                 }
 
-                // Feedback
+                // v4.0 Enhanced Judgment Feedback
                 if (fbT > 0) {
-                    fbT -= dt; const pr = Math.max(0, fbT / 1.2), sc2 = eOB(Math.min(1, (1.2 - fbT) * 4)), yo = (1 - pr) * -20;
-                    X.save(); X.translate(cx, cy + 75 + yo); X.scale(sc2, sc2); X.font = '800 24px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC; X.globalAlpha = pr; X.shadowBlur = 15; X.shadowColor = fbC; X.fillText(fb, 0, 0); X.shadowBlur = 0; X.restore(); X.globalAlpha = 1;
-                    if (spTm > 0) { spTm -= dt; X.font = '600 14px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .6})`; X.textAlign = 'center'; X.fillText(spT, cx, cy + 100 + (1 - spTm / .8) * -12) }
+                    fbT -= dt; const pr = Math.max(0, fbT / 1.2);
+                    const rawP = Math.min(1, (1.2 - fbT) * 5);
+                    const sc2 = rawP < 0.5 ? eOB(rawP * 2) * 1.2 : 1 + 0.2 * Math.pow(1 - (rawP - 0.5) * 2, 2);
+                    const yo = (1 - pr) * -18;
+
+                    // Multi-ring flash effect
+                    if (fbT > 0.4) {
+                        const flashA = (fbT - 0.4) / 0.8;
+                        const [fr, fg, fbb] = hexRGB(fbC);
+                        for (let ri = 0; ri < 3; ri++) {
+                            X.beginPath(); X.arc(cx, cy, baseR * .35 + ri * 8, 0, Math.PI * 2);
+                            X.strokeStyle = `rgba(${fr},${fg},${fbb},${flashA * 0.5 * (1 - ri * 0.3)})`;
+                            X.lineWidth = 3 - ri; X.shadowBlur = 15 + flashA * 15; X.shadowColor = fbC;
+                            X.stroke();
+                        }
+                        X.shadowBlur = 0;
+                    }
+
+                    // Judgment text with double-glow + MISS shake
+                    X.save();
+                    const shakeX = fb === 'MISS' ? (Math.random() - 0.5) * 8 * pr : 0;
+                    X.translate(cx + shakeX, cy + baseR * .35 + 32 + yo); X.scale(sc2, sc2);
+                    X.font = '800 26px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC;
+                    X.globalAlpha = pr; X.shadowBlur = 25; X.shadowColor = fbC; X.fillText(fb, 0, 0);
+                    X.shadowBlur = 40; X.globalAlpha = pr * 0.3; X.fillText(fb, 0, 0);
+                    X.shadowBlur = 0; X.restore(); X.globalAlpha = 1;
+
+                    if (spTm > 0) { spTm -= dt; X.font = '600 14px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .6})`; X.textAlign = 'center'; X.fillText(spT, cx, cy + baseR * .35 + 55 + (1 - spTm / .8) * -12) }
                 }
+
+                // Post-FX
+                drawPostFX(dt);
+                drawFeverOverlay(dt);
+                drawWaveAnn(dt);
+                drawAchPopup(dt);
+
+                // Difficulty badge
+                const dc = DIFF_CFG[difficulty];
+                pill(W / 2 - 28, H - 38, 56, 18, `rgba(${hexRGB(dc.color).join(',')},0.1)`);
+                X.font = '600 9px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
+                X.fillText(dc.emoji + ' ' + dc.name, W / 2, H - 25);
 
                 // Timing bar
                 const bW = W * .55, bH = 5, bX = (W - bW) / 2, bY = H - 58;
@@ -246,33 +590,85 @@
                 X.textAlign = 'right'; X.fillText(`MAX ×${maxCombo}`, W - 24, H - 22);
             }
 
-            // ─── Draw: Game Over ──────────────────────────
+            // ─── Draw: Game Over (Cinematic) ────────────
             function drawGameOver(dt) {
                 clearBtns(); goT += dt; const cx = W / 2;
-                X.fillStyle = `rgba(7,8,12,${Math.min(.65, goT * .8)})`; X.fillRect(0, 0, W, H);
+                X.fillStyle = `rgba(5,6,10,${Math.min(.7, goT * .8)})`; X.fillRect(0, 0, W, H);
                 const fade = Math.min(1, goT * 2);
 
-                const cW = W * .82, cH = 300, cX = (W - cW) / 2, cY = H * .2;
+                const cW = W * .85, cH = 460, cX = (W - cW) / 2, cY = H * .06;
                 X.save(); X.globalAlpha = fade;
-                rr(cX, cY, cW, cH, 24); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                glassPanel(cX, cY, cW, cH, 24, [127, 224, 255], 0.06);
 
-                X.font = '800 28px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('GAME OVER', cx, cY + 48);
+                // Difficulty badge
+                const dc = DIFF_CFG[difficulty];
+                pill(cx - 32, cY + 12, 64, 22, `rgba(${hexRGB(dc.color).join(',')},0.12)`);
+                X.font = '600 10px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
+                X.fillText(dc.emoji + ' ' + dc.name, cx, cY + 27);
 
-                X.font = '300 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText('FINAL SCORE', cx, cY + 76);
-                X.font = '700 44px Outfit'; X.fillStyle = '#7fe0ff'; X.shadowBlur = 20; X.shadowColor = 'rgba(127,224,255,.3)'; X.fillText(score.toString(), cx, cY + 122); X.shadowBlur = 0;
+                X.font = '800 26px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('GAME OVER', cx, cY + 55);
 
-                if (score >= hi && score > 0) { X.font = '600 12px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('★ NEW BEST! ★', cx, cY + 143) }
+                // Rolling score counter
+                rollScore += (score - rollScore) * 0.08;
+                if (Math.abs(score - rollScore) < 1) rollScore = score;
+                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText('FINAL SCORE', cx, cY + 75);
+                X.font = '700 42px Outfit'; X.fillStyle = '#7fe0ff'; X.shadowBlur = 30; X.shadowColor = 'rgba(127,224,255,.4)';
+                X.fillText(Math.round(rollScore).toString(), cx, cY + 118); X.shadowBlur = 0;
 
-                // Earned coins
-                X.font = '600 14px Outfit'; X.fillStyle = '#ffd36a'; X.fillText(`◆ +${earnedCoins} coins earned`, cx, cY + 170);
+                if (score >= hi && score > 0) { X.font = '600 12px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('★ NEW BEST! ★', cx, cY + 138) }
 
-                // Stats
-                const sY = cY + 200;
+                X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.fillText(`◆ +${earnedCoins} coins`, cx, cY + 160);
+
+                // Accuracy breakdown
+                const total = accP + accG + accO + accM;
+                const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100).toFixed(1) : '0.0';
+                const aY = cY + 185;
+                X.font = '600 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(`ACCURACY  ${accPct}%`, cx, aY);
+
+                // Accuracy bar
+                const barW = cW - 48, barH = 8, barX = cX + 24, barY2 = aY + 10;
+                rr(barX, barY2, barW, barH, 4); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
+                if (total > 0) {
+                    const pW = (accP / total) * barW, gW = (accG / total) * barW, oW = (accO / total) * barW;
+                    let bx = barX;
+                    if (pW > 0) { rr(bx, barY2, Math.max(pW, 4), barH, 4); X.fillStyle = '#7fe0ff'; X.fill(); bx += pW; }
+                    if (gW > 0) { X.fillStyle = '#62ffb3'; X.fillRect(bx, barY2, gW, barH); bx += gW; }
+                    if (oW > 0) { X.fillStyle = '#ffd36a'; X.fillRect(bx, barY2, oW, barH); }
+                }
+
+                // Judgment counts
+                const jY = aY + 30;
+                const jData = [['PERFECT', accP, '#7fe0ff'], ['GOOD', accG, '#62ffb3'], ['OK', accO, '#ffd36a'], ['MISS', accM, '#ff5d7a']];
+                jData.forEach(([label, count, color], i) => {
+                    const jx = cX + (cW / 4) * i + cW / 8;
+                    X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText(label, jx, jY);
+                    X.font = '600 15px Outfit'; X.fillStyle = color; X.fillText(count.toString(), jx, jY + 18);
+                });
+
+                // Stats row
+                const sY = jY + 38;
                 [['LEVEL', level], ['MAX COMBO', '×' + maxCombo], ['BEST', hi]].forEach(([l, v], i) => {
                     const sx = cX + (cW / 3) * i + cW / 6;
                     X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(l, sx, sY);
                     X.font = '600 18px Outfit'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(v.toString(), sx, sY + 22)
                 });
+
+                // v4.0 Achievement badges earned this game
+                const sessionAch = ACHIEVEMENTS.filter(a => unlockedAch.has(a.id));
+                if (sessionAch.length > 0) {
+                    const achY = sY + 48;
+                    X.font = '600 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)'; X.textAlign = 'center';
+                    X.fillText(`ACHIEVEMENTS (${sessionAch.length}/${ACHIEVEMENTS.length})`, cx, achY);
+                    const maxShow = Math.min(sessionAch.length, 8);
+                    const achW = Math.min(32, (cW - 32) / maxShow);
+                    const achStartX = cx - (maxShow * achW) / 2;
+                    sessionAch.slice(0, maxShow).forEach((a, i) => {
+                        X.font = '700 18px Outfit'; X.textAlign = 'center';
+                        X.fillStyle = a.color; X.shadowBlur = 6; X.shadowColor = a.color;
+                        X.fillText(a.icon, achStartX + i * achW + achW / 2, achY + 22);
+                        X.shadowBlur = 0;
+                    });
+                }
 
                 // Restart
                 const rY = cY + cH - 30;
@@ -286,7 +682,9 @@
 
             // ─── Draw: Shop ───────────────────────────────
             function drawShop(dt) {
-                clearBtns(); drawBg();
+                clearBtns();
+                drawNeonGrid(0.12, 0.3);
+                drawBg();
                 const cx = W / 2;
                 X.font = '700 24px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('💎 SKIN SHOP', cx, 48);
                 X.font = '600 14px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('◆ ' + SkinShop.getCoins(), cx, 72);
@@ -300,9 +698,8 @@
                     if (y < 70 || y > H - 30) return;
 
                     const owned = SkinShop.isUnlocked(sk.id), eq = SkinShop.getEquippedId() === sk.id;
-                    rr(24, y, W - 48, cardH, 16);
-                    X.fillStyle = eq ? 'rgba(140,123,255,.1)' : 'rgba(255,255,255,.04)'; X.fill();
-                    X.strokeStyle = eq ? 'rgba(140,123,255,.3)' : 'rgba(255,255,255,.06)'; X.lineWidth = 1; X.stroke();
+                    // v4.0 Glassmorphism skin card
+                    glassPanel(24, y, W - 48, cardH, 16, eq ? [140, 123, 255] : [255, 255, 255], eq ? 0.08 : 0.03);
 
                     // Color swatch
                     const swC = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
@@ -331,15 +728,17 @@
                     }
                 });
 
-                // Back button
-                rr(24, H - 64, W - 48, 42, 12); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                // v4.0 Glassmorphism back button
+                glassPanel(24, H - 64, W - 48, 42, 12);
                 X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText('← BACK', cx, H - 37);
                 addBtn('back', 24, H - 64, W - 48, 42);
             }
 
             // ─── Draw: Leaderboard ────────────────────────
             function drawBoard(dt) {
-                clearBtns(); drawBg();
+                clearBtns();
+                drawNeonGrid(0.12, 0.3);
+                drawBg();
                 const cx = W / 2;
                 X.font = '700 24px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('🏆 LEADERBOARD', cx, 48);
 
@@ -358,24 +757,38 @@
                 // Entries
                 const startY = name ? 100 : 130;
                 boardData.forEach((e, i) => {
-                    const y = startY + i * 46; if (y > H - 80) return;
+                    const y = startY + i * 46; if (y > H - 120) return;
                     const isMe = e.name === name;
                     rr(24, y, W - 48, 40, 10); X.fillStyle = isMe ? 'rgba(140,123,255,.08)' : 'rgba(255,255,255,.03)'; X.fill();
 
-                    // Rank
+                    // Rank number
                     const medals = ['🥇', '🥈', '🥉'];
                     X.font = '700 14px Outfit'; X.textAlign = 'center'; X.fillStyle = i < 3 ? '#ffd36a' : 'rgba(255,255,255,.5)';
-                    X.fillText(i < 3 ? medals[i] : (i + 1).toString(), 50, y + 26);
+                    X.fillText(i < 3 ? medals[i] : '#' + (i + 1), 50, y + 26);
 
                     // Name
                     X.font = isMe ? '600 13px Outfit' : '400 13px Outfit'; X.textAlign = 'left'; X.fillStyle = isMe ? '#8c7bff' : 'rgba(255,255,255,.7)';
                     X.fillText(e.name, 78, y + 26);
 
                     // Score
-                    X.font = '600 14px Outfit'; X.textAlign = 'right'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(e.score.toString(), W - 50, y + 26);
+                    X.font = '600 14px Outfit'; X.textAlign = 'right'; X.fillStyle = 'rgba(255,255,255,.8)'; X.fillText(e.score.toString(), W - 76, y + 26);
+
+                    // Individual delete button (✕)
+                    const delX = W - 64, delY = y + 6, delS = 28;
+                    rr(delX, delY, delS, delS, 6); X.fillStyle = 'rgba(255,93,122,.06)'; X.fill();
+                    X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,93,122,.5)'; X.fillText('✕', delX + delS / 2, delY + 19);
+                    addBtn('del_' + i, delX, delY, delS, delS);
                 });
 
                 if (boardData.length === 0) { X.font = '400 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.25)'; X.textAlign = 'center'; X.fillText('No scores yet. Play to rank!', cx, H * .45) }
+
+                // Clear All button (only show when there are records)
+                if (boardData.length > 0) {
+                    const clW = 90, clH = 30, clX = W - clW - 24, clY = H - 110;
+                    rr(clX, clY, clW, clH, 8); X.fillStyle = 'rgba(255,93,122,.08)'; X.fill(); X.strokeStyle = 'rgba(255,93,122,.2)'; X.lineWidth = 1; X.stroke();
+                    X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = '#ff5d7a'; X.fillText('🗑 CLEAR ALL', clX + clW / 2, clY + 20);
+                    addBtn('clear_board', clX, clY, clW, clH);
+                }
 
                 // Back
                 rr(24, H - 64, W - 48, 42, 12); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
@@ -428,9 +841,22 @@
                 if (state === S.MENU) {
                     if (btn?.id === 'shop') { Audio.ui(); state = S.SHOP; shopScroll = 0; shopTarget = 0; return }
                     if (btn?.id === 'board') { Audio.ui(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); return }
-                    // Start game
-                    state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1; lives = 5; t = 0; bpm = 66; fbT = 0;
-                    particles = []; ripples = []; initBg(); return;
+                    // Go to difficulty selection
+                    Audio.ui(); state = S.DIFF; return;
+                }
+
+                if (state === S.DIFF) {
+                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
+                    if (btn?.id?.startsWith('diff_')) { difficulty = parseInt(btn.id.slice(5)); Audio.ui(); return }
+                    if (btn?.id === 'start_game') {
+                        const dc = DIFF_CFG[difficulty];
+                        state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1;
+                        lives = dc.lives; t = 0; bpm = dc.bpmBase; fbT = 0;
+                        feverMode = false; feverT = 0; rollScore = 0;
+                        accP = 0; accG = 0; accO = 0; accM = 0;
+                        particles = []; ripples = []; initBg(); return;
+                    }
+                    return;
                 }
 
                 if (state === S.SHOP) {
@@ -443,6 +869,18 @@
                 if (state === S.BOARD) {
                     if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
                     if (btn?.id === 'set_name') { Audio.ui(); state = S.NAME; nameInput = ''; nameInputActive = true; return }
+                    if (btn?.id?.startsWith('del_')) {
+                        const idx = parseInt(btn.id.slice(4));
+                        Leaderboard.deleteByIndex(idx);
+                        Leaderboard.getTopScores(10).then(d => { boardData = d });
+                        Audio.ui(); return;
+                    }
+                    if (btn?.id === 'clear_board') {
+                        if (confirm('🗑 랭킹 기록을 전부 삭제하시겠습니까?\nClear all ranking records?')) {
+                            Leaderboard.clearAll(); boardData = []; Audio.ui();
+                        }
+                        return;
+                    }
                     return;
                 }
 
@@ -452,25 +890,47 @@
                 }
 
                 // ── Playing tap ──
+                const sm = scoreMult();
                 const n = pv(t), th2 = thr(), cx = W / 2, cy = H * .44;
                 if (n < th2.p) {
-                    score += 15 + combo * 2; combo++; maxCombo = Math.max(maxCombo, combo); fb = 'PERFECT!'; fbC = '#7fe0ff'; fbT = 1.2; spT = `+${15 + (combo - 1) * 2}`; spTm = .8; cShk = 1; Audio.perfect(); burst(cx, cy, '#7fe0ff', 20); ripple(cx, cy, '#7fe0ff'); ripple(cx, cy, '#7fe0ff')
+                    const pts = Math.round((15 + combo * 2) * sm);
+                    score += pts; combo++; maxCombo = Math.max(maxCombo, combo); accP++;
+                    fb = 'PERFECT!'; fbC = '#7fe0ff'; fbT = 1.2; spT = `+${pts}`; spTm = .8; cShk = 1;
+                    Audio.perfect(); burst(cx, cy, '#7fe0ff', 25); ripple(cx, cy, '#7fe0ff'); ripple(cx, cy, '#7fe0ff');
+                    screenFlashT = 1; screenFlashC = '#7fe0ff';
                 } else if (n < th2.g) {
-                    score += 10 + combo; combo++; maxCombo = Math.max(maxCombo, combo); fb = 'GOOD!'; fbC = '#62ffb3'; fbT = 1; spT = `+${10 + (combo - 1)}`; spTm = .8; Audio.good(); burst(cx, cy, '#62ffb3', 12); ripple(cx, cy, '#62ffb3')
+                    const pts = Math.round((10 + combo) * sm);
+                    score += pts; combo++; maxCombo = Math.max(maxCombo, combo); accG++;
+                    fb = 'GOOD!'; fbC = '#62ffb3'; fbT = 1; spT = `+${pts}`; spTm = .8;
+                    Audio.good(); burst(cx, cy, '#62ffb3', 15); ripple(cx, cy, '#62ffb3')
                 } else if (n < th2.o) {
-                    score += 3; combo = 0; fb = 'OK'; fbC = '#ffd36a'; fbT = .8; spT = '+3'; spTm = .6; Audio.ok(); burst(cx, cy, '#ffd36a', 6)
+                    const pts = Math.round(3 * sm);
+                    score += pts; combo = 0; accO++;
+                    fb = 'OK'; fbC = '#ffd36a'; fbT = .8; spT = `+${pts}`; spTm = .6;
+                    Audio.ok(); burst(cx, cy, '#ffd36a', 8)
                 } else {
-                    combo = 0; lives--; fb = 'MISS'; fbC = '#ff5d7a'; fbT = .8; spT = ''; Audio.miss(); cShk = 2;
+                    combo = 0; lives--; accM++;
+                    fb = 'MISS'; fbC = '#ff5d7a'; fbT = .8; spT = ''; Audio.miss(); cShk = 2;
+                    vignetteT = 1;
                     if (lives <= 0) {
+                        feverMode = false;
+                        checkAchievements(true); // v4.0 final achievement check
                         state = S.OVER; goT = 0; earnedCoins = SkinShop.calcEarnedCoins(score, maxCombo, level); SkinShop.addCoins(earnedCoins); Audio.coin();
                         if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()) }
                         if (Leaderboard.hasName()) Leaderboard.submitScore(score, level, maxCombo); Audio.gameOver(); return
                     }
                 }
 
-                // Level up
+                // Level up → Wave announcement
                 const needed = 80 + (level - 1) * 40;
-                if (score >= needed * level) { level++; bpm = 66 + (level - 1) * 6; Audio.levelUp(); fb = 'LEVEL ' + level; const sk = SkinShop.getCurrentSkin(); fbC = sk.ring; fbT = 2; burst(cx, cy, fbC, 30) }
+                if (score >= needed * level) {
+                    level++; bpm = DIFF_CFG[difficulty].bpmBase + (level - 1) * 6;
+                    Audio.levelUp(); fb = 'LEVEL ' + level;
+                    const sk = SkinShop.getCurrentSkin(); fbC = sk.ring; fbT = 2;
+                    burst(cx, cy, fbC, 30);
+                    triggerWave(level); // v4.0 wave announcement
+                }
+                checkAchievements(); // v4.0 achievement check
             }
 
             C.addEventListener('click', e => { const r = C.getBoundingClientRect(); handleTap(e.clientX - r.left, e.clientY - r.top) });
@@ -493,6 +953,7 @@
                 const dt = Math.min((now - last) / 1000, .05); last = now; resize(); X.clearRect(0, 0, W, H);
                 switch (state) {
                     case S.MENU: drawMenu(dt); break;
+                    case S.DIFF: drawDifficulty(dt); break;
                     case S.PLAY: t += dt * spd(); drawGame(dt); break;
                     case S.OVER: drawGame(dt); drawGameOver(dt); break;
                     case S.SHOP: drawShop(dt); break;
