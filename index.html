@@ -84,6 +84,8 @@
     <script src="js/ads.js"></script>
     <script src="js/shop.js"></script>
     <script src="js/leaderboard.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/paypal-shop.js"></script>
     <script>
         (() => {
             'use strict';
@@ -91,6 +93,17 @@
             let W, H;
             function resize() { const d = Math.min(devicePixelRatio || 1, 2), r = C.getBoundingClientRect(); W = r.width; H = r.height; C.width = W * d; C.height = H * d; X.setTransform(d, 0, 0, d, 0, 0) }
             addEventListener('resize', resize); resize();
+
+            // ─── Firebase + Global Leaderboard Boot ──────
+            (async () => {
+                try {
+                    if (window.FirebaseService) {
+                        await FirebaseService.init();
+                        await Leaderboard.initGlobal();
+                        console.log('[ARK] 🌐 Firebase & Global Leaderboard active');
+                    }
+                } catch (e) { console.warn('[ARK] Firebase boot skipped:', e); }
+            })();
 
             // ─── States ───────────────────────────────────
             const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, NAME: 5, DIFF: 6 };
