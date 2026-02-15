@@ -25,13 +25,15 @@
         <!-- ═══ Canvas Layer (always present, behind UI) ═══ -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- ═══ Google Login Modal ═══ -->
+        <!-- ═══ Welcome Gate (Login Required) ═══ -->
         <div id="loginModal" class="login-modal" style="display:none;">
             <div class="login-backdrop"></div>
             <div class="login-card">
-                <div class="login-icon">🏆</div>
-                <div class="login-title">GLOBAL LEADERBOARD</div>
-                <div class="login-desc">Sign in with Google to register your score on the global leaderboard!</div>
+                <div class="login-icon">🎮</div>
+                <div class="login-title">WELCOME</div>
+                <div class="login-desc">Choose how you want to play</div>
+
+                <!-- Option 1: Google Sign In -->
                 <button class="login-google-btn" id="btnGoogleLogin">
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path fill="#4285F4"
@@ -45,7 +47,23 @@
                     </svg>
                     Sign in with Google
                 </button>
-                <button class="login-skip-btn" id="btnLoginSkip">Skip for now</button>
+
+                <!-- Divider -->
+                <div class="login-divider">
+                    <div class="login-divider-line"></div>
+                    <span class="login-divider-text">OR</span>
+                    <div class="login-divider-line"></div>
+                </div>
+
+                <!-- Option 2: Guest with Nickname -->
+                <div class="login-guest-section">
+                    <input type="text" id="guestNickname" class="login-nickname-input" placeholder="Enter your nickname"
+                        maxlength="12" autocomplete="off" spellcheck="false" />
+                    <div class="login-nickname-hint" id="nicknameHint">2-12 characters required</div>
+                    <button class="login-guest-btn" id="btnGuestPlay" disabled>
+                        👤 PLAY AS GUEST
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -262,15 +280,37 @@
         <!-- ═══ SCREEN: Shop ═══ -->
         <div id="shop-screen" class="screen">
             <div class="shop-header">
-                <div class="shop-title">💎 SKIN SHOP</div>
+                <div class="shop-title">💎 SHOP</div>
                 <div class="coin-badge" style="position:static;">
                     <span class="icon">◆</span>
                     <span id="shopCoins">0</span>
                 </div>
                 <div class="shop-close" id="shopClose">✕</div>
             </div>
+            <!-- Tab Navigation -->
+            <div class="shop-tabs">
+                <button class="shop-tab active" id="tabSkins" data-tab="skins">🎨 SKINS</button>
+                <button class="shop-tab" id="tabCoins" data-tab="coins">💰 COINS</button>
+            </div>
+            <!-- Skins Tab -->
             <div class="shop-body" id="shopBody">
                 <!-- dynamically populated -->
+            </div>
+            <!-- Coins Tab -->
+            <div class="shop-body" id="coinShopBody" style="display:none;">
+                <!-- dynamically populated -->
+            </div>
+        </div>
+
+        <!-- PayPal Checkout Modal -->
+        <div id="paypalModal" class="login-modal" style="display:none;">
+            <div class="login-backdrop"></div>
+            <div class="login-card">
+                <div class="login-icon">💰</div>
+                <div class="login-title" id="paypalPackTitle">500 Coins</div>
+                <div class="login-desc" id="paypalPackDesc">$0.99</div>
+                <div id="paypalButtonContainer" style="min-height:50px;margin-top:16px;"></div>
+                <button class="login-guest-btn" id="paypalCancel" style="margin-top:12px;opacity:0.6;">✕ CANCEL</button>
             </div>
         </div>
 
@@ -328,19 +368,23 @@
 
             function updateProfileBadge(user) {
                 const avatar = $('profileAvatar');
-                const name = $('profileName');
+                const nameEl = $('profileName');
                 if (user && !user.isAnonymous && user.displayName) {
-                    name.textContent = user.displayName.split(' ')[0];
+                    nameEl.textContent = user.displayName.split(' ')[0];
                     if (user.photoURL) {
                         avatar.innerHTML = '<img src="' + user.photoURL + '" alt="">';
                     } else {
                         avatar.textContent = '🟢';
                     }
-                    if (window.Leaderboard) Leaderboard.setPlayerName(user.displayName);
                     $('menuUID').textContent = user.uid.slice(0, 6);
-                } else {
-                    name.textContent = 'Guest';
+                } else if (loginMode === 'guest' && isNameSet()) {
+                    // Guest with nickname set
+                    nameEl.textContent = playerName;
                     avatar.textContent = '👤';
+                    $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
+                } else {
+                    nameEl.textContent = 'Tap to Login';
+                    avatar.textContent = '🔒';
                     $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
                 }
             }
@@ -348,14 +392,39 @@
             function showLoginModal() { $('loginModal').style.display = 'flex'; }
             function hideLoginModal() { $('loginModal').style.display = 'none'; }
 
+            // Check if user has a registered name (Google or Guest)
+            let playerName = localStorage.getItem('arkPD_name') || '';
+            let loginMode = localStorage.getItem('arkPD_loginMode') || ''; // 'google' or 'guest'
+
+            function isNameSet() {
+                return playerName.length >= 2;
+            }
+
+            function setPlayerName(name, mode) {
+                playerName = name;
+                loginMode = mode;
+                localStorage.setItem('arkPD_name', name);
+                localStorage.setItem('arkPD_loginMode', mode);
+                if (window.Leaderboard) Leaderboard.setPlayerName(name);
+            }
+
+            // After login is resolved, proceed to difficulty select
+            function proceedToGame() {
+                hideLoginModal();
+                Audio.init(); Audio.ui();
+                state = S.DIFF;
+                showScreen('diff-screen');
+            }
+
             async function handleGoogleLogin() {
                 if (!window.FirebaseService) return;
                 const user = await FirebaseService.signInGoogle();
                 if (user) {
-                    hideLoginModal();
+                    const name = user.displayName || 'Player';
+                    setPlayerName(name, 'google');
                     updateProfileBadge(user);
+
                     if (pendingScore && window.Leaderboard) {
-                        Leaderboard.setPlayerName(user.displayName || 'Player');
                         await Leaderboard.submitScore(
                             pendingScore.score, pendingScore.level,
                             pendingScore.maxCombo, pendingScore.difficulty,
@@ -364,18 +433,66 @@
                         pendingScore = null;
                         console.log('[ARK] 🏆 Pending score submitted after Google login!');
                     }
+                    proceedToGame();
                 }
             }
 
+            function handleGuestLogin() {
+                const input = $('guestNickname');
+                const name = (input.value || '').trim();
+                if (name.length < 2 || name.length > 12) return;
+
+                // Sign in anonymously to Firebase
+                if (window.FirebaseService && !FirebaseService.isSignedIn()) {
+                    FirebaseService.signInAnon();
+                }
+
+                setPlayerName(name, 'guest');
+                // Update profile badge with guest name
+                $('profileName').textContent = name;
+                $('profileAvatar').textContent = '👤';
+                proceedToGame();
+            }
+
+            // Nickname input validation
+            const nicknameInput = $('guestNickname');
+            const guestBtn = $('btnGuestPlay');
+            const nicknameHint = $('nicknameHint');
+
+            nicknameInput.addEventListener('input', () => {
+                const val = nicknameInput.value.trim();
+                if (val.length >= 2 && val.length <= 12) {
+                    guestBtn.disabled = false;
+                    nicknameHint.textContent = '✓ Looks good!';
+                    nicknameHint.style.color = '#62ffb3';
+                } else if (val.length > 0 && val.length < 2) {
+                    guestBtn.disabled = true;
+                    nicknameHint.textContent = 'Too short (min 2 characters)';
+                    nicknameHint.style.color = '#ff5d7a';
+                } else {
+                    guestBtn.disabled = true;
+                    nicknameHint.textContent = '2-12 characters required';
+                    nicknameHint.style.color = '';
+                }
+            });
+
+            // Enter key on nickname input
+            nicknameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !guestBtn.disabled) handleGuestLogin();
+            });
+
+            // Profile badge click — allow re-login / switch
             $('profileBadge').addEventListener('click', () => {
-                if (window.FirebaseService) {
-                    const user = FirebaseService.getUser();
-                    if (!user || user.isAnonymous) showLoginModal();
+                showLoginModal();
+                // Pre-fill current name if guest
+                if (loginMode === 'guest' && playerName) {
+                    nicknameInput.value = playerName;
+                    nicknameInput.dispatchEvent(new Event('input'));
                 }
             });
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
-            $('btnLoginSkip').addEventListener('click', hideLoginModal);
+            $('btnGuestPlay').addEventListener('click', handleGuestLogin);
 
             (async () => {
                 try {
@@ -384,13 +501,34 @@
                         if (!FirebaseService.isSignedIn()) {
                             await FirebaseService.signInAnon();
                         }
-                        FirebaseService.onAuthChange(updateProfileBadge);
+                        FirebaseService.onAuthChange((user) => {
+                            updateProfileBadge(user);
+                            // If Google user, update name
+                            if (user && !user.isAnonymous && user.displayName) {
+                                setPlayerName(user.displayName, 'google');
+                            }
+                        });
                         const curUser = FirebaseService.getUser();
-                        if (curUser) updateProfileBadge(curUser);
-                        if (window.Leaderboard) await Leaderboard.initGlobal();
+                        if (curUser) {
+                            updateProfileBadge(curUser);
+                            // Restore Google user name
+                            if (!curUser.isAnonymous && curUser.displayName) {
+                                setPlayerName(curUser.displayName, 'google');
+                            }
+                        }
+                        if (window.Leaderboard) {
+                            await Leaderboard.initGlobal();
+                            if (isNameSet()) Leaderboard.setPlayerName(playerName);
+                        }
                         console.log('[ARK] 🌐 Firebase & Leaderboard active');
                     }
                 } catch (e) { console.warn('[ARK] Firebase boot skipped:', e); }
+
+                // Restore saved guest name to profile badge
+                if (loginMode === 'guest' && isNameSet()) {
+                    $('profileName').textContent = playerName;
+                    $('profileAvatar').textContent = '👤';
+                }
             })();
 
             // ─── Game State ──────────────────────────────
@@ -936,13 +1074,11 @@
                         SkinShop.addCoins(earnedCoins);
                         if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()); }
 
-                        // Leaderboard: Google user → submit directly, Anonymous → prompt login
+                        // Leaderboard: submit with stored playerName from login gate
                         const fbUser = window.FirebaseService ? FirebaseService.getUser() : null;
                         if (fbUser && window.Leaderboard) {
-                            // Set name: Google users use display name, Guest uses "Guest"
-                            if (!Leaderboard.hasName()) {
-                                const displayName = fbUser.isAnonymous ? 'Guest' : (fbUser.displayName || 'Player');
-                                Leaderboard.setPlayerName(displayName);
+                            if (!Leaderboard.hasName() && isNameSet()) {
+                                Leaderboard.setPlayerName(playerName);
                             }
                             Leaderboard.submitScore(score, level, maxCombo, difficulty,
                                 Math.round((accP / Math.max(1, accP + accG + accO + accM)) * 100));
@@ -975,7 +1111,14 @@
             // ─── Event Listeners ─────────────────────────
 
             // Menu
-            $('menuTap').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.DIFF; showScreen('diff-screen'); });
+            $('menuTap').addEventListener('click', () => {
+                // ── Login Gate: must have a name before playing ──
+                if (!isNameSet()) {
+                    showLoginModal();
+                    return;
+                }
+                Audio.init(); Audio.ui(); state = S.DIFF; showScreen('diff-screen');
+            });
             $('btnShop').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.SHOP; updateShop(); showScreen('shop-screen'); });
             $('btnRank').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.BOARD; updateBoard(); showScreen('board-screen'); });
 
@@ -1032,7 +1175,97 @@
                 }
             });
 
-            // Board
+            // ─── Shop Tabs ──────────────────────────────
+            function switchShopTab(tab) {
+                $('tabSkins').classList.toggle('active', tab === 'skins');
+                $('tabCoins').classList.toggle('active', tab === 'coins');
+                $('shopBody').style.display = tab === 'skins' ? '' : 'none';
+                $('coinShopBody').style.display = tab === 'coins' ? '' : 'none';
+                if (tab === 'coins') updateCoinShop();
+            }
+            $('tabSkins').addEventListener('click', () => { Audio.ui(); switchShopTab('skins'); });
+            $('tabCoins').addEventListener('click', () => { Audio.ui(); switchShopTab('coins'); });
+
+            // ─── Coin Pack Shop ─────────────────────────
+            function updateCoinShop() {
+                if (!window.PayPalShop) {
+                    $('coinShopBody').innerHTML = '<div class="board-empty">Coin shop not available</div>';
+                    return;
+                }
+                const packs = PayPalShop.getPacks();
+                let html = '';
+                packs.forEach(p => {
+                    html += `
+                    <div class="skin-card coin-pack-card" data-pack="${p.id}">
+                        <div class="coin-pack-amount">◆ ${p.coins.toLocaleString()}</div>
+                        <div class="coin-pack-label">${p.label}</div>
+                        ${p.bonus ? `<div class="coin-pack-bonus">${p.bonus}</div>` : ''}
+                        <button class="skin-btn buy-btn coin-buy-btn" data-action="buy-coins" data-pack="${p.id}">
+                            $${p.price}
+                        </button>
+                    </div>`;
+                });
+                $('coinShopBody').innerHTML = html;
+            }
+
+            // ─── PayPal Checkout ─────────────────────────
+            let paypalSDKLoading = false;
+
+            $('coinShopBody').addEventListener('click', async (e) => {
+                const btn = e.target.closest('[data-action="buy-coins"]');
+                if (!btn) return;
+                const packId = btn.dataset.pack;
+                if (!packId || !window.PayPalShop) return;
+
+                Audio.ui();
+                const pack = PayPalShop.getPacks().find(p => p.id === packId);
+                if (!pack) return;
+
+                // Show PayPal modal
+                $('paypalPackTitle').textContent = pack.label;
+                $('paypalPackDesc').textContent = `$${pack.price} USD`;
+                $('paypalButtonContainer').innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">Loading PayPal...</div>';
+                $('paypalModal').style.display = 'flex';
+
+                // Load PayPal SDK if needed
+                try {
+                    if (!PayPalShop.isLoaded()) {
+                        if (!paypalSDKLoading) {
+                            paypalSDKLoading = true;
+                            await PayPalShop.loadSDK();
+                            paypalSDKLoading = false;
+                        }
+                    }
+
+                    // Render PayPal buttons in modal
+                    PayPalShop.renderButtons('paypalButtonContainer', packId,
+                        // onSuccess
+                        (purchasedPack, details) => {
+                            $('paypalModal').style.display = 'none';
+                            Audio.buy();
+                            updateShop();
+                            updateCoinShop();
+                            $('shopCoins').textContent = SkinShop.getCoins();
+                            // Show success feedback
+                            alert(`✅ ${purchasedPack.coins.toLocaleString()} Coins added!`);
+                        },
+                        // onError
+                        (err) => {
+                            console.error('[PayPal] Purchase error:', err);
+                            alert('❌ Payment failed. Please try again.');
+                        }
+                    );
+                } catch (err) {
+                    console.error('[PayPal] SDK load error:', err);
+                    $('paypalButtonContainer').innerHTML = '<div style="text-align:center;color:#ff5d7a;padding:20px;">Failed to load PayPal. Check your connection.</div>';
+                }
+            });
+
+            $('paypalCancel').addEventListener('click', () => {
+                Audio.ui();
+                $('paypalModal').style.display = 'none';
+            });
+
             $('boardClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
 
             // Pause / Resume
