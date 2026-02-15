@@ -6,7 +6,7 @@
  */
 const PayPalShop = (() => {
     // ─── Config ─────────────────────────────────
-    const SANDBOX_CLIENT_ID = 'sb'; // Replace with real sandbox client ID
+    const SANDBOX_CLIENT_ID = 'AaG5r1RQWNIYr30P21qOaHXUC242afKF97UtmHrHCq0fKSl4s7B02BFwqcZIxneJ3rz2BqTnSGmq1YvW';
     const LIVE_CLIENT_ID = ''; // Replace with real live client ID
     const IS_SANDBOX = true;
     const CLIENT_ID = IS_SANDBOX ? SANDBOX_CLIENT_ID : LIVE_CLIENT_ID;
