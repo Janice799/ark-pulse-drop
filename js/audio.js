@@ -3,11 +3,12 @@
  */
 const Audio = (() => {
     let ctx = null;
+    let muted = false;
     function init() {
         if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
     function tone(freq, dur, type = 'sine', vol = 0.12) {
-        if (!ctx) return;
+        if (!ctx || muted) return;
         const o = ctx.createOscillator(), g = ctx.createGain();
         o.type = type; o.frequency.setValueAtTime(freq, ctx.currentTime);
         g.gain.setValueAtTime(vol, ctx.currentTime);
@@ -16,6 +17,8 @@ const Audio = (() => {
     }
     return {
         init,
+        setMuted(v) { muted = !!v; },
+        isMuted() { return muted; },
         perfect() { tone(880, .15, 'sine', .13); setTimeout(() => tone(1320, .12, 'sine', .1), 60); setTimeout(() => tone(1760, .18, 'sine', .08), 120); },
         good() { tone(660, .12, 'sine', .1); setTimeout(() => tone(880, .14, 'sine', .08), 80); },
         ok() { tone(440, .12, 'triangle', .08); },

@@ -1844,8 +1844,9 @@ body {
 
 /* Pause overlay */
 .pause-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
+    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1918,4 +1919,46 @@ body {
 .pause-quit-btn:hover {
     border-color: rgba(255, 100, 100, 0.3);
     color: rgba(255, 100, 100, 0.7);
+}
+
+.pause-sound-btn {
+    display: block;
+    width: 200px;
+    margin: 0 auto 12px;
+    padding: 12px 0;
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 215, 0, 0.06);
+    color: #ffd700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pause-sound-btn:hover {
+    background: rgba(255, 215, 0, 0.12);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+}
+
+/* HUD Sound Button */
+.hud-sound-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.hud-sound-btn:active {
+    transform: scale(0.9);
 }

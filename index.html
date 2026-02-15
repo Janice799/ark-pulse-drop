@@ -157,6 +157,7 @@
                 </div>
                 <div class="hud-right">
                     <div class="hud-pill hud-hearts" id="hudHearts"></div>
+                    <button class="hud-sound-btn" id="btnSoundHUD">🔊</button>
                     <button class="hud-pause-btn" id="btnPause">⏸</button>
                 </div>
             </div>
@@ -180,15 +181,14 @@
             </div>
         </div>
 
-        <!-- ═══ SCREEN: Pause Overlay ═══ -->
-        <div id="pause-screen" class="screen">
-            <div class="pause-overlay">
-                <div class="pause-card">
-                    <div class="pause-icon">⏸</div>
-                    <div class="pause-title">PAUSED</div>
-                    <button class="pause-resume-btn" id="btnResume">▶ RESUME</button>
-                    <button class="pause-quit-btn" id="btnQuit">✕ QUIT TO MENU</button>
-                </div>
+        <!-- ═══ Pause Overlay (independent, not a .screen) ═══ -->
+        <div id="pause-overlay" class="pause-overlay" style="display:none;">
+            <div class="pause-card">
+                <div class="pause-icon">⏸</div>
+                <div class="pause-title">PAUSED</div>
+                <button class="pause-sound-btn" id="btnSoundToggle">🔊 SOUND ON</button>
+                <button class="pause-resume-btn" id="btnResume">▶ RESUME</button>
+                <button class="pause-quit-btn" id="btnQuit">✕ QUIT TO MENU</button>
             </div>
         </div>
 
@@ -1350,27 +1350,46 @@
 
             $('boardClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
 
-            // Pause / Resume
+            // Pause / Resume — overlay approach (no showScreen)
             $('btnPause').addEventListener('click', () => {
                 if (state !== S.PLAY) return;
                 Audio.ui();
                 state = S.PAUSE;
-                showScreen('pause-screen');
+                $('pause-overlay').style.display = 'flex';
             });
 
             $('btnResume').addEventListener('click', () => {
                 Audio.ui();
                 state = S.PLAY;
                 last = performance.now(); // reset dt so no jump
-                showScreen('play-screen');
+                $('pause-overlay').style.display = 'none';
             });
 
             $('btnQuit').addEventListener('click', () => {
                 Audio.ui();
                 state = S.MENU;
+                $('pause-overlay').style.display = 'none';
                 updateMenuUI();
                 showScreen('menu-screen');
             });
+
+            // ─── Sound Toggle ────────────────────────────
+            let soundMuted = localStorage.getItem('arkPD_muted') === 'true';
+            function updateSoundUI() {
+                const icon = soundMuted ? '🔇' : '🔊';
+                $('btnSoundHUD').textContent = icon;
+                $('btnSoundToggle').textContent = soundMuted ? '🔇 SOUND OFF' : '🔊 SOUND ON';
+                if (Audio.setMuted) Audio.setMuted(soundMuted);
+            }
+            function toggleSound() {
+                soundMuted = !soundMuted;
+                localStorage.setItem('arkPD_muted', soundMuted);
+                updateSoundUI();
+                if (!soundMuted) Audio.ui(); // play feedback when unmuting
+            }
+            $('btnSoundHUD').addEventListener('click', (e) => { e.stopPropagation(); toggleSound(); });
+            $('btnSoundToggle').addEventListener('click', () => { toggleSound(); });
+            updateSoundUI(); // apply saved preference on load
 
             // ─── Game Loop ───────────────────────────────
             let last = performance.now();
