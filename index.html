@@ -1351,7 +1351,8 @@
             $('boardClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
 
             // Pause / Resume — overlay approach (no showScreen)
-            $('btnPause').addEventListener('click', () => {
+            $('btnPause').addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (state !== S.PLAY) return;
                 Audio.ui();
                 state = S.PAUSE;
@@ -1383,9 +1384,12 @@
             }
             function toggleSound() {
                 soundMuted = !soundMuted;
-                localStorage.setItem('arkPD_muted', soundMuted);
+                localStorage.setItem('arkPD_muted', soundMuted.toString());
                 updateSoundUI();
-                if (!soundMuted) Audio.ui(); // play feedback when unmuting
+                if (!soundMuted) {
+                    Audio.init(); // ensure AudioContext exists
+                    Audio.ui(); // play feedback when unmuting
+                }
             }
             $('btnSoundHUD').addEventListener('click', (e) => { e.stopPropagation(); toggleSound(); });
             $('btnSoundToggle').addEventListener('click', () => { toggleSound(); });

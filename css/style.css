@@ -523,7 +523,19 @@ body {
 
 #play-screen.active {
     pointer-events: none;
-    /* let canvas receive taps */
+    /* let canvas receive taps — but HUD buttons get pointer-events:auto */
+}
+
+#play-screen .hud-top {
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
+}
+
+#play-screen .hud-bottom {
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
 }
 
 .hud-top {
@@ -1835,9 +1847,33 @@ body {
     justify-content: center;
     transition: all 0.2s;
     -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
 }
 
 .hud-pause-btn:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* HUD Sound Button */
+.hud-sound-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+}
+
+.hud-sound-btn:active {
     transform: scale(0.9);
     background: rgba(255, 255, 255, 0.15);
 }
