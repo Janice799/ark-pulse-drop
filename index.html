@@ -857,390 +857,468 @@
                 X.textAlign = 'right'; X.fillText(`MAX ×${maxCombo}`, W - 24, H - 22);
             }
 
-            // ─── Draw: Game Over (v5.0 ULTRA Cinematic) ──
+            // ─── Draw: Game Over (v5.0 ULTRA — Mockup Match) ──
             function drawGameOver(dt) {
                 clearBtns(); goT += dt; const cx = W / 2;
-                X.fillStyle = `rgba(5,6,10,${Math.min(.75, goT * .8)})`; X.fillRect(0, 0, W, H);
+                X.fillStyle = `rgba(5,6,10,${Math.min(.8, goT * .8)})`; X.fillRect(0, 0, W, H);
                 const fade = Math.min(1, goT * 2);
 
-                const cW = W * .88, cH = 520, cX = (W - cW) / 2, cY = H * .04;
+                const cW = W * .92, cH = 560, cX = (W - cW) / 2, cY = H * .03;
                 X.save(); X.globalAlpha = fade;
-                glassPanel(cX, cY, cW, cH, 24, [127, 224, 255], 0.08);
+                glassPanel(cX, cY, cW, cH, 28, [127, 224, 255], 0.10);
 
-                // Difficulty badge — colored pill
+                // Difficulty badge — bigger, brighter pill
                 const dc = DIFF_CFG[difficulty];
-                const dbW = 80, dbH = 26, dbX = cx - dbW / 2;
-                rr(dbX, cY + 10, dbW, dbH, 13);
-                X.fillStyle = `rgba(${hexRGB(dc.color).join(',')},0.2)`; X.fill();
-                X.strokeStyle = `rgba(${hexRGB(dc.color).join(',')},0.4)`; X.lineWidth = 1.5; X.stroke();
-                X.font = '700 11px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
-                X.fillText(dc.emoji + ' ' + dc.name, cx, cY + 28);
+                const dbW = 100, dbH = 30, dbX = cx - dbW / 2;
+                rr(dbX, cY + 10, dbW, dbH, 15);
+                X.fillStyle = `rgba(${hexRGB(dc.color).join(',')},0.25)`; X.fill();
+                X.strokeStyle = `rgba(${hexRGB(dc.color).join(',')},0.5)`; X.lineWidth = 2; X.stroke();
+                X.font = '800 14px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
+                X.shadowBlur = 8; X.shadowColor = dc.color;
+                X.fillText(dc.emoji + ' ' + dc.name, cx, cY + 30); X.shadowBlur = 0;
 
-                // GAME OVER — bigger
-                X.font = '800 34px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)';
-                X.shadowBlur = 16; X.shadowColor = 'rgba(127,224,255,.3)';
-                X.fillText('GAME OVER', cx, cY + 62); X.shadowBlur = 0;
+                // GAME OVER — massive with light ray glow
+                X.font = '900 38px Outfit'; X.fillStyle = 'rgba(255,255,255,.97)';
+                X.shadowBlur = 30; X.shadowColor = 'rgba(127,224,255,.5)';
+                X.fillText('GAME OVER', cx, cY + 68);
+                // Second glow pass
+                X.shadowBlur = 60; X.globalAlpha = .3;
+                X.fillText('GAME OVER', cx, cY + 68);
+                X.shadowBlur = 0; X.globalAlpha = 1;
 
                 // "FINAL SCORE" label
-                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText('FINAL SCORE', cx, cY + 82);
+                X.font = '500 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)'; X.fillText('FINAL SCORE', cx, cY + 88);
 
-                // v5.0 MASSIVE score display
+                // MASSIVE score — quadruple glow (mockup: huge radiating number)
                 rollScore += (score - rollScore) * 0.08;
                 if (Math.abs(score - rollScore) < 1) rollScore = score;
                 const scoreStr = Math.round(rollScore).toLocaleString();
-                X.font = '700 64px Outfit'; X.fillStyle = '#7fe0ff';
-                X.shadowBlur = 50; X.shadowColor = 'rgba(127,224,255,.6)';
-                X.fillText(scoreStr, cx, cY + 140);
-                X.shadowBlur = 80; X.globalAlpha = 0.25;
-                X.fillText(scoreStr, cx, cY + 140);
+                X.font = '800 72px Outfit'; X.fillStyle = '#7fe0ff';
+                // Glow layer 1
+                X.shadowBlur = 40; X.shadowColor = 'rgba(127,224,255,.7)';
+                X.fillText(scoreStr, cx, cY + 154);
+                // Glow layer 2
+                X.shadowBlur = 80; X.globalAlpha = .3;
+                X.fillText(scoreStr, cx, cY + 154);
+                // Glow layer 3 — wide diffuse
+                X.shadowBlur = 120; X.globalAlpha = .15;
+                X.fillText(scoreStr, cx, cY + 154);
                 X.shadowBlur = 0; X.globalAlpha = 1;
 
-                // v5.0 NEW BEST — big golden pulse
-                let nextY = cY + 160;
+                // NEW BEST — big golden with star pulse
+                let nextY = cY + 174;
                 if (score >= hi && score > 0) {
-                    const goldPulse = 18 + Math.sin(goT * 5) * 12;
-                    X.font = '700 18px Outfit'; X.fillStyle = '#ffd36a';
-                    X.shadowBlur = goldPulse; X.shadowColor = 'rgba(255,211,106,.7)';
+                    const goldPulse = 22 + Math.sin(goT * 5) * 16;
+                    X.font = '800 20px Outfit'; X.fillStyle = '#ffd36a';
+                    X.shadowBlur = goldPulse; X.shadowColor = 'rgba(255,211,106,.8)';
                     X.fillText('⭐ NEW BEST! ⭐', cx, nextY);
-                    X.shadowBlur = 0; nextY += 24;
+                    X.shadowBlur = 0; nextY += 28;
                 } else { nextY += 4; }
 
-                // v5.0 Coins earned — bigger with shine
-                X.font = '700 16px Outfit'; X.fillStyle = '#ffd36a';
-                X.shadowBlur = 14; X.shadowColor = 'rgba(255,211,106,.4)';
+                // Coins earned — bigger with shine
+                X.font = '800 18px Outfit'; X.fillStyle = '#ffd36a';
+                X.shadowBlur = 16; X.shadowColor = 'rgba(255,211,106,.5)';
                 X.fillText(`◆ +${earnedCoins} coins`, cx, nextY);
-                X.shadowBlur = 0; nextY += 28;
+                X.shadowBlur = 0; nextY += 32;
 
-                // ACCURACY label + percentage
+                // ACCURACY label + percentage — bigger
                 const total = accP + accG + accO + accM;
                 const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100).toFixed(1) : '0.0';
-                X.font = '700 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.85)';
-                X.fillText(`ACCURACY  ${accPct}%`, cx, nextY); nextY += 14;
+                X.font = '800 15px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
+                X.fillText(`ACCURACY  ${accPct}%`, cx, nextY); nextY += 16;
 
-                // v5.0 Rainbow gradient accuracy bar — TALLER
-                const barW = cW - 40, barH = 12, barX = cX + 20;
-                rr(barX, nextY, barW, barH, 6); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
+                // Rainbow gradient accuracy bar — THICKER, with rounded ends
+                const barW = cW - 36, barH = 16, barX = cX + 18;
+                rr(barX, nextY, barW, barH, 8); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
                 if (total > 0) {
-                    const pW = (accP / total) * barW, gW = (accG / total) * barW, oW = (accO / total) * barW, mW = (accM / total) * barW;
+                    const pW = (accP / total) * barW, gW = (accG / total) * barW;
+                    const oW = (accO / total) * barW, mW = (accM / total) * barW;
                     let bx = barX;
-                    if (pW > 0) { rr(bx, nextY, Math.max(pW, 6), barH, 6); X.fillStyle = '#7fe0ff'; X.shadowBlur = 8; X.shadowColor = '#7fe0ff'; X.fill(); X.shadowBlur = 0; bx += pW; }
+                    if (pW > 0) {
+                        rr(bx, nextY, Math.max(pW, 8), barH, 8);
+                        X.fillStyle = '#7fe0ff'; X.shadowBlur = 12; X.shadowColor = '#7fe0ff';
+                        X.fill(); X.shadowBlur = 0; bx += pW;
+                    }
                     if (gW > 0) { X.fillStyle = '#62ffb3'; X.fillRect(bx, nextY, gW, barH); bx += gW; }
                     if (oW > 0) { X.fillStyle = '#ffd36a'; X.fillRect(bx, nextY, oW, barH); bx += oW; }
-                    if (mW > 0) { X.fillStyle = '#ff5d7a'; X.fillRect(bx, nextY, mW, barH); }
+                    if (mW > 0) {
+                        rr(bx, nextY, Math.max(mW, 8), barH, 0);
+                        X.fillStyle = '#ff5d7a'; X.fill();
+                    }
+                    // Percentage marker
+                    const markerX = barX + barW * parseFloat(accPct) / 100;
+                    X.font = '700 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.6)'; X.textAlign = 'center';
+                    X.fillText(`${accPct}%`, Math.min(markerX, barX + barW - 16), nextY - 4);
                 }
-                nextY += barH + 16;
+                nextY += barH + 18;
 
-                // v5.0 Judgment counts — colored pills with emoji icons
+                // Judgment counts — OVERSIZED colored pills with emoji icons
                 const jData = [
-                    ['PERFECT', accP, '#7fe0ff', 'rgba(127,224,255,.12)', '👑'],
-                    ['GOOD', accG, '#62ffb3', 'rgba(98,255,179,.10)', '👍'],
-                    ['OK', accO, '#ffd36a', 'rgba(255,211,106,.10)', '👌'],
-                    ['MISS', accM, '#ff5d7a', 'rgba(255,93,122,.10)', '❌']
+                    ['PERFECT', accP, '#7fe0ff', 'rgba(127,224,255,.15)', '👑'],
+                    ['GOOD', accG, '#62ffb3', 'rgba(98,255,179,.12)', '👍'],
+                    ['OK', accO, '#ffd36a', 'rgba(255,211,106,.12)', '👌'],
+                    ['MISS', accM, '#ff5d7a', 'rgba(255,93,122,.12)', '❌']
                 ];
-                const pillW = (cW - 48) / 4 - 4, pillH = 60;
+                const pillW = (cW - 44) / 4 - 6, pillH = 70;
                 jData.forEach(([label, count, color, bg, emoji], i) => {
-                    const jx = cX + 14 + i * (pillW + 6);
-                    // Pill background
-                    rr(jx, nextY, pillW, pillH, 12);
+                    const jx = cX + 12 + i * (pillW + 8);
+                    // Pill background with colored border
+                    rr(jx, nextY, pillW, pillH, 14);
                     X.fillStyle = bg; X.fill();
-                    X.strokeStyle = color.replace(')', ',.25)').replace('rgb', 'rgba'); X.lineWidth = 1; X.stroke();
-                    // Emoji
-                    X.font = '700 16px Outfit'; X.textAlign = 'center';
-                    X.fillText(emoji, jx + pillW / 2, nextY + 20);
+                    X.strokeStyle = color.replace(')', ',.3)').replace('rgb', 'rgba'); X.lineWidth = 1.5; X.stroke();
+                    // Big Emoji
+                    X.font = '700 20px Outfit'; X.textAlign = 'center';
+                    X.fillText(emoji, jx + pillW / 2, nextY + 24);
                     // Label
-                    X.font = '500 8px Outfit'; X.fillStyle = 'rgba(255,255,255,.45)';
-                    X.fillText(label, jx + pillW / 2, nextY + 34);
-                    // Count
-                    X.font = '700 18px Outfit'; X.fillStyle = color;
-                    if (i === 0 && accP > 0) { X.shadowBlur = 8; X.shadowColor = color; }
-                    X.fillText(count.toString(), jx + pillW / 2, nextY + 52); X.shadowBlur = 0;
+                    X.font = '600 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
+                    X.fillText(label, jx + pillW / 2, nextY + 38);
+                    // Big Count with glow
+                    X.font = '800 22px Outfit'; X.fillStyle = color;
+                    if (i === 0 && accP > 0) { X.shadowBlur = 10; X.shadowColor = color; }
+                    X.fillText(count.toString(), jx + pillW / 2, nextY + 60); X.shadowBlur = 0;
                 });
-                nextY += pillH + 14;
+                nextY += pillH + 16;
 
-                // v5.0 Stats row — glassmorphism mini cards
-                const statW = (cW - 56) / 3 - 4, statH = 48;
+                // Stats row — bigger glassmorphism cards with glow borders
+                const statW = (cW - 52) / 3 - 6, statH = 54;
                 [['LEVEL ⚡', level], ['MAX COMBO 🔥', '×' + maxCombo], ['BEST 🏆', hi]].forEach(([l, v], i) => {
-                    const sx = cX + 16 + i * (statW + 8);
-                    rr(sx, nextY, statW, statH, 10);
-                    X.fillStyle = 'rgba(255,255,255,.04)'; X.fill();
-                    X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
-                    X.font = '400 8px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.35)';
-                    X.fillText(l, sx + statW / 2, nextY + 16);
-                    X.font = '700 18px Outfit'; X.fillStyle = 'rgba(255,255,255,.85)';
-                    X.fillText(v.toString(), sx + statW / 2, nextY + 38);
+                    const sx = cX + 14 + i * (statW + 10);
+                    rr(sx, nextY, statW, statH, 12);
+                    X.fillStyle = 'rgba(255,255,255,.05)'; X.fill();
+                    X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
+                    X.font = '500 9px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.4)';
+                    X.fillText(l, sx + statW / 2, nextY + 18);
+                    X.font = '800 20px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
+                    X.fillText(v.toString(), sx + statW / 2, nextY + 42);
                 });
-                nextY += statH + 10;
+                nextY += statH + 12;
 
-                // v5.0 Achievement badges
+                // Achievement badges
                 const sessionAch = ACHIEVEMENTS.filter(a => unlockedAch.has(a.id));
                 if (sessionAch.length > 0) {
-                    X.font = '600 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)'; X.textAlign = 'center';
+                    X.font = '600 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.45)'; X.textAlign = 'center';
                     X.fillText(`ACHIEVEMENTS (${sessionAch.length}/${ACHIEVEMENTS.length})`, cx, nextY + 4);
                     const maxShow = Math.min(sessionAch.length, 8);
-                    const achW = Math.min(36, (cW - 32) / maxShow);
+                    const achW = Math.min(40, (cW - 28) / maxShow);
                     const achStartX = cx - (maxShow * achW) / 2;
                     sessionAch.slice(0, maxShow).forEach((a, i) => {
-                        X.font = '700 20px Outfit'; X.textAlign = 'center';
-                        X.fillStyle = a.color; X.shadowBlur = 10; X.shadowColor = a.color;
-                        X.fillText(a.icon, achStartX + i * achW + achW / 2, nextY + 26);
+                        X.font = '700 24px Outfit'; X.textAlign = 'center';
+                        X.fillStyle = a.color; X.shadowBlur = 14; X.shadowColor = a.color;
+                        X.fillText(a.icon, achStartX + i * achW + achW / 2, nextY + 30);
                         X.shadowBlur = 0;
                     });
                 }
 
-                // Restart
-                const rY = cY + cH - 32;
-                const ra = .4 + Math.sin(goT * 3) * .3;
-                X.font = '600 15px Outfit'; X.fillStyle = `rgba(255,255,255,${ra})`;
+                // Restart — bigger, pulsing
+                const rY = cY + cH - 36;
+                const ra = .45 + Math.sin(goT * 3) * .35;
+                X.font = '700 16px Outfit'; X.fillStyle = `rgba(255,255,255,${ra})`;
                 X.fillText('TAP TO RESTART', cx, rY);
-                addBtn('restart', cX, rY - 20, cW, 40);
+                addBtn('restart', cX, rY - 22, cW, 44);
 
                 X.restore();
             }
 
 
-            // ─── Draw: Shop (v5.0 ULTRA) ─────────────────
+            // ─── Draw: Shop (v5.0 ULTRA — Mockup Match) ──
             function drawShop(dt) {
                 clearBtns();
                 drawNeonGrid(0.15, 0.4);
                 drawBg();
                 const cx = W / 2;
 
-                // v5.0 Title with neon glow
-                X.font = '800 28px Outfit'; X.textAlign = 'center';
-                X.fillStyle = '#fff'; X.shadowBlur = 20; X.shadowColor = 'rgba(140,123,255,.6)';
-                X.fillText('💎 SKIN SHOP', cx, 46); X.shadowBlur = 0;
+                // Title — MASSIVE with triple glow
+                X.font = '900 34px Outfit'; X.textAlign = 'center';
+                X.fillStyle = '#fff';
+                X.shadowBlur = 40; X.shadowColor = 'rgba(140,123,255,.8)';
+                X.fillText('💎 SKIN SHOP', cx, 48);
+                X.shadowBlur = 60; X.globalAlpha = .4;
+                X.fillText('💎 SKIN SHOP', cx, 48);
+                X.shadowBlur = 0; X.globalAlpha = 1;
 
-                // Coin balance pill
-                const balW = 100, balH = 28, balX = (W - balW) / 2;
-                rr(balX, 56, balW, balH, 14); X.fillStyle = 'rgba(255,211,106,.12)'; X.fill();
-                X.strokeStyle = 'rgba(255,211,106,.3)'; X.lineWidth = 1; X.stroke();
-                X.font = '700 14px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('◆ ' + SkinShop.getCoins(), cx, 75);
+                // Coin balance pill — bigger, gold glow
+                const balW = 120, balH = 32, balX = (W - balW) / 2;
+                rr(balX, 60, balW, balH, 16);
+                X.fillStyle = 'rgba(255,211,106,.15)'; X.fill();
+                X.strokeStyle = 'rgba(255,211,106,.5)'; X.lineWidth = 2;
+                X.shadowBlur = 12; X.shadowColor = '#ffd36a'; X.stroke(); X.shadowBlur = 0;
+                X.font = '800 16px Outfit'; X.fillStyle = '#ffd36a';
+                X.fillText('◆ ' + SkinShop.getCoins(), cx, 82);
 
                 shopScroll += (shopTarget - shopScroll) * .12;
                 const skins = SkinShop.getSkins();
-                const cardH = 94, gap = 12, startY = 100;
+                const cardH = 105, gap = 14, startY = 108;
 
                 skins.forEach((sk, i) => {
                     const y = startY + i * (cardH + gap) - shopScroll;
-                    if (y < 70 || y > H - 80) return;
+                    if (y < 70 || y > H - 90) return;
 
                     const owned = SkinShop.isUnlocked(sk.id), eq = SkinShop.getEquippedId() === sk.id;
 
-                    // v5.0 Card with thick neon border per state
+                    // Card background — stronger glass
                     const borderColor = eq ? [140, 123, 255] : owned ? [98, 255, 179] : [255, 255, 255];
-                    const borderAlpha = eq ? 0.12 : owned ? 0.06 : 0.04;
-                    glassPanel(20, y, W - 40, cardH, 18, borderColor, borderAlpha);
+                    const borderAlpha = eq ? 0.15 : owned ? 0.08 : 0.04;
+                    glassPanel(16, y, W - 32, cardH, 20, borderColor, borderAlpha);
 
-                    // Thick neon border
-                    rr(20, y, W - 40, cardH, 18);
+                    // THICK neon border with DOUBLE glow (mockup style)
+                    rr(16, y, W - 32, cardH, 20);
                     if (eq) {
-                        const pa = 0.5 + Math.sin(t * 4) * 0.3;
-                        X.strokeStyle = `rgba(140,123,255,${pa})`; X.lineWidth = 2.5;
-                        X.shadowBlur = 20; X.shadowColor = '#8c7bff';
+                        const pa = 0.6 + Math.sin(t * 4) * 0.35;
+                        X.strokeStyle = `rgba(140,123,255,${pa})`; X.lineWidth = 3.5;
+                        X.shadowBlur = 30; X.shadowColor = '#8c7bff';
+                        X.stroke();
+                        // Second glow layer
+                        X.shadowBlur = 50; X.globalAlpha = 0.3;
+                        X.stroke(); X.globalAlpha = 1;
                     } else if (owned) {
-                        X.strokeStyle = 'rgba(98,255,179,.3)'; X.lineWidth = 1.5;
-                        X.shadowBlur = 10; X.shadowColor = '#62ffb3';
+                        X.strokeStyle = 'rgba(98,255,179,.45)'; X.lineWidth = 2.5;
+                        X.shadowBlur = 20; X.shadowColor = '#62ffb3';
+                        X.stroke();
                     } else {
-                        X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1;
-                        X.shadowBlur = 0;
+                        X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1.5;
+                        X.stroke();
                     }
-                    X.stroke(); X.shadowBlur = 0;
+                    X.shadowBlur = 0;
 
-                    // v5.0 Large color swatch with outer glow ring
+                    // Swatch — TRIPLE layer glow ring (mockup)
                     const swC = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
-                    const swX = 54, swY = y + cardH / 2;
-                    // Outer glow
-                    X.beginPath(); X.arc(swX, swY, 22, 0, Math.PI * 2);
-                    X.fillStyle = swC; X.globalAlpha = .15; X.fill(); X.globalAlpha = 1;
-                    // Ring
-                    X.beginPath(); X.arc(swX, swY, 16, 0, Math.PI * 2);
-                    X.strokeStyle = swC; X.lineWidth = 4; X.shadowBlur = 24; X.shadowColor = swC;
-                    X.stroke(); X.shadowBlur = 0;
-                    // Inner dot
-                    X.beginPath(); X.arc(swX, swY, 5, 0, Math.PI * 2);
-                    X.fillStyle = swC; X.fill();
+                    const swX = 56, swY = y + cardH / 2;
+                    // Layer 1: Outer diffuse glow
+                    X.beginPath(); X.arc(swX, swY, 28, 0, Math.PI * 2);
+                    X.fillStyle = swC; X.globalAlpha = .12; X.fill(); X.globalAlpha = 1;
+                    // Layer 2: Main ring — thick with glow
+                    X.beginPath(); X.arc(swX, swY, 20, 0, Math.PI * 2);
+                    X.strokeStyle = swC; X.lineWidth = 5;
+                    X.shadowBlur = 30; X.shadowColor = swC;
+                    X.stroke();
+                    // Second pass for stronger glow
+                    X.shadowBlur = 50; X.globalAlpha = .35;
+                    X.stroke(); X.globalAlpha = 1; X.shadowBlur = 0;
+                    // Layer 3: Inner filled dot
+                    X.beginPath(); X.arc(swX, swY, 7, 0, Math.PI * 2);
+                    X.fillStyle = swC; X.shadowBlur = 10; X.shadowColor = swC;
+                    X.fill(); X.shadowBlur = 0;
 
-                    // v5.0 Name (bigger)
-                    X.font = '700 16px Outfit'; X.textAlign = 'left';
-                    X.fillStyle = eq ? '#c4baff' : 'rgba(255,255,255,.95)';
-                    X.fillText(sk.name, 86, y + 32);
+                    // Name — BIGGER, bolder
+                    X.font = '800 18px Outfit'; X.textAlign = 'left';
+                    X.fillStyle = eq ? '#d4cbff' : '#fff';
+                    if (eq) { X.shadowBlur = 8; X.shadowColor = '#8c7bff'; }
+                    X.fillText(sk.name, 92, y + 34); X.shadowBlur = 0;
                     // Description
-                    X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.45)';
-                    X.fillText(sk.desc, 86, y + 52);
+                    X.font = '400 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
+                    X.fillText(sk.desc, 92, y + 54);
                     // Trail tag
                     if (sk.trail) {
-                        X.font = '600 9px Outfit'; X.fillStyle = 'rgba(255,211,106,.7)';
-                        X.fillText('✨ TRAIL', 86, y + 68);
+                        X.font = '700 10px Outfit'; X.fillStyle = '#ffd36a';
+                        X.shadowBlur = 6; X.shadowColor = '#ffd36a';
+                        X.fillText('✨ TRAIL', 92, y + 72); X.shadowBlur = 0;
                     }
 
-                    // v5.0 Action button — FILLED backgrounds
-                    const bW2 = 88, bH2 = 36, bX2 = W - 40 - bW2 - 12, bY2 = y + (cardH - bH2) / 2;
+                    // Action button — WIDER, BOLDER fills
+                    const bW2 = 100, bH2 = 40, bX2 = W - 32 - bW2 - 12, bY2 = y + (cardH - bH2) / 2;
                     if (eq) {
-                        // EQUIPPED — filled purple pill
-                        rr(bX2, bY2, bW2, bH2, 10); X.fillStyle = 'rgba(140,123,255,.25)'; X.fill();
-                        X.strokeStyle = 'rgba(140,123,255,.5)'; X.lineWidth = 1.5; X.stroke();
-                        X.font = '700 12px Outfit'; X.textAlign = 'center'; X.fillStyle = '#c4baff';
-                        X.fillText('EQUIPPED', bX2 + bW2 / 2, bY2 + 23);
+                        // EQUIPPED — intense purple fill
+                        rr(bX2, bY2, bW2, bH2, 12);
+                        X.fillStyle = 'rgba(140,123,255,.3)'; X.fill();
+                        X.strokeStyle = 'rgba(140,123,255,.65)'; X.lineWidth = 2;
+                        X.shadowBlur = 14; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
+                        X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#d4cbff';
+                        X.fillText('EQUIPPED', bX2 + bW2 / 2, bY2 + 26);
                     } else if (owned) {
-                        // EQUIP — filled green pill
-                        rr(bX2, bY2, bW2, bH2, 10); X.fillStyle = 'rgba(98,255,179,.15)'; X.fill();
-                        X.strokeStyle = 'rgba(98,255,179,.4)'; X.lineWidth = 1.5; X.stroke();
-                        X.font = '700 12px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3';
-                        X.fillText('EQUIP', bX2 + bW2 / 2, bY2 + 23);
+                        // EQUIP — intense green fill
+                        rr(bX2, bY2, bW2, bH2, 12);
+                        X.fillStyle = 'rgba(98,255,179,.2)'; X.fill();
+                        X.strokeStyle = 'rgba(98,255,179,.55)'; X.lineWidth = 2;
+                        X.shadowBlur = 14; X.shadowColor = '#62ffb3'; X.stroke(); X.shadowBlur = 0;
+                        X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3';
+                        X.fillText('EQUIP', bX2 + bW2 / 2, bY2 + 26);
                         addBtn('equip_' + sk.id, bX2, bY2, bW2, bH2);
                     } else {
-                        // PRICE — filled gold pill
+                        // PRICE — gold fill with glow
                         const canBuy = SkinShop.getCoins() >= sk.price;
-                        rr(bX2, bY2, bW2, bH2, 10);
-                        X.fillStyle = canBuy ? 'rgba(255,211,106,.18)' : 'rgba(255,255,255,.04)'; X.fill();
-                        X.strokeStyle = canBuy ? 'rgba(255,211,106,.4)' : 'rgba(255,255,255,.08)';
-                        X.lineWidth = 1.5; X.stroke();
-                        X.font = '700 13px Outfit'; X.textAlign = 'center';
+                        rr(bX2, bY2, bW2, bH2, 12);
+                        X.fillStyle = canBuy ? 'rgba(255,211,106,.2)' : 'rgba(255,255,255,.04)'; X.fill();
+                        X.strokeStyle = canBuy ? 'rgba(255,211,106,.55)' : 'rgba(255,255,255,.1)';
+                        X.lineWidth = 2;
+                        if (canBuy) { X.shadowBlur = 10; X.shadowColor = '#ffd36a'; }
+                        X.stroke(); X.shadowBlur = 0;
+                        X.font = '800 14px Outfit'; X.textAlign = 'center';
                         X.fillStyle = canBuy ? '#ffd36a' : 'rgba(255,255,255,.3)';
-                        X.fillText('◆ ' + sk.price, bX2 + bW2 / 2, bY2 + 23);
+                        X.fillText('◆ ' + sk.price, bX2 + bW2 / 2, bY2 + 26);
                         if (canBuy) addBtn('buy_' + sk.id, bX2, bY2, bW2, bH2);
                     }
                 });
 
-                // v5.0 BUY COINS button — bright filled
-                const bcW = (W - 48 - 10) / 2, bcH = 46;
-                rr(24, H - 68, bcW, bcH, 14); X.fillStyle = 'rgba(0,255,204,.12)'; X.fill();
-                X.strokeStyle = `rgba(0,255,204,${0.4 + Math.sin(t * 3) * 0.2})`; X.lineWidth = 2;
-                X.shadowBlur = 16; X.shadowColor = '#00ffcc'; X.stroke(); X.shadowBlur = 0;
-                X.font = '800 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#00ffcc';
-                X.fillText('💰 BUY COINS', 24 + bcW / 2, H - 39);
-                addBtn('buy_coins', 24, H - 68, bcW, bcH);
+                // BUY COINS — gradient glow button
+                const bcW = (W - 48 - 12) / 2, bcH = 50;
+                rr(20, H - 72, bcW, bcH, 16);
+                X.fillStyle = 'rgba(0,255,204,.15)'; X.fill();
+                const bcGl = 0.5 + Math.sin(t * 3) * 0.3;
+                X.strokeStyle = `rgba(0,255,204,${bcGl})`; X.lineWidth = 2.5;
+                X.shadowBlur = 24; X.shadowColor = '#00ffcc'; X.stroke();
+                X.shadowBlur = 40; X.globalAlpha = .2; X.stroke();
+                X.shadowBlur = 0; X.globalAlpha = 1;
+                X.font = '900 15px Outfit'; X.textAlign = 'center'; X.fillStyle = '#00ffcc';
+                X.shadowBlur = 8; X.shadowColor = '#00ffcc';
+                X.fillText('💰 BUY COINS', 20 + bcW / 2, H - 41); X.shadowBlur = 0;
+                addBtn('buy_coins', 20, H - 72, bcW, bcH);
 
-                // BACK button
-                rr(24 + bcW + 10, H - 68, bcW, bcH, 14); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
-                X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
-                X.font = '700 14px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.7)';
-                X.fillText('← BACK', 24 + bcW + 10 + bcW / 2, H - 39);
-                addBtn('back', 24 + bcW + 10, H - 68, bcW, bcH);
+                // BACK button — brighter
+                rr(20 + bcW + 12, H - 72, bcW, bcH, 16);
+                X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
+                X.strokeStyle = 'rgba(255,255,255,.18)'; X.lineWidth = 1.5; X.stroke();
+                X.font = '700 15px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.75)';
+                X.fillText('← BACK', 20 + bcW + 12 + bcW / 2, H - 41);
+                addBtn('back', 20 + bcW + 12, H - 72, bcW, bcH);
             }
 
-            // ─── Draw: Leaderboard (v5.0 ULTRA) ─────────
+            // ─── Draw: Leaderboard (v5.0 ULTRA — Mockup Match) ──
             function drawBoard(dt) {
                 clearBtns();
                 drawNeonGrid(0.15, 0.4);
                 drawBg();
                 const cx = W / 2;
 
-                // v5.0 Title with trophy glow
-                X.font = '800 28px Outfit'; X.textAlign = 'center';
-                X.fillStyle = '#fff'; X.shadowBlur = 20; X.shadowColor = 'rgba(255,211,106,.5)';
-                X.fillText('🏆 LEADERBOARD', cx, 46); X.shadowBlur = 0;
+                // Title — MASSIVE with golden triple glow
+                X.font = '900 34px Outfit'; X.textAlign = 'center';
+                X.fillStyle = '#fff';
+                X.shadowBlur = 40; X.shadowColor = 'rgba(255,211,106,.7)';
+                X.fillText('🏆 LEADERBOARD', cx, 48);
+                X.shadowBlur = 60; X.globalAlpha = .35;
+                X.fillText('🏆 LEADERBOARD', cx, 48);
+                X.shadowBlur = 0; X.globalAlpha = 1;
 
                 const name = Leaderboard.getPlayerName();
                 if (name) {
-                    // Player name pill
-                    const pnW = 140, pnH = 26, pnX = (W - pnW) / 2;
-                    rr(pnX, 58, pnW, pnH, 13); X.fillStyle = 'rgba(140,123,255,.1)'; X.fill();
-                    X.strokeStyle = 'rgba(140,123,255,.25)'; X.lineWidth = 1; X.stroke();
-                    X.font = '600 12px Outfit'; X.fillStyle = '#c4baff'; X.fillText(`Player: ${name}`, cx, 76);
+                    // Player name pill — bigger, glowing
+                    const pnW = 160, pnH = 30, pnX = (W - pnW) / 2;
+                    rr(pnX, 60, pnW, pnH, 15);
+                    X.fillStyle = 'rgba(140,123,255,.12)'; X.fill();
+                    X.strokeStyle = 'rgba(140,123,255,.35)'; X.lineWidth = 1.5;
+                    X.shadowBlur = 10; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
+                    X.font = '700 14px Outfit'; X.fillStyle = '#d4cbff';
+                    X.fillText(`Player: ${name}`, cx, 80);
                 } else {
-                    X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
-                    X.fillText('Set your name to rank!', cx, 70);
+                    X.font = '400 14px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
+                    X.fillText('Set your name to rank!', cx, 72);
                 }
 
-                // Name set button
+                // Name set button — bigger, brighter
                 if (!name) {
-                    const nbW = 130, nbH = 38, nbX = (W - nbW) / 2, nbY = 80;
-                    rr(nbX, nbY, nbW, nbH, 12); X.fillStyle = 'rgba(140,123,255,.15)'; X.fill();
-                    X.strokeStyle = 'rgba(140,123,255,.4)'; X.lineWidth = 1.5; X.stroke();
-                    X.font = '700 13px Outfit'; X.fillStyle = '#c4baff'; X.fillText('SET NAME', cx, nbY + 24);
+                    const nbW = 150, nbH = 42, nbX = (W - nbW) / 2, nbY = 82;
+                    rr(nbX, nbY, nbW, nbH, 14);
+                    X.fillStyle = 'rgba(140,123,255,.18)'; X.fill();
+                    X.strokeStyle = 'rgba(140,123,255,.5)'; X.lineWidth = 2;
+                    X.shadowBlur = 14; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
+                    X.font = '800 14px Outfit'; X.fillStyle = '#d4cbff'; X.fillText('SET NAME', cx, nbY + 27);
                     addBtn('set_name', nbX, nbY, nbW, nbH);
                 }
 
-                // v5.0 Entries — dramatically larger cards
-                const startY = name ? 100 : 130;
-                const entryH = 58, entryGap = 8;
-                const medalBgColors = ['rgba(255,211,106,.12)', 'rgba(200,200,210,.08)', 'rgba(205,127,50,.08)'];
-                const medalBorderColors = ['rgba(255,211,106,.5)', 'rgba(200,200,210,.35)', 'rgba(205,127,50,.35)'];
+                // Entries — DRAMATICALLY larger cards 
+                const startY = name ? 104 : 136;
+                const entryH = 66, entryGap = 10;
+                const medalBgColors = ['rgba(255,211,106,.15)', 'rgba(200,200,210,.10)', 'rgba(205,127,50,.10)'];
+                const medalBorderColors = ['rgba(255,211,106,.6)', 'rgba(200,200,210,.45)', 'rgba(205,127,50,.45)'];
                 const medalGlowColors = ['#ffd36a', '#c8c8d2', '#cd7f32'];
 
                 boardData.forEach((e, i) => {
                     const y = startY + i * (entryH + entryGap);
-                    if (y > H - 120) return;
+                    if (y > H - 130) return;
                     const isMe = e.name === name;
 
-                    // Card background
-                    rr(20, y, W - 40, entryH, 14);
+                    // Card background with thick colored borders
+                    rr(16, y, W - 32, entryH, 16);
                     if (isMe) {
-                        X.fillStyle = 'rgba(140,123,255,.12)'; X.fill();
-                        X.strokeStyle = 'rgba(140,123,255,.5)'; X.lineWidth = 2;
-                        X.shadowBlur = 14; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
+                        X.fillStyle = 'rgba(140,123,255,.15)'; X.fill();
+                        X.strokeStyle = 'rgba(140,123,255,.6)'; X.lineWidth = 3;
+                        X.shadowBlur = 24; X.shadowColor = '#8c7bff'; X.stroke();
+                        X.shadowBlur = 40; X.globalAlpha = .25; X.stroke();
+                        X.globalAlpha = 1; X.shadowBlur = 0;
                     } else if (i < 3) {
                         X.fillStyle = medalBgColors[i]; X.fill();
-                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 2;
-                        X.shadowBlur = 12; X.shadowColor = medalGlowColors[i]; X.stroke(); X.shadowBlur = 0;
+                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 3;
+                        X.shadowBlur = 20; X.shadowColor = medalGlowColors[i]; X.stroke();
+                        X.shadowBlur = 35; X.globalAlpha = .2; X.stroke();
+                        X.globalAlpha = 1; X.shadowBlur = 0;
                     } else {
                         X.fillStyle = 'rgba(255,255,255,.04)'; X.fill();
-                        X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
+                        X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1.5; X.stroke();
                     }
 
-                    // v5.0 Rank — colored circle with number/medal
-                    const rkX = 50, rkY = y + entryH / 2;
+                    // Rank — large colored circles with glow
+                    const rkX = 48, rkY = y + entryH / 2;
                     if (i < 3) {
-                        X.beginPath(); X.arc(rkX, rkY, 16, 0, Math.PI * 2);
+                        // Medal circle — bigger with intense glow
+                        X.beginPath(); X.arc(rkX, rkY, 22, 0, Math.PI * 2);
                         X.fillStyle = medalBgColors[i]; X.fill();
-                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 2;
-                        X.shadowBlur = 10; X.shadowColor = medalGlowColors[i]; X.stroke(); X.shadowBlur = 0;
+                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 2.5;
+                        X.shadowBlur = 18; X.shadowColor = medalGlowColors[i]; X.stroke(); X.shadowBlur = 0;
                         const medals = ['🥇', '🥈', '🥉'];
-                        X.font = '700 16px Outfit'; X.textAlign = 'center'; X.fillStyle = '#fff';
-                        X.fillText(medals[i], rkX, rkY + 6);
+                        X.font = '700 20px Outfit'; X.textAlign = 'center'; X.fillStyle = '#fff';
+                        X.fillText(medals[i], rkX, rkY + 7);
                     } else {
-                        X.beginPath(); X.arc(rkX, rkY, 14, 0, Math.PI * 2);
-                        X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
-                        X.font = '700 14px Outfit'; X.textAlign = 'center';
-                        X.fillStyle = 'rgba(255,255,255,.5)';
-                        X.fillText('#' + (i + 1), rkX, rkY + 5);
+                        X.beginPath(); X.arc(rkX, rkY, 18, 0, Math.PI * 2);
+                        X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
+                        X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
+                        X.font = '800 16px Outfit'; X.textAlign = 'center';
+                        X.fillStyle = 'rgba(255,255,255,.55)';
+                        X.fillText('#' + (i + 1), rkX, rkY + 6);
                     }
 
-                    // v5.0 Name — bigger font
-                    X.font = isMe ? '700 15px Outfit' : '500 15px Outfit'; X.textAlign = 'left';
-                    X.fillStyle = isMe ? '#c4baff' : 'rgba(255,255,255,.85)';
-                    X.fillText(e.name, 78, y + entryH / 2 + 5);
+                    // Name — BIGGER, bolder
+                    X.font = isMe ? '800 18px Outfit' : '600 17px Outfit'; X.textAlign = 'left';
+                    X.fillStyle = isMe ? '#d4cbff' : 'rgba(255,255,255,.9)';
+                    if (isMe) { X.shadowBlur = 6; X.shadowColor = '#8c7bff'; }
+                    X.fillText(e.name, 82, y + entryH / 2 + 6); X.shadowBlur = 0;
 
-                    // v5.0 Score — bigger, with glow for top entries
-                    X.font = '700 18px Outfit'; X.textAlign = 'right';
+                    // Score — MUCH bigger, with intense glow for top
+                    X.font = '800 22px Outfit'; X.textAlign = 'right';
                     if (i === 0) {
-                        X.fillStyle = '#ffd36a'; X.shadowBlur = 12; X.shadowColor = '#ffd36a';
+                        X.fillStyle = '#ffd36a';
+                        X.shadowBlur = 20; X.shadowColor = '#ffd36a';
                     } else if (i < 3) {
                         X.fillStyle = medalGlowColors[i];
+                        X.shadowBlur = 10; X.shadowColor = medalGlowColors[i];
+                    } else if (isMe) {
+                        X.fillStyle = '#d4cbff';
+                        X.shadowBlur = 8; X.shadowColor = '#8c7bff';
                     } else {
                         X.fillStyle = 'rgba(255,255,255,.8)';
                     }
-                    X.fillText(e.score.toLocaleString(), W - 76, y + entryH / 2 + 6); X.shadowBlur = 0;
+                    X.fillText(e.score.toLocaleString(), W - 72, y + entryH / 2 + 7);
+                    X.shadowBlur = 0;
 
-                    // Delete button (✕)
-                    const delX = W - 62, delY = y + 8, delS = 28;
-                    X.font = '600 14px Outfit'; X.textAlign = 'center';
-                    X.fillStyle = 'rgba(255,93,122,.4)'; X.fillText('✕', delX + delS / 2, delY + 19);
+                    // Delete button (✕) — bigger
+                    const delX = W - 58, delY = y + 6, delS = 30;
+                    X.font = '700 16px Outfit'; X.textAlign = 'center';
+                    X.fillStyle = 'rgba(255,93,122,.45)'; X.fillText('✕', delX + delS / 2, delY + 21);
                     addBtn('del_' + i, delX, delY, delS, delS);
                 });
 
                 if (boardData.length === 0) {
-                    X.font = '400 14px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.textAlign = 'center';
+                    X.font = '500 16px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.textAlign = 'center';
                     X.fillText('No scores yet. Play to rank!', cx, H * .45);
                 }
 
-                // Clear All (when records exist)
+                // Clear All — bigger, more prominent
                 if (boardData.length > 0) {
-                    const clW = 100, clH = 34, clX = W - clW - 24, clY = H - 114;
-                    rr(clX, clY, clW, clH, 10); X.fillStyle = 'rgba(255,93,122,.1)'; X.fill();
-                    X.strokeStyle = 'rgba(255,93,122,.3)'; X.lineWidth = 1.5; X.stroke();
-                    X.font = '700 11px Outfit'; X.textAlign = 'center'; X.fillStyle = '#ff5d7a';
-                    X.fillText('🗑 CLEAR ALL', clX + clW / 2, clY + 22);
+                    const clW = 120, clH = 38, clX = W - clW - 20, clY = H - 124;
+                    rr(clX, clY, clW, clH, 12);
+                    X.fillStyle = 'rgba(255,93,122,.12)'; X.fill();
+                    X.strokeStyle = 'rgba(255,93,122,.4)'; X.lineWidth = 2;
+                    X.shadowBlur = 10; X.shadowColor = '#ff5d7a'; X.stroke(); X.shadowBlur = 0;
+                    X.font = '800 12px Outfit'; X.textAlign = 'center'; X.fillStyle = '#ff5d7a';
+                    X.fillText('🗑 CLEAR ALL', clX + clW / 2, clY + 24);
                     addBtn('clear_board', clX, clY, clW, clH);
                 }
 
-                // Back button
-                rr(24, H - 68, W - 48, 46, 14); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
-                X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
-                X.font = '700 14px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.7)';
-                X.fillText('← BACK', cx, H - 39);
-                addBtn('back', 24, H - 68, W - 48, 46);
+                // Back button — bigger, brighter
+                rr(16, H - 72, W - 32, 50, 16);
+                X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
+                X.strokeStyle = 'rgba(255,255,255,.18)'; X.lineWidth = 1.5; X.stroke();
+                X.font = '700 16px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.75)';
+                X.fillText('← BACK', cx, H - 41);
+                addBtn('back', 16, H - 72, W - 32, 50);
             }
 
             // ─── Draw: Name Input ─────────────────────────
