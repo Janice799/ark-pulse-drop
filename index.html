@@ -1,5 +1,5 @@
 <!--
-  Project: ARK [Pulse Drop] v4.0 "NEON ASCEND" | Created by Solo Alchemist | ARK
+  Project: ARK [Pulse Drop] v5.0 "NEON ASCEND ULTRA" | Created by Solo Alchemist | ARK
   Phase 1: Neon Grid + Dual Orbit Ring + Glassmorphism UI + Enhanced Judgment FX
   Monetization: Reward Ads + Skin Shop + Coin System + Leaderboard
 -->
@@ -84,19 +84,240 @@
 <body>
     <div class="wrap"><canvas id="c"></canvas></div>
 
-    <!-- PayPal Coin Shop Modal -->
-    <div id="coinShopModal"
-        style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-        <div style="max-width:380px;margin:40px auto;padding:0 16px;">
-            <h2 style="text-align:center;color:#00ffcc;font-family:'Outfit',sans-serif;font-size:24px;margin:0 0 4px;">
-                💎 Coin Shop</h2>
-            <p
-                style="text-align:center;color:rgba(255,255,255,.4);font-family:'Outfit',sans-serif;font-size:13px;margin:0 0 20px;">
-                Get coins to unlock premium skins!</p>
+    <!-- Mobile Name Input (hidden overlay for virtual keyboard) -->
+    <input id="mobileNameInput" type="text" maxlength="12"
+        style="position:fixed;top:-9999px;left:0;width:1px;height:1px;opacity:0;font-size:16px;z-index:-1;"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+
+    <!-- v5.0 Premium Coin Shop Modal -->
+    <style>
+        @keyframes coinShopSlideUp {
+            from {
+                transform: translateY(40px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px var(--glow-color);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+            }
+        }
+
+        #coinShopModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(5, 6, 15, .95) 0%, rgba(10, 8, 25, .98) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #coinShopModal .cs-inner {
+            max-width: 380px;
+            margin: 0 auto;
+            padding: 32px 16px 40px;
+            animation: coinShopSlideUp .4s cubic-bezier(.22, 1, .36, 1) forwards;
+        }
+
+        #coinShopModal .cs-title {
+            text-align: center;
+            color: #00ffcc;
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 0 4px;
+            text-shadow: 0 0 30px rgba(0, 255, 204, .4);
+        }
+
+        #coinShopModal .cs-sub {
+            text-align: center;
+            color: rgba(255, 255, 255, .35);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            margin: 0 0 6px;
+        }
+
+        #coinShopModal .cs-balance {
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffd36a;
+            margin: 0 0 20px;
+            text-shadow: 0 0 12px rgba(255, 211, 106, .3);
+        }
+
+        .coin-pack-card {
+            position: relative;
+            border-radius: 16px;
+            padding: 16px 16px 12px;
+            margin-bottom: 14px;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .coin-pack-card:active {
+            transform: scale(.97);
+        }
+
+        .coin-pack-card.tier-starter {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        .coin-pack-card.tier-plus {
+            background: rgba(0, 255, 204, .03);
+            border: 1px solid rgba(0, 255, 204, .2);
+            --glow-color: rgba(0, 255, 204, .15);
+        }
+
+        .coin-pack-card.tier-pro {
+            background: rgba(255, 211, 106, .03);
+            border: 1px solid rgba(255, 211, 106, .25);
+            --glow-color: rgba(255, 211, 106, .2);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        .coin-pack-card.tier-ultra {
+            background: linear-gradient(135deg, rgba(140, 123, 255, .06), rgba(255, 211, 106, .04));
+            border: 1px solid rgba(140, 123, 255, .3);
+            --glow-color: rgba(140, 123, 255, .25);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .coin-pack-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .coin-pack-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .coin-pack-price {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffd36a;
+            text-shadow: 0 0 12px rgba(255, 211, 106, .3);
+        }
+
+        .badge-bonus {
+            display: inline-block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .badge-bonus.cyan {
+            background: rgba(0, 255, 204, .15);
+            color: #00ffcc;
+        }
+
+        .badge-bonus.gold {
+            background: rgba(255, 211, 106, .15);
+            color: #ffd36a;
+        }
+
+        .badge-popular {
+            position: absolute;
+            top: -6px;
+            right: 16px;
+            background: linear-gradient(135deg, #8c7bff, #b06aff);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 10px;
+            letter-spacing: .5px;
+            box-shadow: 0 2px 12px rgba(140, 123, 255, .4);
+        }
+
+        .badge-bestvalue {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #ffd36a, #ffaa00, #ffd36a);
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+            color: #1a1200;
+            font-family: 'Outfit', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 14px;
+            border-radius: 12px;
+            letter-spacing: .8px;
+            box-shadow: 0 2px 16px rgba(255, 211, 106, .5);
+        }
+
+        .cs-close-btn {
+            display: block;
+            width: 100%;
+            margin: 16px 0 0;
+            padding: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            color: rgba(255, 255, 255, .45);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .cs-close-btn:hover {
+            background: rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .7);
+        }
+    </style>
+
+    <div id="coinShopModal">
+        <div class="cs-inner">
+            <h2 class="cs-title">💎 COIN SHOP</h2>
+            <p class="cs-sub">Power up with premium coins</p>
+            <div class="cs-balance" id="coinShopBalance">Your Balance: ◆ 0</div>
             <div id="coinPacksContainer"></div>
-            <button id="coinShopClose"
-                style="display:block;width:100%;margin:16px 0 40px;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:rgba(255,255,255,.5);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;">←
-                Back to Shop</button>
+            <button id="coinShopClose" class="cs-close-btn">← Back to Shop</button>
         </div>
     </div>
     <script src="js/audio.js"></script>
@@ -470,7 +691,7 @@
                 X.save(); X.translate(cx, cy); const sc = 1 + Math.sin(menuT * 1.5) * .02; X.scale(sc, sc);
                 X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.6)'; X.fillText('A R K', 0, -38);
                 X.font = '700 38px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)'; X.shadowBlur = 40; X.shadowColor = 'rgba(140,123,255,.5)'; X.fillText('Pulse Drop', 0, 2); X.shadowBlur = 0;
-                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(140,123,255,.45)'; X.fillText('v4.0 — NEON ASCEND', 0, 26);
+                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(140,123,255,.45)'; X.fillText('v5.0 — NEON ASCEND ULTRA', 0, 26);
                 X.restore();
 
                 // Ring anim with orbit
@@ -504,7 +725,7 @@
                 const sk = SkinShop.getCurrentSkin();
                 X.font = '400 11px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.22)';
                 X.fillText(`Skin: ${sk.name}`, cx, H - 32);
-                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(140,123,255,.2)'; X.fillText('v4.0 NEON ASCEND — ARK', cx, H - 14);
+                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(140,123,255,.2)'; X.fillText('v5.0 NEON ASCEND ULTRA — ARK', cx, H - 14);
             }
 
             // ─── Draw: Game ───────────────────────────────
@@ -567,14 +788,14 @@
                     X.fillText(`${combo}x COMBO`, cx + shX, 65); X.shadowBlur = 0;
                 }
 
-                // v4.0 Enhanced Judgment Feedback
+                // v5.0 Enhanced Judgment Feedback (MOVED TO BOTTOM — Reddit fix)
                 if (fbT > 0) {
                     fbT -= dt; const pr = Math.max(0, fbT / 1.2);
                     const rawP = Math.min(1, (1.2 - fbT) * 5);
                     const sc2 = rawP < 0.5 ? eOB(rawP * 2) * 1.2 : 1 + 0.2 * Math.pow(1 - (rawP - 0.5) * 2, 2);
                     const yo = (1 - pr) * -18;
 
-                    // Multi-ring flash effect
+                    // Multi-ring flash effect (stays on center ring)
                     if (fbT > 0.4) {
                         const flashA = (fbT - 0.4) / 0.8;
                         const [fr, fg, fbb] = hexRGB(fbC);
@@ -587,16 +808,30 @@
                         X.shadowBlur = 0;
                     }
 
-                    // Judgment text with double-glow + MISS shake
+                    // v5.0 Edge flash effect (side bars glow with judgment color)
+                    if (fbT > 0.3) {
+                        const edgeA = (fbT - 0.3) / 0.9 * 0.4;
+                        const [er, eg, eb] = hexRGB(fbC);
+                        const edgeGradL = X.createLinearGradient(0, 0, 30, 0);
+                        edgeGradL.addColorStop(0, `rgba(${er},${eg},${eb},${edgeA})`); edgeGradL.addColorStop(1, 'rgba(0,0,0,0)');
+                        X.fillStyle = edgeGradL; X.fillRect(0, 0, 30, H);
+                        const edgeGradR = X.createLinearGradient(W, 0, W - 30, 0);
+                        edgeGradR.addColorStop(0, `rgba(${er},${eg},${eb},${edgeA})`); edgeGradR.addColorStop(1, 'rgba(0,0,0,0)');
+                        X.fillStyle = edgeGradR; X.fillRect(W - 30, 0, 30, H);
+                    }
+
+                    // v5.0 Judgment text — BOTTOM position (near timing bar)
                     X.save();
                     const shakeX = fb === 'MISS' ? (Math.random() - 0.5) * 8 * pr : 0;
-                    X.translate(cx + shakeX, cy + baseR * .35 + 32 + yo); X.scale(sc2, sc2);
-                    X.font = '800 26px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC;
-                    X.globalAlpha = pr; X.shadowBlur = 25; X.shadowColor = fbC; X.fillText(fb, 0, 0);
-                    X.shadowBlur = 40; X.globalAlpha = pr * 0.3; X.fillText(fb, 0, 0);
+                    const judgY = H - 105 + yo;
+                    X.translate(cx + shakeX, judgY); X.scale(sc2, sc2);
+                    X.font = '800 32px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC;
+                    X.globalAlpha = pr; X.shadowBlur = 30; X.shadowColor = fbC; X.fillText(fb, 0, 0);
+                    X.shadowBlur = 50; X.globalAlpha = pr * 0.3; X.fillText(fb, 0, 0);
                     X.shadowBlur = 0; X.restore(); X.globalAlpha = 1;
 
-                    if (spTm > 0) { spTm -= dt; X.font = '600 14px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .6})`; X.textAlign = 'center'; X.fillText(spT, cx, cy + baseR * .35 + 55 + (1 - spTm / .8) * -12) }
+                    // Score popup also at bottom
+                    if (spTm > 0) { spTm -= dt; X.font = '600 15px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .7})`; X.textAlign = 'center'; X.fillText(spT, cx, H - 75 + (1 - spTm / .8) * -12) }
                 }
 
                 // Post-FX
@@ -644,12 +879,22 @@
                 rollScore += (score - rollScore) * 0.08;
                 if (Math.abs(score - rollScore) < 1) rollScore = score;
                 X.font = '300 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText('FINAL SCORE', cx, cY + 75);
-                X.font = '700 42px Outfit'; X.fillStyle = '#7fe0ff'; X.shadowBlur = 30; X.shadowColor = 'rgba(127,224,255,.4)';
-                X.fillText(Math.round(rollScore).toString(), cx, cY + 118); X.shadowBlur = 0;
+                X.font = '700 44px Outfit'; X.fillStyle = '#7fe0ff'; X.shadowBlur = 40; X.shadowColor = 'rgba(127,224,255,.5)';
+                X.fillText(Math.round(rollScore).toString(), cx, cY + 118);
+                X.shadowBlur = 60; X.globalAlpha = 0.3; X.fillText(Math.round(rollScore).toString(), cx, cY + 118);
+                X.shadowBlur = 0; X.globalAlpha = 1;
 
-                if (score >= hi && score > 0) { X.font = '600 12px Outfit'; X.fillStyle = '#ffd36a'; X.fillText('★ NEW BEST! ★', cx, cY + 138) }
+                // v5.0 NEW BEST golden glow pulse
+                if (score >= hi && score > 0) {
+                    const goldPulse = 12 + Math.sin(goT * 5) * 8;
+                    X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.shadowBlur = goldPulse; X.shadowColor = 'rgba(255,211,106,.6)';
+                    X.fillText('★ NEW BEST! ★', cx, cY + 138);
+                    X.shadowBlur = 0;
+                }
 
-                X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.fillText(`◆ +${earnedCoins} coins`, cx, cY + 160);
+                // v5.0 Coins with shimmer
+                X.font = '600 14px Outfit'; X.fillStyle = '#ffd36a'; X.shadowBlur = 8; X.shadowColor = 'rgba(255,211,106,.3)';
+                X.fillText(`◆ +${earnedCoins} coins`, cx, cY + 160); X.shadowBlur = 0;
 
                 // Accuracy breakdown
                 const total = accP + accG + accO + accM;
@@ -668,13 +913,15 @@
                     if (oW > 0) { X.fillStyle = '#ffd36a'; X.fillRect(bx, barY2, oW, barH); }
                 }
 
-                // Judgment counts
+                // Judgment counts with glow
                 const jY = aY + 30;
                 const jData = [['PERFECT', accP, '#7fe0ff'], ['GOOD', accG, '#62ffb3'], ['OK', accO, '#ffd36a'], ['MISS', accM, '#ff5d7a']];
                 jData.forEach(([label, count, color], i) => {
                     const jx = cX + (cW / 4) * i + cW / 8;
                     X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.fillText(label, jx, jY);
-                    X.font = '600 15px Outfit'; X.fillStyle = color; X.fillText(count.toString(), jx, jY + 18);
+                    X.font = '700 16px Outfit'; X.fillStyle = color;
+                    if (i === 0 && accP > 0) { X.shadowBlur = 6; X.shadowColor = color; }
+                    X.fillText(count.toString(), jx, jY + 18); X.shadowBlur = 0;
                 });
 
                 // Stats row
@@ -730,13 +977,22 @@
                     if (y < 70 || y > H - 30) return;
 
                     const owned = SkinShop.isUnlocked(sk.id), eq = SkinShop.getEquippedId() === sk.id;
-                    // v4.0 Glassmorphism skin card
-                    glassPanel(24, y, W - 48, cardH, 16, eq ? [140, 123, 255] : [255, 255, 255], eq ? 0.08 : 0.03);
+                    // v5.0 Enhanced Glassmorphism skin card
+                    glassPanel(24, y, W - 48, cardH, 16, eq ? [140, 123, 255] : [255, 255, 255], eq ? 0.10 : 0.03);
+                    // v5.0 Equipped card pulsing neon border
+                    if (eq) {
+                        const pulseA = 0.25 + Math.sin(t * 4) * 0.15;
+                        X.save(); rr(24, y, W - 48, cardH, 16);
+                        X.strokeStyle = `rgba(140,123,255,${pulseA})`; X.lineWidth = 2; X.shadowBlur = 16; X.shadowColor = '#8c7bff'; X.stroke();
+                        X.shadowBlur = 0; X.restore();
+                    }
 
-                    // Color swatch
+                    // Color swatch with enhanced glow
                     const swC = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
                     X.beginPath(); X.arc(56, y + cardH / 2, 14, 0, Math.PI * 2); X.fillStyle = swC; X.globalAlpha = .3; X.fill(); X.globalAlpha = 1;
-                    X.beginPath(); X.arc(56, y + cardH / 2, 10, 0, Math.PI * 2); X.strokeStyle = swC; X.lineWidth = 3; X.shadowBlur = 10; X.shadowColor = swC; X.stroke(); X.shadowBlur = 0;
+                    X.beginPath(); X.arc(56, y + cardH / 2, 10, 0, Math.PI * 2); X.strokeStyle = swC; X.lineWidth = 3; X.shadowBlur = 15; X.shadowColor = swC; X.stroke(); X.shadowBlur = 0;
+                    // Trail indicator
+                    if (sk.trail) { X.font = '400 8px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,211,106,.5)'; X.fillText('✨', 56, y + cardH / 2 + 22); }
 
                     // Name
                     X.font = '600 14px Outfit'; X.textAlign = 'left'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText(sk.name, 82, y + 28);
@@ -760,10 +1016,12 @@
                     }
                 });
 
-                // BUY COINS button
+                // v5.0 BUY COINS button with pulse glow
                 const bcW = (W - 48 - 10) / 2, bcH = 42;
-                glassPanel(24, H - 64, bcW, bcH, 12, [0, 255, 204], 0.08);
-                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#00ffcc'; X.fillText('💰 BUY COINS', 24 + bcW / 2, H - 37);
+                const coinGlow = 0.08 + Math.sin(t * 3) * 0.04;
+                glassPanel(24, H - 64, bcW, bcH, 12, [0, 255, 204], coinGlow);
+                X.save(); rr(24, H - 64, bcW, bcH, 12); X.strokeStyle = `rgba(0,255,204,${0.2 + Math.sin(t * 3) * 0.1})`; X.lineWidth = 1; X.shadowBlur = 10; X.shadowColor = '#00ffcc'; X.stroke(); X.shadowBlur = 0; X.restore();
+                X.font = '700 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#00ffcc'; X.fillText('💰 BUY COINS', 24 + bcW / 2, H - 37);
                 addBtn('buy_coins', 24, H - 64, bcW, bcH);
 
                 // v4.0 Glassmorphism back button
@@ -797,12 +1055,18 @@
                 boardData.forEach((e, i) => {
                     const y = startY + i * 46; if (y > H - 120) return;
                     const isMe = e.name === name;
-                    rr(24, y, W - 48, 40, 10); X.fillStyle = isMe ? 'rgba(140,123,255,.08)' : 'rgba(255,255,255,.03)'; X.fill();
+                    // v5.0 Enhanced card with glow for top 3 and me
+                    rr(24, y, W - 48, 40, 10);
+                    const medalColors = ['rgba(255,211,106,.08)', 'rgba(192,192,192,.06)', 'rgba(205,127,50,.05)'];
+                    X.fillStyle = isMe ? 'rgba(140,123,255,.10)' : (i < 3 ? medalColors[i] : 'rgba(255,255,255,.03)'); X.fill();
+                    if (isMe) { X.strokeStyle = 'rgba(140,123,255,.25)'; X.lineWidth = 1; X.shadowBlur = 8; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0; }
+                    else if (i < 3) { const gc = ['rgba(255,211,106,.15)', 'rgba(192,192,192,.12)', 'rgba(205,127,50,.10)']; X.strokeStyle = gc[i]; X.lineWidth = 1; X.stroke(); }
 
-                    // Rank number
+                    // Rank number with glow
                     const medals = ['🥇', '🥈', '🥉'];
                     X.font = '700 14px Outfit'; X.textAlign = 'center'; X.fillStyle = i < 3 ? '#ffd36a' : 'rgba(255,255,255,.5)';
-                    X.fillText(i < 3 ? medals[i] : '#' + (i + 1), 50, y + 26);
+                    if (i === 0) { X.shadowBlur = 8; X.shadowColor = '#ffd36a'; }
+                    X.fillText(i < 3 ? medals[i] : '#' + (i + 1), 50, y + 26); X.shadowBlur = 0;
 
                     // Name
                     X.font = isMe ? '600 13px Outfit' : '400 13px Outfit'; X.textAlign = 'left'; X.fillStyle = isMe ? '#8c7bff' : 'rgba(255,255,255,.7)';
@@ -907,7 +1171,7 @@
 
                 if (state === S.BOARD) {
                     if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
-                    if (btn?.id === 'set_name') { Audio.ui(); state = S.NAME; nameInput = ''; nameInputActive = true; return }
+                    if (btn?.id === 'set_name') { Audio.ui(); state = S.NAME; nameInput = ''; nameInputActive = true; const mi = document.getElementById('mobileNameInput'); if (mi) { mi.value = ''; setTimeout(() => mi.focus(), 100); } return }
                     if (btn?.id?.startsWith('del_')) {
                         const idx = parseInt(btn.id.slice(4));
                         Leaderboard.deleteByIndex(idx);
@@ -975,13 +1239,31 @@
             C.addEventListener('click', e => { const r = C.getBoundingClientRect(); handleTap(e.clientX - r.left, e.clientY - r.top) });
             C.addEventListener('touchstart', e => { e.preventDefault(); const tc = e.touches[0], r = C.getBoundingClientRect(); handleTap(tc.clientX - r.left, tc.clientY - r.top) }, { passive: false });
 
-            // Keyboard for name input
+            // Keyboard for name input (desktop)
             addEventListener('keydown', e => {
                 if (state !== S.NAME) return;
-                if (e.key === 'Backspace') { nameInput = nameInput.slice(0, -1); return }
-                if (e.key === 'Enter' && nameInput.length > 0) { Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); return }
-                if (e.key.length === 1 && nameInput.length < 12) nameInput += e.key;
+                if (e.key === 'Backspace') { nameInput = nameInput.slice(0, -1); const mi = document.getElementById('mobileNameInput'); if (mi) mi.value = nameInput; return }
+                if (e.key === 'Enter' && nameInput.length > 0) { Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); const mi = document.getElementById('mobileNameInput'); if (mi) { mi.value = ''; mi.blur(); } return }
+                if (e.key.length === 1 && nameInput.length < 12) { nameInput += e.key; const mi = document.getElementById('mobileNameInput'); if (mi) mi.value = nameInput; }
             });
+
+            // Mobile name input sync (virtual keyboard)
+            const mobileInput = document.getElementById('mobileNameInput');
+            if (mobileInput) {
+                mobileInput.addEventListener('input', e => {
+                    if (state !== S.NAME) return;
+                    nameInput = (e.target.value || '').slice(0, 12);
+                });
+                mobileInput.addEventListener('keydown', e => {
+                    if (state !== S.NAME) return;
+                    if (e.key === 'Enter' && nameInput.length > 0) {
+                        e.preventDefault();
+                        Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD;
+                        Leaderboard.getTopScores(10).then(d => { boardData = d });
+                        mobileInput.value = ''; mobileInput.blur();
+                    }
+                });
+            }
 
             // Shop scroll
             C.addEventListener('wheel', e => { if (state === S.SHOP) { shopTarget = Math.max(0, shopTarget + e.deltaY * .5) } }, { passive: true });
@@ -990,23 +1272,41 @@
             function openCoinShop() {
                 const modal = document.getElementById('coinShopModal');
                 const container = document.getElementById('coinPacksContainer');
+                const balanceEl = document.getElementById('coinShopBalance');
                 if (!modal || !container) return;
+
+                // Update balance display
+                if (balanceEl && window.SkinShop) {
+                    balanceEl.textContent = `Your Balance: ◆ ${SkinShop.getCoins()}`;
+                }
 
                 container.innerHTML = '';
                 const packs = PayPalShop.getPacks();
+                const tierMap = ['starter', 'plus', 'pro', 'ultra'];
+                const coinEmojis = ['🪙', '💰', '💎', '👑'];
 
-                packs.forEach(pack => {
+                packs.forEach((pack, i) => {
                     const card = document.createElement('div');
-                    card.style.cssText = 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px;';
+                    card.className = `coin-pack-card tier-${tierMap[i]}`;
 
-                    const bonusBadge = pack.bonus ? `<span style="background:rgba(0,255,204,.15);color:#00ffcc;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:8px;">${pack.bonus}</span>` : '';
+                    // Badges
+                    let badge = '';
+                    if (i === 2) badge = '<span class="badge-popular">POPULAR</span>';
+                    if (i === 3) badge = '<span class="badge-bestvalue">⭐ BEST VALUE</span>';
 
-                    card.innerHTML = `
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    // Bonus badge
+                    let bonusBadge = '';
+                    if (pack.bonus && pack.bonus !== 'BEST VALUE') {
+                        const badgeColor = i <= 1 ? 'cyan' : 'gold';
+                        bonusBadge = `<span class="badge-bonus ${badgeColor}">${pack.bonus}</span>`;
+                    }
+
+                    card.innerHTML = `${badge}
+                        <div class="coin-pack-header">
                             <div>
-                                <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:white;">💎 ${pack.label}</span>${bonusBadge}
+                                <span class="coin-pack-label">${coinEmojis[i]} ${pack.label}</span>${bonusBadge}
                             </div>
-                            <span style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:#ffd36a;">$${pack.price}</span>
+                            <span class="coin-pack-price">$${pack.price}</span>
                         </div>
                         <div id="pp-btn-${pack.id}" style="min-height:45px;"></div>
                     `;
@@ -1022,8 +1322,9 @@
                             (p, details) => {
                                 console.log(`[CoinShop] ✅ Purchased ${p.coins} coins! Order: ${details.id}`);
                                 closeCoinShop();
-                                // Visual feedback
                                 fb = `+${p.coins} COINS!`; fbC = '#ffd36a'; fbT = 2.5;
+                                // Update balance
+                                if (balanceEl) balanceEl.textContent = `Your Balance: ◆ ${SkinShop.getCoins()}`;
                             },
                             (err) => {
                                 console.error('[CoinShop] Payment failed:', err);
@@ -1032,7 +1333,7 @@
                     });
                 }).catch(err => {
                     console.error('[CoinShop] SDK load failed:', err);
-                    container.innerHTML = '<p style="text-align:center;color:#ff5d7a;font-family:Outfit,sans-serif;">Failed to load payment system. Please try again.</p>';
+                    container.innerHTML = '<p style="text-align:center;color:#ff5d7a;font-family:Outfit,sans-serif;padding:20px;">Failed to load payment system. Please try again.</p>';
                 });
             }
 
