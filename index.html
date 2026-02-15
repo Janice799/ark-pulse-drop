@@ -269,6 +269,18 @@
                     <div class="ach-badges" id="overAchBadges"></div>
                 </div>
 
+                <!-- Continue (coin revive) -->
+                <div class="over-continue" id="overContinue" style="display:none;">
+                    <button class="continue-btn" id="btnContinue">
+                        <span class="continue-icon">🔄</span>
+                        <span class="continue-label">CONTINUE?</span>
+                        <span class="continue-cost">◆ 200</span>
+                    </button>
+                    <div class="continue-timer" id="continueTimer">
+                        <div class="continue-timer-bar" id="continueTimerBar"></div>
+                    </div>
+                </div>
+
                 <!-- Restart -->
                 <div class="over-restart" id="overRestart">
                     <div class="restart-text">TAP TO RESTART</div>
@@ -544,6 +556,10 @@
             let accP = 0, accG = 0, accO = 0, accM = 0;
             let gridOffset = 0, orbitAngle = 0;
             let vignetteT = 0, screenFlashT = 0, screenFlashC = '#7fe0ff';
+            let reviveUsed = false;
+            let continueTimerId = null;
+            const REVIVE_COST = 200;
+            const REVIVE_TIMEOUT = 5000; // 5 seconds
 
             const DIFF_CFG = [
                 { name: 'EASY', emoji: '🌿', color: '#62ffb3', lives: 7, bpmBase: 56, thrMult: 1.4, scoreMult: 0.8 },
@@ -1089,6 +1105,9 @@
                         goT = 0;
                         updateGameOver();
                         showScreen('over-screen');
+
+                        // ── Show Continue button if eligible ──
+                        showContinueOption();
                         return;
                     }
                 }
@@ -1106,6 +1125,63 @@
                     updateHUD();
                 }
                 checkAchievements();
+            }
+
+            // ─── Continue / Revive System ────────────────
+            function showContinueOption() {
+                if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
+
+                const canContinue = !reviveUsed && SkinShop.getCoins() >= REVIVE_COST;
+                const el = $('overContinue');
+
+                if (canContinue) {
+                    el.style.display = '';
+                    $('btnContinue').disabled = false;
+                    // Start countdown timer bar
+                    const bar = $('continueTimerBar');
+                    bar.style.transition = 'none';
+                    bar.style.width = '100%';
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            bar.style.transition = `width ${REVIVE_TIMEOUT}ms linear`;
+                            bar.style.width = '0%';
+                        });
+                    });
+                    // Auto-expire
+                    continueTimerId = setTimeout(() => {
+                        el.style.display = 'none';
+                        continueTimerId = null;
+                    }, REVIVE_TIMEOUT);
+                } else {
+                    el.style.display = 'none';
+                }
+            }
+
+            function doContinue() {
+                if (reviveUsed || SkinShop.getCoins() < REVIVE_COST) return;
+                if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
+
+                // Deduct coins
+                SkinShop.addCoins(-REVIVE_COST);
+                reviveUsed = true;
+                $('overContinue').style.display = 'none';
+
+                // Restore half max lives (at least 1)
+                const maxLives = DIFF_CFG[difficulty].lives;
+                lives = Math.max(1, Math.ceil(maxLives / 2));
+
+                // Resume game
+                Audio.ui();
+                state = S.PLAY;
+                last = performance.now();
+                updateHUD();
+                showScreen('play-screen');
+
+                // Visual feedback
+                screenFlashC = '#62ffb3';
+                screenFlashT = 0.5;
+                showFeedback('REVIVED!', '#62ffb3');
+                burst(W / 2, H * 0.44, '#62ffb3', 30);
             }
 
             // ─── Event Listeners ─────────────────────────
@@ -1140,6 +1216,7 @@
                 feverMode = false; feverT = 0;
                 accP = 0; accG = 0; accO = 0; accM = 0;
                 newAchievements = [];
+                reviveUsed = false;
                 particles = []; ripples = []; initBg();
                 updateHUD();
                 showScreen('play-screen');
@@ -1157,8 +1234,13 @@
 
             // Game Over restart
             $('overRestart').addEventListener('click', () => {
+                if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
+                $('overContinue').style.display = 'none';
                 Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen');
             });
+
+            // Continue / Revive
+            $('btnContinue').addEventListener('click', () => { doContinue(); });
 
             // Shop
             $('shopClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });

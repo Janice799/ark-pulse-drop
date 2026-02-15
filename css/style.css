@@ -1129,6 +1129,90 @@ body {
     box-shadow: 0 0 12px rgba(255, 50, 50, 0.4);
 }
 
+/* ── Continue / Revive CTA ── */
+.over-continue {
+    padding: 8px 20px 4px;
+    text-align: center;
+}
+
+.continue-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, rgba(98, 255, 179, 0.12), rgba(98, 255, 179, 0.04));
+    border: 1px solid rgba(98, 255, 179, 0.35);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: continuePulse 1.5s ease-in-out infinite;
+}
+
+.continue-btn:hover {
+    background: linear-gradient(135deg, rgba(98, 255, 179, 0.22), rgba(98, 255, 179, 0.08));
+    box-shadow: 0 0 24px rgba(98, 255, 179, 0.2);
+}
+
+.continue-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.continue-icon {
+    font-size: 20px;
+}
+
+.continue-label {
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 900;
+    color: #62ffb3;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(98, 255, 179, 0.4);
+}
+
+.continue-cost {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.continue-timer {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.continue-timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #62ffb3, #7fe0ff);
+    border-radius: 3px;
+    width: 100%;
+    box-shadow: 0 0 8px rgba(98, 255, 179, 0.4);
+}
+
+@keyframes continuePulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(98, 255, 179, 0.15);
+    }
+}
+
 /* ════════════════════════════════════════════════════
    SCREEN: Shop
    ════════════════════════════════════════════════════ */
