@@ -1,8 +1,8 @@
 /**
- * ARK Pulse Drop — Service Worker v4.1
+ * ARK Pulse Drop — Service Worker v5.0
  * Offline-first caching strategy
  */
-const CACHE_NAME = 'ark-pulse-drop-v4.1.2';
+const CACHE_NAME = 'ark-pulse-drop-v5.0.0';
 const ASSETS = [
     '/',
     '/index.html',
@@ -10,6 +10,8 @@ const ASSETS = [
     '/js/leaderboard.js',
     '/js/audio.js',
     '/js/ads.js',
+    '/js/paypal-shop.js',
+    '/js/firebase-config.js',
     '/manifest.json',
     '/icons/icon-48.png',
     '/icons/icon-72.png',

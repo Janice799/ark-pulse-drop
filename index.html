@@ -1,814 +1,870 @@
 <!--
-  Project: ARK [Pulse Drop] v5.0 "NEON ASCEND ULTRA" | Created by Solo Alchemist | ARK
-  Phase 1: Neon Grid + Dual Orbit Ring + Glassmorphism UI + Enhanced Judgment FX
-  Monetization: Reward Ads + Skin Shop + Coin System + Leaderboard
+  ARK [Pulse Drop] v6.0 "STITCH REBORN"
+  Architecture: HTML/CSS UI Screens + Canvas Game Engine
+  Created by Solo Alchemist | ARK
 -->
 <!doctype html>
 <html lang="ko">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
     <meta name="description" content="ARK Pulse Drop — Premium rhythm timing game" />
-    <meta name="theme-color" content="#07080c" />
+    <meta name="theme-color" content="#05060a" />
     <title>ARK — Pulse Drop</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
-    <style>
-        :root {
-            --bg: #05060a;
-            --panel: rgba(255, 255, 255, .04);
-            --text: rgba(255, 255, 255, .92);
-            --muted: rgba(255, 255, 255, .50);
-            --good: #62ffb3;
-            --perfect: #7fe0ff;
-            --ok: #ffd36a;
-            --bad: #ff5d7a;
-            --accent: #8c7bff
-        }
-
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box
-        }
-
-        html,
-        body {
-            height: 100%;
-            background: #05060a;
-            color: var(--text);
-            font-family: 'Outfit', system-ui, sans-serif;
-            -webkit-font-smoothing: antialiased
-        }
-
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: radial-gradient(ellipse 140% 80% at 50% 0%, rgba(140, 123, 255, .05), transparent), #05060a
-        }
-
-        * {
-            user-select: none;
-            -webkit-user-select: none
-        }
-
-        .wrap {
-            width: min(520px, 100vw);
-            height: min(920px, 100vh);
-            position: relative;
-            padding: 12px
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 32px;
-            background: linear-gradient(180deg, rgba(5, 6, 10, 1) 0%, rgba(8, 10, 18, 1) 100%);
-            box-shadow: 0 0 0 1px rgba(255, 255, 255, .04), 0 0 60px rgba(140, 123, 255, .06), 0 30px 80px rgba(0, 0, 0, .55);
-            cursor: pointer;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
-    <div class="wrap"><canvas id="c"></canvas></div>
+    <div id="app">
+        <!-- ═══ Canvas Layer (always present, behind UI) ═══ -->
+        <canvas id="gameCanvas"></canvas>
 
-    <!-- Mobile Name Input (hidden overlay for virtual keyboard) -->
-    <input id="mobileNameInput" type="text" maxlength="12"
-        style="position:fixed;top:-9999px;left:0;width:1px;height:1px;opacity:0;font-size:16px;z-index:-1;"
-        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <!-- ═══ Google Login Modal ═══ -->
+        <div id="loginModal" class="login-modal" style="display:none;">
+            <div class="login-backdrop"></div>
+            <div class="login-card">
+                <div class="login-icon">🏆</div>
+                <div class="login-title">GLOBAL LEADERBOARD</div>
+                <div class="login-desc">Sign in with Google to register your score on the global leaderboard!</div>
+                <button class="login-google-btn" id="btnGoogleLogin">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
+                        <path fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Sign in with Google
+                </button>
+                <button class="login-skip-btn" id="btnLoginSkip">Skip for now</button>
+            </div>
+        </div>
 
-    <!-- v5.0 Premium Coin Shop Modal -->
-    <style>
-        @keyframes coinShopSlideUp {
-            from {
-                transform: translateY(40px);
-                opacity: 0;
-            }
+        <!-- ═══ SCREEN: Main Menu ═══ -->
+        <div id="menu-screen" class="screen active">
+            <div class="neon-grid"></div>
 
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
+            <!-- Profile Badge (top-left) -->
+            <div class="profile-badge" id="profileBadge">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <span class="profile-name" id="profileName">Guest</span>
+            </div>
 
-        @keyframes shimmer {
-            0% {
-                background-position: -200% center;
-            }
+            <div class="coin-badge">
+                <span class="icon">◆</span>
+                <span id="menuCoins">0</span>
+            </div>
 
-            100% {
-                background-position: 200% center;
-            }
-        }
+            <div class="menu-title">
+                <div class="sub">A R K</div>
+                <div class="hero">PULSE<br>DROP</div>
+            </div>
 
-        @keyframes pulseGlow {
+            <div class="menu-ring">
+                <canvas id="menuRingCanvas"></canvas>
+                <div class="best-label" id="bestLabel" style="display:none;">
+                    <span>BEST</span>
+                    <strong id="bestScore">0</strong>
+                </div>
+            </div>
 
-            0%,
-            100% {
-                box-shadow: 0 0 8px var(--glow-color);
-            }
+            <div class="menu-cta" id="menuTap">
+                <span class="play-icon">▶</span> TAP TO START
+            </div>
 
-            50% {
-                box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
-            }
-        }
+            <div class="menu-buttons">
+                <button class="btn-pill btn-shop" id="btnShop">💎 SHOP</button>
+                <button class="btn-pill btn-rank" id="btnRank">🏆 RANK</button>
+            </div>
 
-        #coinShopModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(5, 6, 15, .95) 0%, rgba(10, 8, 25, .98) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 99999;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+            <div class="menu-footer">
+                VER 6.0.0 • UID: <span id="menuUID">---</span>
+            </div>
+        </div>
 
-        #coinShopModal .cs-inner {
-            max-width: 380px;
-            margin: 0 auto;
-            padding: 32px 16px 40px;
-            animation: coinShopSlideUp .4s cubic-bezier(.22, 1, .36, 1) forwards;
-        }
+        <!-- ═══ SCREEN: Difficulty Select ═══ -->
+        <div id="diff-screen" class="screen">
+            <div class="neon-grid"></div>
+            <div class="diff-title">SELECT DIFFICULTY</div>
+            <div class="diff-cards">
+                <div class="diff-card" data-diff="0">
+                    <div class="emoji">🌿</div>
+                    <div class="info">
+                        <div class="name" style="color:#62ffb3;">EASY</div>
+                        <div class="desc">Wider timing • Forgiving</div>
+                    </div>
+                    <div class="lives-badge" style="color:#62ffb3;">♥ 7</div>
+                </div>
+                <div class="diff-card selected" data-diff="1">
+                    <div class="emoji">⚡</div>
+                    <div class="info">
+                        <div class="name" style="color:#7fe0ff;">NORMAL</div>
+                        <div class="desc">Balanced • Standard</div>
+                    </div>
+                    <div class="lives-badge" style="color:#7fe0ff;">♥ 5</div>
+                </div>
+                <div class="diff-card" data-diff="2">
+                    <div class="emoji">🔥</div>
+                    <div class="info">
+                        <div class="name" style="color:#ff5d7a;">HARD</div>
+                        <div class="desc">Fast • Punishing</div>
+                    </div>
+                    <div class="lives-badge" style="color:#ff5d7a;">♥ 3</div>
+                </div>
+            </div>
+            <button class="btn-start" id="btnStartGame">▶ START GAME</button>
+            <button class="btn-back" id="btnDiffBack">← Back to Menu</button>
+        </div>
 
-        #coinShopModal .cs-title {
-            text-align: center;
-            color: #00ffcc;
-            font-family: 'Outfit', sans-serif;
-            font-size: 26px;
-            font-weight: 800;
-            margin: 0 0 4px;
-            text-shadow: 0 0 30px rgba(0, 255, 204, .4);
-        }
+        <!-- ═══ SCREEN: Gameplay HUD (overlay) ═══ -->
+        <div id="play-screen" class="screen">
+            <div class="hud-top">
+                <div class="hud-pill hud-level">
+                    <div class="dot"></div>
+                    <span id="hudLevel">LV 1</span>
+                </div>
+                <div class="hud-score-area">
+                    <div class="hud-score-label">SCORE</div>
+                    <div class="hud-score-value" id="hudScore">0</div>
+                    <div class="hud-combo" id="hudCombo">0× COMBO</div>
+                </div>
+                <div class="hud-right">
+                    <div class="hud-pill hud-hearts" id="hudHearts"></div>
+                    <button class="hud-pause-btn" id="btnPause">⏸</button>
+                </div>
+            </div>
 
-        #coinShopModal .cs-sub {
-            text-align: center;
-            color: rgba(255, 255, 255, .35);
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            margin: 0 0 6px;
-        }
+            <div class="feedback-text" id="feedbackText"></div>
+            <div class="score-popup" id="scorePopup"></div>
 
-        #coinShopModal .cs-balance {
-            text-align: center;
-            font-family: 'Outfit', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            color: #ffd36a;
-            margin: 0 0 20px;
-            text-shadow: 0 0 12px rgba(255, 211, 106, .3);
-        }
+            <div class="hud-bottom">
+                <div class="hud-stat">
+                    <div class="label">BEST SCORE</div>
+                    <div class="value" id="hudBest">0</div>
+                </div>
+                <div class="hud-diff-badge" id="hudDiffBadge">
+                    <div class="dot"></div>
+                    <span>NORMAL</span>
+                </div>
+                <div class="hud-stat">
+                    <div class="label">STREAK</div>
+                    <div class="value" id="hudStreak">MAX ×0</div>
+                </div>
+            </div>
+        </div>
 
-        .coin-pack-card {
-            position: relative;
-            border-radius: 16px;
-            padding: 16px 16px 12px;
-            margin-bottom: 14px;
-            transition: transform .15s, box-shadow .15s;
-        }
+        <!-- ═══ SCREEN: Pause Overlay ═══ -->
+        <div id="pause-screen" class="screen">
+            <div class="pause-overlay">
+                <div class="pause-card">
+                    <div class="pause-icon">⏸</div>
+                    <div class="pause-title">PAUSED</div>
+                    <button class="pause-resume-btn" id="btnResume">▶ RESUME</button>
+                    <button class="pause-quit-btn" id="btnQuit">✕ QUIT TO MENU</button>
+                </div>
+            </div>
+        </div>
 
-        .coin-pack-card:active {
-            transform: scale(.97);
-        }
+        <!-- ═══ SCREEN: Game Over ═══ -->
+        <div id="over-screen" class="screen">
+            <div class="over-card">
+                <!-- Header -->
+                <div class="over-header">
+                    <div class="over-diff-badge" id="overDiffBadge">⚡ NORMAL</div>
+                    <div class="over-title">GAME<br>OVER</div>
+                    <div class="over-subtitle">FINAL SCORE</div>
+                </div>
 
-        .coin-pack-card.tier-starter {
-            background: rgba(255, 255, 255, .04);
-            border: 1px solid rgba(255, 255, 255, .1);
-        }
+                <!-- Score (left) + Accuracy (right) -->
+                <div class="over-split">
+                    <div class="over-score-area">
+                        <div class="over-score-value" id="overScore">0</div>
+                        <div class="over-new-best" id="overNewBest" style="display:none;">⭐ NEW BEST! ⭐</div>
+                        <div class="over-coins-pill" id="overCoins">◆ +0 coins</div>
+                    </div>
+                    <div class="over-accuracy">
+                        <div class="accuracy-ring">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="bg-circle" cx="50" cy="50" r="40" />
+                                <circle class="fill-circle" id="accCircle" cx="50" cy="50" r="40"
+                                    stroke-dasharray="251.3" stroke-dashoffset="251.3" />
+                            </svg>
+                            <div class="center-text">
+                                <div class="pct" id="accPct">0%</div>
+                                <div class="pct-label">ACCURACY</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        .coin-pack-card.tier-plus {
-            background: rgba(0, 255, 204, .03);
-            border: 1px solid rgba(0, 255, 204, .2);
-            --glow-color: rgba(0, 255, 204, .15);
-        }
+                <!-- Judgment cards -->
+                <div class="over-judgments">
+                    <div class="judgment-card perfect">
+                        <div class="jtop">PERFECT</div>
+                        <div class="jcount" id="jPerfect">0</div>
+                    </div>
+                    <div class="judgment-card good">
+                        <div class="jtop">GOOD</div>
+                        <div class="jcount" id="jGood">0</div>
+                    </div>
+                    <div class="judgment-card ok">
+                        <div class="jtop">OK</div>
+                        <div class="jcount" id="jOk">0</div>
+                    </div>
+                    <div class="judgment-card miss">
+                        <div class="jtop">MISS</div>
+                        <div class="jcount" id="jMiss">0</div>
+                    </div>
+                </div>
 
-        .coin-pack-card.tier-pro {
-            background: rgba(255, 211, 106, .03);
-            border: 1px solid rgba(255, 211, 106, .25);
-            --glow-color: rgba(255, 211, 106, .2);
-            animation: pulseGlow 3s ease-in-out infinite;
-        }
+                <!-- Stat pills -->
+                <div class="over-stats">
+                    <div class="stat-pill">
+                        <div class="slabel">LEVEL</div>
+                        <div class="svalue"><span class="sicon">⚡</span> <span id="overLevel">1</span></div>
+                    </div>
+                    <div class="stat-pill">
+                        <div class="slabel">COMBO</div>
+                        <div class="svalue"><span class="sicon">🔥</span> <span id="overCombo">×0</span></div>
+                    </div>
+                    <div class="stat-pill">
+                        <div class="slabel">BEST</div>
+                        <div class="svalue"><span class="sicon">🏆</span> <span id="overBest">0</span></div>
+                    </div>
+                </div>
 
-        .coin-pack-card.tier-ultra {
-            background: linear-gradient(135deg, rgba(140, 123, 255, .06), rgba(255, 211, 106, .04));
-            border: 1px solid rgba(140, 123, 255, .3);
-            --glow-color: rgba(140, 123, 255, .25);
-            animation: pulseGlow 2s ease-in-out infinite;
-        }
+                <!-- Achievements (always visible, shows locked state) -->
+                <div class="over-achievements" id="overAchievements">
+                    <div class="ach-header">
+                        <span class="ach-title">ACHIEVEMENTS</span>
+                        <span class="ach-count" id="achCount">0/8</span>
+                    </div>
+                    <div class="ach-badges" id="overAchBadges"></div>
+                </div>
 
-        .coin-pack-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+                <!-- Restart -->
+                <div class="over-restart" id="overRestart">
+                    <div class="restart-text">TAP TO RESTART</div>
+                    <div class="restart-line"></div>
+                </div>
+            </div>
+        </div>
 
-        .coin-pack-label {
-            font-family: 'Outfit', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-            color: white;
-        }
+        <!-- ═══ SCREEN: Shop ═══ -->
+        <div id="shop-screen" class="screen">
+            <div class="shop-header">
+                <div class="shop-title">💎 SKIN SHOP</div>
+                <div class="coin-badge" style="position:static;">
+                    <span class="icon">◆</span>
+                    <span id="shopCoins">0</span>
+                </div>
+                <div class="shop-close" id="shopClose">✕</div>
+            </div>
+            <div class="shop-body" id="shopBody">
+                <!-- dynamically populated -->
+            </div>
+        </div>
 
-        .coin-pack-price {
-            font-family: 'Outfit', sans-serif;
-            font-size: 20px;
-            font-weight: 800;
-            color: #ffd36a;
-            text-shadow: 0 0 12px rgba(255, 211, 106, .3);
-        }
-
-        .badge-bonus {
-            display: inline-block;
-            font-family: 'Outfit', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        .badge-bonus.cyan {
-            background: rgba(0, 255, 204, .15);
-            color: #00ffcc;
-        }
-
-        .badge-bonus.gold {
-            background: rgba(255, 211, 106, .15);
-            color: #ffd36a;
-        }
-
-        .badge-popular {
-            position: absolute;
-            top: -6px;
-            right: 16px;
-            background: linear-gradient(135deg, #8c7bff, #b06aff);
-            color: white;
-            font-family: 'Outfit', sans-serif;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 3px 10px;
-            border-radius: 10px;
-            letter-spacing: .5px;
-            box-shadow: 0 2px 12px rgba(140, 123, 255, .4);
-        }
-
-        .badge-bestvalue {
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(90deg, #ffd36a, #ffaa00, #ffd36a);
-            background-size: 200% auto;
-            animation: shimmer 3s linear infinite;
-            color: #1a1200;
-            font-family: 'Outfit', sans-serif;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 14px;
-            border-radius: 12px;
-            letter-spacing: .8px;
-            box-shadow: 0 2px 16px rgba(255, 211, 106, .5);
-        }
-
-        .cs-close-btn {
-            display: block;
-            width: 100%;
-            margin: 16px 0 0;
-            padding: 14px;
-            background: rgba(255, 255, 255, .04);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 14px;
-            color: rgba(255, 255, 255, .45);
-            font-family: 'Outfit', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .2s;
-            backdrop-filter: blur(4px);
-        }
-
-        .cs-close-btn:hover {
-            background: rgba(255, 255, 255, .08);
-            color: rgba(255, 255, 255, .7);
-        }
-    </style>
-
-    <div id="coinShopModal">
-        <div class="cs-inner">
-            <h2 class="cs-title">💎 COIN SHOP</h2>
-            <p class="cs-sub">Power up with premium coins</p>
-            <div class="cs-balance" id="coinShopBalance">Your Balance: ◆ 0</div>
-            <div id="coinPacksContainer"></div>
-            <button id="coinShopClose" class="cs-close-btn">← Back to Shop</button>
+        <!-- ═══ SCREEN: Leaderboard ═══ -->
+        <div id="board-screen" class="screen">
+            <div class="board-header">
+                <div class="board-title">🏆 LEADERBOARD</div>
+                <div class="shop-close" id="boardClose">✕</div>
+            </div>
+            <div class="board-body" id="boardBody">
+                <div class="board-empty">No scores yet. Play a game!</div>
+            </div>
         </div>
     </div>
+
+    <!-- External JS modules (unchanged) -->
     <script src="js/audio.js"></script>
-    <script src="js/ads.js"></script>
     <script src="js/shop.js"></script>
-    <script src="js/leaderboard.js"></script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/ads.js"></script>
     <script src="js/paypal-shop.js"></script>
+
+    <!-- ═══ Game Engine + UI Controller ═══ -->
     <script>
         (() => {
             'use strict';
-            const C = document.getElementById('c'), X = C.getContext('2d');
-            let W, H;
-            function resize() { const d = Math.min(devicePixelRatio || 1, 2), r = C.getBoundingClientRect(); W = r.width; H = r.height; C.width = W * d; C.height = H * d; X.setTransform(d, 0, 0, d, 0, 0) }
-            addEventListener('resize', resize); resize();
 
-            // ─── Firebase + Global Leaderboard Boot ──────
+            // ─── DOM References ──────────────────────────
+            const $ = id => document.getElementById(id);
+            const app = $('app');
+            const canvas = $('gameCanvas');
+            const X = canvas.getContext('2d');
+            const menuRingCanvas = $('menuRingCanvas');
+            const MX = menuRingCanvas.getContext('2d');
+
+            // ─── Resize ──────────────────────────────────
+            let W, H;
+            function resize() {
+                const d = Math.min(devicePixelRatio || 1, 2);
+                const r = app.getBoundingClientRect();
+                W = r.width; H = r.height;
+                canvas.width = W * d; canvas.height = H * d;
+                X.setTransform(d, 0, 0, d, 0, 0);
+
+                const mr = menuRingCanvas.getBoundingClientRect();
+                menuRingCanvas.width = mr.width * d; menuRingCanvas.height = mr.height * d;
+                MX.setTransform(d, 0, 0, d, 0, 0);
+            }
+            addEventListener('resize', resize);
+            resize();
+
+            // ─── Firebase Boot ───────────────────────────
+            let pendingScore = null; // score waiting for Google login
+
+            function updateProfileBadge(user) {
+                const avatar = $('profileAvatar');
+                const name = $('profileName');
+                if (user && !user.isAnonymous && user.displayName) {
+                    name.textContent = user.displayName.split(' ')[0];
+                    if (user.photoURL) {
+                        avatar.innerHTML = '<img src="' + user.photoURL + '" alt="">';
+                    } else {
+                        avatar.textContent = '🟢';
+                    }
+                    if (window.Leaderboard) Leaderboard.setPlayerName(user.displayName);
+                    $('menuUID').textContent = user.uid.slice(0, 6);
+                } else {
+                    name.textContent = 'Guest';
+                    avatar.textContent = '👤';
+                    $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
+                }
+            }
+
+            function showLoginModal() { $('loginModal').style.display = 'flex'; }
+            function hideLoginModal() { $('loginModal').style.display = 'none'; }
+
+            async function handleGoogleLogin() {
+                if (!window.FirebaseService) return;
+                const user = await FirebaseService.signInGoogle();
+                if (user) {
+                    hideLoginModal();
+                    updateProfileBadge(user);
+                    if (pendingScore && window.Leaderboard) {
+                        Leaderboard.setPlayerName(user.displayName || 'Player');
+                        await Leaderboard.submitScore(
+                            pendingScore.score, pendingScore.level,
+                            pendingScore.maxCombo, pendingScore.difficulty,
+                            pendingScore.accuracy
+                        );
+                        pendingScore = null;
+                        console.log('[ARK] 🏆 Pending score submitted after Google login!');
+                    }
+                }
+            }
+
+            $('profileBadge').addEventListener('click', () => {
+                if (window.FirebaseService) {
+                    const user = FirebaseService.getUser();
+                    if (!user || user.isAnonymous) showLoginModal();
+                }
+            });
+
+            $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
+            $('btnLoginSkip').addEventListener('click', hideLoginModal);
+
             (async () => {
                 try {
                     if (window.FirebaseService) {
                         await FirebaseService.init();
-                        await Leaderboard.initGlobal();
-                        console.log('[ARK] 🌐 Firebase & Global Leaderboard active');
+                        if (!FirebaseService.isSignedIn()) {
+                            await FirebaseService.signInAnon();
+                        }
+                        FirebaseService.onAuthChange(updateProfileBadge);
+                        const curUser = FirebaseService.getUser();
+                        if (curUser) updateProfileBadge(curUser);
+                        if (window.Leaderboard) await Leaderboard.initGlobal();
+                        console.log('[ARK] 🌐 Firebase & Leaderboard active');
                     }
                 } catch (e) { console.warn('[ARK] Firebase boot skipped:', e); }
             })();
 
-            // ─── States ───────────────────────────────────
-            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, NAME: 5, DIFF: 6 };
-            let state = S.MENU, t = 0, score = 0, combo = 0, maxCombo = 0, level = 1, lives = 5, bpm = 66;
+            // ─── Game State ──────────────────────────────
+            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, DIFF: 5, PAUSE: 6 };
+            let state = S.MENU;
+            let t = 0, score = 0, combo = 0, maxCombo = 0, level = 1, lives = 5, bpm = 66;
             let hi = +(localStorage.getItem('arkPD_hi') || 0);
             let fb = '', fbC = '', fbT = 0, spT = '', spTm = 0, cShk = 0;
             let particles = [], ripples = [], bgP = [];
             let menuT = 0, goT = 0, earnedCoins = 0;
-            let shopScroll = 0, shopTarget = 0, boardData = [];
-            let nameInput = '', nameInputActive = false, nameCursor = 0;
-
-            // ─── v4.0 NEON ASCEND ────────────────────────
+            let difficulty = 1;
+            let feverMode = false, feverT = 0;
+            let accP = 0, accG = 0, accO = 0, accM = 0;
             let gridOffset = 0, orbitAngle = 0;
             let vignetteT = 0, screenFlashT = 0, screenFlashC = '#7fe0ff';
 
-            // ─── v4.0 Phase 2: Difficulty / Fever / Accuracy ──
-            let difficulty = 1; // 0=EASY, 1=NORMAL, 2=HARD
             const DIFF_CFG = [
                 { name: 'EASY', emoji: '🌿', color: '#62ffb3', lives: 7, bpmBase: 56, thrMult: 1.4, scoreMult: 0.8 },
                 { name: 'NORMAL', emoji: '⚡', color: '#7fe0ff', lives: 5, bpmBase: 66, thrMult: 1.0, scoreMult: 1.0 },
                 { name: 'HARD', emoji: '🔥', color: '#ff5d7a', lives: 3, bpmBase: 80, thrMult: 0.7, scoreMult: 1.5 }
             ];
-            let feverMode = false, feverT = 0;
-            let accP = 0, accG = 0, accO = 0, accM = 0; // accuracy counters
-            let rollScore = 0; // rolling score animation for game over
 
-            // ─── Helpers ──────────────────────────────────
-            function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.lineTo(x + w - r, y); X.quadraticCurveTo(x + w, y, x + w, y + r); X.lineTo(x + w, y + h - r); X.quadraticCurveTo(x + w, y + h, x + w - r, y + h); X.lineTo(x + r, y + h); X.quadraticCurveTo(x, y + h, x, y + h - r); X.lineTo(x, y + r); X.quadraticCurveTo(x, y, x + r, y); X.closePath() }
-            function pill(x, y, w, h, f = 'rgba(255,255,255,.06)') { X.save(); rr(x, y, w, h, h / 2); X.fillStyle = f; X.fill(); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke(); X.restore() }
-            function eOB(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2) }
-            function hexRGB(hex) { return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] }
-            function spd() { return (1 + (level - 1) * .12) * (difficulty === 2 ? 1.15 : difficulty === 0 ? 0.85 : 1) }
-            function thr() { const b = Math.max(.035, .08 - (level - 1) * .004) * DIFF_CFG[difficulty].thrMult; return { p: b, g: b * 3, o: b * 6 } }
-            function scoreMult() { return DIFF_CFG[difficulty].scoreMult * (feverMode ? 1.5 : 1) }
-            function pv(time) { return (1 - Math.cos(time * Math.PI * 2 * spd())) * .5 }
+            // Achievements
+            const ACHIEVEMENTS = [
+                { id: 'first_perfect', name: 'First Light', desc: 'Get your first PERFECT', icon: '✨', color: '#7fe0ff' },
+                { id: 'combo5', name: 'On Fire', desc: '5x Combo', icon: '🔥', color: '#ff9a5c' },
+                { id: 'combo15', name: 'Unstoppable', desc: '15x Combo', icon: '⚡', color: '#ffd36a' },
+                { id: 'combo30', name: 'Godlike', desc: '30x Combo', icon: '💎', color: '#b07bff' },
+                { id: 'lv5', name: 'Rising Star', desc: 'Reach Level 5', icon: '⭐', color: '#62ffb3' },
+                { id: 'lv10', name: 'Ascended', desc: 'Reach Level 10', icon: '👑', color: '#ffd700' },
+                { id: 'score1k', name: 'Millennial', desc: 'Score 1000+', icon: '🎯', color: '#7fe0ff' },
+                { id: 'perfect20', name: 'Precision', desc: '20 Perfects in a game', icon: '💠', color: '#ff69b4' },
+            ];
+            let unlockedAch = new Set(JSON.parse(localStorage.getItem('arkPD_ach') || '[]'));
+            let newAchievements = []; // track newly unlocked during this game
 
-            // Rainbow color
+            function saveAch() { localStorage.setItem('arkPD_ach', JSON.stringify([...unlockedAch])); }
+            function unlockAch(id) {
+                if (unlockedAch.has(id)) return;
+                unlockedAch.add(id);
+                const ach = ACHIEVEMENTS.find(a => a.id === id);
+                if (ach) newAchievements.push(ach);
+                saveAch();
+            }
+            function checkAchievements(isGameOver = false) {
+                if (accP >= 1) unlockAch('first_perfect');
+                if (combo >= 5) unlockAch('combo5');
+                if (combo >= 15) unlockAch('combo15');
+                if (combo >= 30) unlockAch('combo30');
+                if (level >= 5) unlockAch('lv5');
+                if (level >= 10) unlockAch('lv10');
+                if (score >= 1000) unlockAch('score1k');
+                if (accP >= 20) unlockAch('perfect20');
+            }
+
+            // ─── Helpers ─────────────────────────────────
+            function hexRGB(hex) { return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]; }
+            function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); }
+            function spd() { return (1 + (level - 1) * 0.12) * (difficulty === 2 ? 1.15 : difficulty === 0 ? 0.85 : 1); }
+            function thr() { const b = Math.max(0.035, 0.08 - (level - 1) * 0.004) * DIFF_CFG[difficulty].thrMult; return { p: b, g: b * 3, o: b * 6 }; }
+            function scoreMult() { return DIFF_CFG[difficulty].scoreMult * (feverMode ? 1.5 : 1); }
+            function pv(time) { return (1 - Math.cos(time * Math.PI * 2 * spd())) * 0.5; }
+            function eOB(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
             function rainbowColor(t) {
                 const r = Math.sin(t) * .5 + .5, g = Math.sin(t + 2.094) * .5 + .5, b = Math.sin(t + 4.189) * .5 + .5;
                 return `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`;
             }
 
-            // ─── Particles ────────────────────────────────
-            function burst(x, y, color, n = 15) { for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n + Math.random() * .3, s = 1.5 + Math.random() * 3.5; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, decay: .012 + Math.random() * .015, size: 2 + Math.random() * 3, color }) } }
-            function ripple(x, y, c) { ripples.push({ x, y, r: 10, mx: 120 + Math.random() * 60, life: 1, c }) }
-            function initBg() { bgP = []; for (let i = 0; i < 35; i++)bgP.push({ x: Math.random() * W, y: Math.random() * H, sz: .5 + Math.random() * 1.5, sp: .1 + Math.random() * .3, op: .12 + Math.random() * .18, ph: Math.random() * Math.PI * 2 }) }
+            // ─── Particles ──────────────────────────────
+            function burst(x, y, color, n = 15) {
+                for (let i = 0; i < n; i++) {
+                    const a = Math.PI * 2 * i / n + Math.random() * .3;
+                    const s = 1.5 + Math.random() * 3.5;
+                    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, decay: .012 + Math.random() * .015, size: 2 + Math.random() * 3, color });
+                }
+            }
+            function ripple(x, y, c) { ripples.push({ x, y, r: 10, mx: 120 + Math.random() * 60, life: 1, c }); }
 
-            // ─── v4.0 Glassmorphism Panel ─────────────────
-            function glassPanel(x, y, w, h, r = 20, tint = [140, 123, 255], op = 0.07) {
-                X.save();
-                rr(x, y, w, h, r); X.fillStyle = `rgba(${tint[0]},${tint[1]},${tint[2]},${op})`; X.fill();
-                const gd = X.createLinearGradient(x, y, x, y + h * 0.5);
-                gd.addColorStop(0, 'rgba(255,255,255,.06)'); gd.addColorStop(1, 'rgba(255,255,255,0)');
-                rr(x, y, w, h, r); X.fillStyle = gd; X.fill();
-                rr(x, y, w, h, r); X.strokeStyle = 'rgba(255,255,255,.08)'; X.lineWidth = 1; X.stroke();
-                X.restore();
+            function initBg() {
+                bgP = [];
+                for (let i = 0; i < 35; i++) bgP.push({
+                    x: Math.random() * W, y: Math.random() * H,
+                    sz: .5 + Math.random() * 1.5, sp: .1 + Math.random() * .3,
+                    op: .12 + Math.random() * .18, ph: Math.random() * Math.PI * 2
+                });
             }
 
-            // ─── v4.0 Neon Grid ───────────────────────────
-            function drawNeonGrid(intensity = 0.3, beat = 0) {
+            // ─── Screen Management ───────────────────────
+            function showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                const screen = $(screenId);
+                if (screen) screen.classList.add('active');
+            }
+
+            // ─── UI Updates ─────────────────────────────
+            function updateMenuUI() {
+                $('menuCoins').textContent = SkinShop.getCoins();
+                if (hi > 0) {
+                    $('bestLabel').style.display = '';
+                    $('bestScore').textContent = hi;
+                } else {
+                    $('bestLabel').style.display = 'none';
+                }
+                if (SkinShop.getPlayerUID) {
+                    $('menuUID').textContent = SkinShop.getPlayerUID();
+                }
+            }
+
+            function updateHUD() {
+                $('hudLevel').textContent = 'LV ' + level;
+                $('hudScore').textContent = score;
+                $('hudBest').textContent = hi;
+                $('hudStreak').textContent = 'MAX ×' + maxCombo;
+
+                // Combo
+                const comboEl = $('hudCombo');
+                if (combo > 1) {
+                    comboEl.classList.add('visible');
+                    comboEl.textContent = combo + '× COMBO';
+                    const cc = combo >= 10 ? '#ffd36a' : combo >= 5 ? '#62ffb3' : '#7fe0ff';
+                    comboEl.style.color = cc;
+                    comboEl.style.borderColor = cc + '44';
+                    comboEl.style.background = cc + '18';
+                } else {
+                    comboEl.classList.remove('visible');
+                }
+
+                // Hearts
+                const heartsEl = $('hudHearts');
+                const maxLives = DIFF_CFG[difficulty].lives;
+                let heartsHTML = '';
+                for (let i = 0; i < maxLives; i++) {
+                    heartsHTML += `<span class="heart ${i < lives ? '' : 'lost'}">♥</span>`;
+                }
+                heartsEl.innerHTML = heartsHTML;
+
+                // Difficulty badge
+                const dc = DIFF_CFG[difficulty];
+                const badge = $('hudDiffBadge');
+                badge.querySelector('.dot').style.background = dc.color;
+                badge.querySelector('.dot').style.boxShadow = `0 0 6px ${dc.color}`;
+                badge.querySelector('span').textContent = dc.name;
+                badge.querySelector('span').style.color = dc.color;
+            }
+
+            function showFeedback(text, color) {
+                const el = $('feedbackText');
+                el.textContent = text;
+                el.style.color = color;
+                el.classList.add('show');
+                clearTimeout(el._timer);
+                el._timer = setTimeout(() => el.classList.remove('show'), 600);
+            }
+
+            function showScorePopup(text) {
+                const el = $('scorePopup');
+                el.textContent = text;
+                el.style.opacity = 1;
+                el.style.transform = 'translate(-50%, 0)';
+                el.style.transition = 'none';
+                requestAnimationFrame(() => {
+                    el.style.transition = 'opacity 0.6s, transform 0.6s';
+                    el.style.opacity = 0;
+                    el.style.transform = 'translate(-50%, -30px)';
+                });
+            }
+
+            function updateGameOver() {
+                const dc = DIFF_CFG[difficulty];
+                $('overDiffBadge').textContent = dc.emoji + ' ' + dc.name;
+                $('overDiffBadge').style.background = `rgba(${hexRGB(dc.color).join(',')},0.15)`;
+                $('overDiffBadge').style.border = `1px solid rgba(${hexRGB(dc.color).join(',')},0.35)`;
+                $('overDiffBadge').style.color = dc.color;
+
+                $('overScore').textContent = score.toLocaleString();
+                $('overCoins').textContent = `◆ +${earnedCoins} coins`;
+                $('overLevel').textContent = level;
+                $('overCombo').textContent = '×' + maxCombo;
+                $('overBest').textContent = hi;
+
+                // New best?
+                $('overNewBest').style.display = (score >= hi && score > 0) ? '' : 'none';
+
+                // Accuracy
+                const total = accP + accG + accO + accM;
+                const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100) : 0;
+                const circumference = 2 * Math.PI * 40; // r=40
+                const offset = circumference - (accPct / 100) * circumference;
+                const accColor = accPct >= 80 ? '#7fe0ff' : accPct >= 50 ? '#62ffb3' : '#ffd36a';
+
+                const circle = $('accCircle');
+                circle.style.stroke = accColor;
+                circle.style.filter = `drop-shadow(0 0 8px ${accColor})`;
+                // Animate after a tick
+                requestAnimationFrame(() => {
+                    circle.setAttribute('stroke-dashoffset', offset);
+                });
+                $('accPct').textContent = accPct.toFixed(1) + '%';
+                $('accPct').style.color = accColor;
+
+                // Judgments
+                $('jPerfect').textContent = accP;
+                $('jGood').textContent = accG;
+                $('jOk').textContent = accO;
+                $('jMiss').textContent = accM;
+
+                // Achievements — always show all 8 (unlocked + locked)
+                const achUnlockedSet = new Set([...unlockedAch]);
+                const achNewSet = new Set(newAchievements.map(a => a.id));
+                $('achCount').textContent = `${achUnlockedSet.size}/${ACHIEVEMENTS.length}`;
+                $('overAchBadges').innerHTML = ACHIEVEMENTS.map(a => {
+                    const isUnlocked = achUnlockedSet.has(a.id);
+                    const isNew = achNewSet.has(a.id);
+                    const cls = isNew ? 'ach-badge unlocked new' : isUnlocked ? 'ach-badge unlocked' : 'ach-badge locked';
+                    const bg = isUnlocked ? `background:${a.color}22;` : '';
+                    return `<div class="${cls}" style="color:${a.color};border-color:${isUnlocked ? a.color + '55' : ''};${bg}" title="${a.name}: ${a.desc}">${a.icon}</div>`;
+                }).join('');
+            }
+
+            function updateShop() {
+                $('shopCoins').textContent = SkinShop.getCoins();
+                const skins = SkinShop.getSkins();
+                const equipped = SkinShop.getEquippedId();
+                let html = '';
+                skins.forEach(s => {
+                    const owned = SkinShop.isUnlocked(s.id);
+                    const isEquipped = s.id === equipped;
+                    html += `
+                    <div class="skin-card ${isEquipped ? 'equipped' : ''}">
+                        <div class="skin-preview" style="border-color:${s.ring};box-shadow:0 0 16px ${s.ring}55;background:${s.ring}22;"></div>
+                        <div class="skin-name">${s.name}</div>
+                        ${isEquipped
+                            ? '<button class="skin-btn equipped-btn" disabled>✓ EQUIPPED</button>'
+                            : owned
+                                ? `<button class="skin-btn equip-btn" data-action="equip" data-skin="${s.id}">EQUIP</button>`
+                                : `<button class="skin-btn buy-btn" data-action="buy" data-skin="${s.id}">◆ ${s.price}</button>`
+                        }
+                    </div>`;
+                });
+                $('shopBody').innerHTML = html;
+            }
+
+            function updateBoard() {
+                if (!window.Leaderboard) {
+                    $('boardBody').innerHTML = '<div class="board-empty">Leaderboard not available</div>';
+                    return;
+                }
+                Leaderboard.getTopScores(10).then(data => {
+                    if (!data || data.length === 0) {
+                        $('boardBody').innerHTML = '<div class="board-empty">No scores yet. Play a game!</div>';
+                        return;
+                    }
+                    let html = '';
+                    data.forEach((entry, i) => {
+                        const rankClass = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
+                        const colorClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+                        html += `
+                        <div class="board-entry ${rankClass}">
+                            <div class="board-rank ${colorClass}">${medal}</div>
+                            <div class="board-info">
+                                <div class="board-name">${entry.name || 'Unknown'}</div>
+                                <div class="board-meta">LV ${entry.level || 1} • ×${entry.combo || 0}</div>
+                            </div>
+                            <div class="board-score">${(entry.score || 0).toLocaleString()}</div>
+                        </div>`;
+                    });
+                    $('boardBody').innerHTML = html;
+                });
+            }
+
+            // ─── Menu Ring Animation ─────────────────────
+            function drawMenuRing(dt) {
+                const w = menuRingCanvas.width / (devicePixelRatio || 1);
+                const h = menuRingCanvas.height / (devicePixelRatio || 1);
+                const cx = w / 2, cy = h / 2;
+                MX.clearRect(0, 0, w, h);
+
+                const sk = SkinShop.getCurrentSkin();
+                const col = sk.rainbow ? rainbowColor(menuT * 3) : sk.ring;
+                const R = Math.min(w, h) * 0.38 + Math.sin(menuT * 2) * 4;
+
+                // outer dashed ring
+                MX.beginPath(); MX.arc(cx, cy, R + 14, 0, Math.PI * 2);
+                MX.strokeStyle = 'rgba(127,224,255,0.08)';
+                MX.lineWidth = 1; MX.setLineDash([4, 6]); MX.stroke(); MX.setLineDash([]);
+
+                // glow fill
+                const glow = MX.createRadialGradient(cx, cy, 0, cx, cy, R + 10);
+                glow.addColorStop(0, 'rgba(0,200,255,0.03)');
+                glow.addColorStop(1, 'rgba(0,200,255,0)');
+                MX.fillStyle = glow;
+                MX.fillRect(0, 0, w, h);
+
+                // main ring
+                MX.beginPath(); MX.arc(cx, cy, R, 0, Math.PI * 2);
+                MX.strokeStyle = col; MX.lineWidth = 3;
+                MX.shadowBlur = 25; MX.shadowColor = col; MX.stroke(); MX.shadowBlur = 0;
+
+                // orbiting dot
+                const angle = menuT * 1.5;
+                const dotX = cx + Math.cos(angle) * R;
+                const dotY = cy + Math.sin(angle) * R;
+                MX.beginPath(); MX.arc(dotX, dotY, 4, 0, Math.PI * 2);
+                MX.fillStyle = '#fff'; MX.shadowBlur = 12; MX.shadowColor = col;
+                MX.fill(); MX.shadowBlur = 0;
+            }
+
+            // ─── Canvas Game Drawing ─────────────────────
+            function drawNeonGrid(intensity, beat) {
                 const cx = W / 2, hy = H * 0.36;
                 const sk = SkinShop.getCurrentSkin();
                 const col = sk.rainbow ? '#8c7bff' : sk.ring;
                 const [r, g, b] = hexRGB(col);
-                gridOffset = (gridOffset + 0.003 * (state === S.PLAY ? spd() : 0.7)) % 1;
-                for (let i = 0; i <= 16; i++) {
-                    const raw = (i / 16 + gridOffset) % 1;
-                    const y = hy + (H - hy) * Math.pow(raw, 1.8);
-                    const a = Math.pow(raw, 0.5) * intensity * (0.6 + beat * 0.4);
-                    if (a < 0.005) continue;
-                    X.beginPath(); X.moveTo(0, y); X.lineTo(W, y);
-                    X.strokeStyle = `rgba(${r},${g},${b},${Math.min(a, 0.28)})`;
-                    X.lineWidth = 1 + beat * 0.5; X.stroke();
+                const base = intensity * (0.03 + beat * 0.015);
+
+                gridOffset += 0.3;
+                const gap = 40;
+                X.save();
+                for (let gy = -gap; gy < H + gap; gy += gap) {
+                    const yy = ((gy + gridOffset) % (H + gap * 2)) - gap;
+                    const dist = 1 - Math.abs(yy - hy) / H;
+                    const a = base * Math.max(0, dist);
+                    if (a < 0.002) continue;
+                    X.strokeStyle = `rgba(${r},${g},${b},${a})`;
+                    X.lineWidth = 0.5;
+                    X.beginPath(); X.moveTo(0, yy); X.lineTo(W, yy); X.stroke();
                 }
-                for (let i = -10; i <= 10; i++) {
-                    const xB = cx + i * (W * 0.06), xT = cx + i * 3;
-                    const a = (1 - Math.abs(i) / 10) * intensity * 0.4;
-                    if (a < 0.005) continue;
-                    X.beginPath(); X.moveTo(xB, H); X.lineTo(xT, hy);
-                    X.strokeStyle = `rgba(${r},${g},${b},${Math.min(a, 0.16)})`;
-                    X.lineWidth = 1; X.stroke();
+                for (let gx = 0; gx < W; gx += gap) {
+                    const dist = 1 - Math.abs(gx - cx) / W * 2;
+                    const a = base * Math.max(0, dist) * 0.7;
+                    if (a < 0.002) continue;
+                    X.strokeStyle = `rgba(${r},${g},${b},${a})`;
+                    X.lineWidth = 0.5;
+                    X.beginPath(); X.moveTo(gx, 0); X.lineTo(gx, H); X.stroke();
                 }
-                const hg = X.createLinearGradient(0, hy - 20, 0, hy + 20);
-                hg.addColorStop(0, `rgba(${r},${g},${b},0)`);
-                hg.addColorStop(0.5, `rgba(${r},${g},${b},${intensity * 0.12 + beat * 0.06})`);
-                hg.addColorStop(1, `rgba(${r},${g},${b},0)`);
-                X.fillStyle = hg; X.fillRect(0, hy - 20, W, 40);
+                X.restore();
             }
 
-            // ─── v4.0 Orbit Ring ──────────────────────────
             function drawOrbitRing(cx, cy, baseR, dt) {
+                orbitAngle += dt * 0.8;
                 const sk = SkinShop.getCurrentSkin();
-                const rc = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
-                const [r, g, b] = hexRGB(rc);
-                const oR = baseR * 0.55;
-                orbitAngle += dt * (1.2 + Math.min(combo, 30) * 0.04);
-                X.beginPath(); X.arc(cx, cy, oR, 0, Math.PI * 2);
-                X.strokeStyle = `rgba(${r},${g},${b},0.04)`; X.lineWidth = 1;
-                X.setLineDash([3, 8]); X.stroke(); X.setLineDash([]);
-                for (let i = 0; i < 3; i++) {
-                    const ang = orbitAngle + (Math.PI * 2 / 3) * i;
-                    for (let s = 0; s < 8; s++) {
-                        const a1 = ang - (Math.PI * 0.3 * s / 8);
-                        const a2 = ang - (Math.PI * 0.3 * (s + 1) / 8);
-                        X.beginPath(); X.arc(cx, cy, oR, a2, a1);
-                        X.strokeStyle = `rgba(${r},${g},${b},${(1 - s / 8) * 0.2})`;
-                        X.lineWidth = 2.5 - s * 0.25; X.stroke();
-                    }
-                    const ox = cx + Math.cos(ang) * oR, oy = cy + Math.sin(ang) * oR;
-                    X.beginPath(); X.arc(ox, oy, 2.5, 0, Math.PI * 2);
-                    X.fillStyle = rc; X.shadowBlur = 10; X.shadowColor = rc;
-                    X.fill(); X.shadowBlur = 0;
+                const col = sk.rainbow ? rainbowColor(orbitAngle * 2) : sk.ring;
+                const orbitR = baseR + 28;
+                X.save();
+                for (let i = 0; i < 4; i++) {
+                    const a = orbitAngle + (Math.PI * 2 * i / 4);
+                    const ox = cx + Math.cos(a) * orbitR;
+                    const oy = cy + Math.sin(a) * orbitR;
+                    X.beginPath(); X.arc(ox, oy, 1.5, 0, Math.PI * 2);
+                    X.fillStyle = col; X.globalAlpha = 0.25 + Math.sin(orbitAngle * 3 + i) * 0.15;
+                    X.shadowBlur = 6; X.shadowColor = col;
+                    X.fill();
                 }
+                X.globalAlpha = 1; X.shadowBlur = 0;
+                X.restore();
             }
 
-            // ─── v4.0 Post-FX ─────────────────────────────
-            function drawPostFX(dt) {
-                if (vignetteT > 0) {
-                    vignetteT -= dt * 2.5;
-                    const grad = X.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.7);
-                    grad.addColorStop(0, 'rgba(0,0,0,0)');
-                    grad.addColorStop(1, `rgba(255,50,80,${vignetteT * 0.22})`);
-                    X.fillStyle = grad; X.fillRect(0, 0, W, H);
+            function drawBg() {
+                bgP.forEach(p => {
+                    p.y -= p.sp;
+                    if (p.y < -5) { p.y = H + 5; p.x = Math.random() * W; }
+                    X.beginPath(); X.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+                    X.fillStyle = `rgba(255,255,255,${p.op + Math.sin(menuT + p.ph) * 0.05})`;
+                    X.fill();
+                });
+            }
+
+            function drawFX() {
+                // Particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx; p.y += p.vy; p.life -= p.decay; p.vx *= 0.98; p.vy *= 0.98;
+                    if (p.life <= 0) { particles.splice(i, 1); continue; }
+                    X.beginPath(); X.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                    X.fillStyle = p.color; X.globalAlpha = p.life * 0.7; X.fill();
                 }
+                // Ripples
+                for (let i = ripples.length - 1; i >= 0; i--) {
+                    const ri = ripples[i];
+                    ri.r += (ri.mx - ri.r) * 0.08; ri.life -= 0.015;
+                    if (ri.life <= 0) { ripples.splice(i, 1); continue; }
+                    X.beginPath(); X.arc(ri.x, ri.y, ri.r, 0, Math.PI * 2);
+                    X.strokeStyle = ri.c; X.lineWidth = 2; X.globalAlpha = ri.life * 0.4; X.stroke();
+                }
+                X.globalAlpha = 1;
+            }
+
+            function drawPostFX(dt) {
+                // Vignette pulse (on miss)
+                if (vignetteT > 0) {
+                    vignetteT -= dt * 2;
+                    const vg = X.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.min(W, H) * 0.7);
+                    vg.addColorStop(0, 'rgba(0,0,0,0)');
+                    vg.addColorStop(1, `rgba(255,30,50,${vignetteT * 0.25})`);
+                    X.fillStyle = vg; X.fillRect(0, 0, W, H);
+                }
+                // Screen flash (on perfect)
                 if (screenFlashT > 0) {
-                    screenFlashT -= dt * 5;
+                    screenFlashT -= dt * 3;
                     const [fr, fg, fb] = hexRGB(screenFlashC);
                     X.fillStyle = `rgba(${fr},${fg},${fb},${screenFlashT * 0.06})`;
                     X.fillRect(0, 0, W, H);
                 }
             }
 
-            // ─── v4.0 Draw: Difficulty Select ─────────────
-            function drawDifficulty(dt) {
-                clearBtns(); menuT += dt;
-                drawNeonGrid(0.2, Math.sin(menuT * 2) * 0.5 + 0.5);
-                drawBg();
-                const cx = W / 2;
-
-                glassPanel(cx - W * 0.4, H * 0.12, W * 0.8, 80, 20, [140, 123, 255], 0.05);
-                X.font = '800 22px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)';
-                X.shadowBlur = 20; X.shadowColor = 'rgba(140,123,255,.4)';
-                X.fillText('SELECT DIFFICULTY', cx, H * 0.12 + 35);
-                X.shadowBlur = 0;
-                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
-                X.fillText('Choose your challenge level', cx, H * 0.12 + 58);
-
-                const cardW = W * 0.75, cardH = 110, startY = H * 0.28, gap = 16;
-                DIFF_CFG.forEach((d, i) => {
-                    const y = startY + i * (cardH + gap);
-                    const isSelected = difficulty === i;
-                    glassPanel((W - cardW) / 2, y, cardW, cardH, 18, hexRGB(d.color), isSelected ? 0.12 : 0.05);
-
-                    // Emoji + Name
-                    X.font = '700 28px Outfit'; X.textAlign = 'center'; X.fillStyle = d.color;
-                    X.fillText(d.emoji, cx, y + 32);
-                    X.font = '700 18px Outfit'; X.fillText(d.name, cx, y + 56);
-
-                    // Stats
-                    X.font = '400 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
-                    const info = `Lives: ${d.lives}  |  Speed: ${d.bpmBase} BPM  |  Score: ×${d.scoreMult}`;
-                    X.fillText(info, cx, y + 78);
-
-                    // Select indicator
-                    if (isSelected) {
-                        X.font = '600 10px Outfit'; X.fillStyle = d.color;
-                        X.fillText('▶ SELECTED', cx, y + 96);
-                    }
-                    addBtn('diff_' + i, (W - cardW) / 2, y, cardW, cardH);
-                });
-
-                // Start button
-                const bY = startY + 3 * (cardH + gap) + 8;
-                glassPanel((W - cardW) / 2, bY, cardW, 50, 14, hexRGB(DIFF_CFG[difficulty].color), 0.1);
-                X.font = '700 16px Outfit'; X.textAlign = 'center'; X.fillStyle = DIFF_CFG[difficulty].color;
-                X.shadowBlur = 10; X.shadowColor = DIFF_CFG[difficulty].color;
-                X.fillText('▶  START GAME', cx, bY + 32); X.shadowBlur = 0;
-                addBtn('start_game', (W - cardW) / 2, bY, cardW, 50);
-
-                // Back
-                glassPanel(24, H - 64, W - 48, 42, 12);
-                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.6)'; X.fillText('← BACK', cx, H - 37);
-                addBtn('back', 24, H - 64, W - 48, 42);
-            }
-
-            // ─── v4.0 Draw: Fever Overlay ─────────────────
             function drawFeverOverlay(dt) {
                 if (!feverMode) return;
                 feverT += dt;
-                // Rainbow edge glow
-                const gL = X.createLinearGradient(0, 0, 0, H);
-                const gR = X.createLinearGradient(W, 0, W, H);
-                for (let i = 0; i <= 4; i++) {
-                    const c = rainbowColor(feverT * 3 + i * 1.5);
-                    gL.addColorStop(i / 4, c); gR.addColorStop(i / 4, c);
-                }
-                X.globalAlpha = 0.06 + Math.sin(feverT * 6) * 0.03;
-                X.fillStyle = gL; X.fillRect(0, 0, 8, H);
-                X.fillStyle = gR; X.fillRect(W - 8, 0, 8, H);
-                // Top/bottom chromatic bars
-                X.fillStyle = gL; X.fillRect(0, 0, W, 4);
-                X.fillRect(0, H - 4, W, 4);
+                const pulse = Math.sin(feverT * 8) * 0.5 + 0.5;
+                // rainbow border
+                const borderW = 3 + pulse * 2;
+                X.save();
+                X.strokeStyle = rainbowColor(feverT * 4);
+                X.lineWidth = borderW;
+                X.globalAlpha = 0.15 + pulse * 0.1;
+                X.strokeRect(borderW / 2, borderW / 2, W - borderW, H - borderW);
                 X.globalAlpha = 1;
-                // FEVER badge
-                X.save(); X.translate(W / 2, 85);
-                const fs = 1 + Math.sin(feverT * 8) * 0.05;
-                X.scale(fs, fs);
-                X.font = '800 12px Outfit'; X.textAlign = 'center';
-                X.fillStyle = rainbowColor(feverT * 4);
-                X.shadowBlur = 15; X.shadowColor = X.fillStyle;
-                X.fillText('🔥 FEVER ×1.5', 0, 0);
-                X.shadowBlur = 0; X.restore();
-            }
-
-            // ─── v4.0 Phase 3: Achievements ──────────────
-            const ACHIEVEMENTS = [
-                { id: 'first_perfect', name: 'First Light', desc: 'Get your first PERFECT', icon: '✨', color: '#7fe0ff' },
-                { id: 'combo_10', name: 'Chain Reaction', desc: 'Reach 10x Combo', icon: '⚡', color: '#ffd36a' },
-                { id: 'combo_25', name: 'Unstoppable', desc: 'Reach 25x Combo', icon: '💥', color: '#ff5d7a' },
-                { id: 'score_200', name: 'Rising Star', desc: 'Score 200 points', icon: '⭐', color: '#62ffb3' },
-                { id: 'score_500', name: 'Neon Master', desc: 'Score 500 points', icon: '💎', color: '#8c7bff' },
-                { id: 'fever_first', name: 'Fever Time!', desc: 'Activate Fever Mode', icon: '🌈', color: '#ff9d5c' },
-                { id: 'hard_200', name: 'Iron Will', desc: 'Score 200+ on HARD', icon: '🏆', color: '#ff5d7a' },
-                { id: 'flawless', name: 'Flawless', desc: 'Finish with 0 MISS', icon: '💫', color: '#7fe0ff' }
-            ];
-            let unlockedAch = new Set(JSON.parse(localStorage.getItem('arkPD_ach') || '[]'));
-            let achQueue = []; // popup queue
-            let achPopT = 0, achPopCurrent = null;
-
-            function saveAch() { localStorage.setItem('arkPD_ach', JSON.stringify([...unlockedAch])) }
-            function unlockAch(id) {
-                if (unlockedAch.has(id)) return;
-                unlockedAch.add(id); saveAch();
-                const a = ACHIEVEMENTS.find(a => a.id === id);
-                if (a) achQueue.push(a);
-            }
-            function checkAchievements(isGameOver = false) {
-                if (accP >= 1) unlockAch('first_perfect');
-                if (maxCombo >= 10) unlockAch('combo_10');
-                if (maxCombo >= 25) unlockAch('combo_25');
-                if (score >= 200) unlockAch('score_200');
-                if (score >= 500) unlockAch('score_500');
-                if (feverMode) unlockAch('fever_first');
-                if (difficulty === 2 && score >= 200) unlockAch('hard_200');
-                if (isGameOver && accM === 0 && (accP + accG + accO) > 0) unlockAch('flawless');
-            }
-
-            // Achievement popup drawing
-            function drawAchPopup(dt) {
-                // Process queue
-                if (!achPopCurrent && achQueue.length > 0) {
-                    achPopCurrent = achQueue.shift();
-                    achPopT = 3.0; // 3 seconds display
-                }
-                if (!achPopCurrent) return;
-                achPopT -= dt;
-                if (achPopT <= 0) { achPopCurrent = null; return; }
-
-                const a = achPopCurrent;
-                const fadeIn = Math.min(1, (3.0 - achPopT) * 4);
-                const fadeOut = Math.min(1, achPopT * 3);
-                const alpha = Math.min(fadeIn, fadeOut);
-                const slideY = (1 - fadeIn) * -30;
-
-                X.save();
-                X.globalAlpha = alpha;
-                const pW = W * 0.7, pH = 52, pX = (W - pW) / 2, pY = H * 0.06 + slideY;
-                glassPanel(pX, pY, pW, pH, 14, hexRGB(a.color), 0.12);
-
-                // Icon
-                X.font = '700 20px Outfit'; X.textAlign = 'left'; X.fillStyle = a.color;
-                X.fillText(a.icon, pX + 14, pY + 30);
-                // Title
-                X.font = '700 12px Outfit'; X.fillStyle = a.color;
-                X.shadowBlur = 8; X.shadowColor = a.color;
-                X.fillText('ACHIEVEMENT UNLOCKED', pX + 44, pY + 18);
-                X.shadowBlur = 0;
-                // Name
-                X.font = '600 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
-                X.fillText(a.name + ' — ' + a.desc, pX + 44, pY + 38);
-
                 X.restore();
             }
 
-            // ─── v4.0 Phase 3: Wave Announcement ─────────
-            let waveAnnT = 0, waveAnnLevel = 0;
-            function triggerWave(lv) { waveAnnT = 2.5; waveAnnLevel = lv; }
-            function drawWaveAnn(dt) {
-                if (waveAnnT <= 0) return;
-                waveAnnT -= dt;
-                const cx = W / 2, cy = H * 0.32;
-                const fadeIn = Math.min(1, (2.5 - waveAnnT) * 5);
-                const fadeOut = Math.min(1, waveAnnT * 2);
-                const alpha = Math.min(fadeIn, fadeOut);
-                const sc = 0.5 + fadeIn * 0.5;
-
-                X.save();
-                X.globalAlpha = alpha;
-                X.translate(cx, cy); X.scale(sc, sc);
-
-                // Ring burst
-                const ringR = 40 + (1 - fadeOut) * 60;
-                X.beginPath(); X.arc(0, 0, ringR, 0, Math.PI * 2);
-                X.strokeStyle = `rgba(140,123,255,${alpha * 0.4})`;
-                X.lineWidth = 3; X.shadowBlur = 20; X.shadowColor = 'rgba(140,123,255,.5)';
-                X.stroke(); X.shadowBlur = 0;
-
-                // WAVE text
-                X.font = '300 14px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.7)';
-                X.fillText('W A V E', 0, -14);
-                X.font = '800 48px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)';
-                X.shadowBlur = 30; X.shadowColor = 'rgba(140,123,255,.6)';
-                X.fillText(waveAnnLevel.toString(), 0, 32);
-                X.shadowBlur = 0;
-
-                X.restore();
-            }
-
-            // ─── Hit Zones (buttons) ──────────────────────
-            let buttons = [];
-            function addBtn(id, x, y, w, h) { buttons.push({ id, x, y, w, h }) }
-            function hitBtn(px, py) { return buttons.find(b => px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) }
-            function clearBtns() { buttons = [] }
-
-            // ─── Draw: Background particles ──────────────
-            function drawBg() { bgP.forEach(p => { p.y -= p.sp; p.ph += .01; if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W } const ox = Math.sin(p.ph) * 15; X.beginPath(); X.arc(p.x + ox, p.y, p.sz, 0, Math.PI * 2); X.fillStyle = `rgba(255,255,255,${p.op * (.5 + .5 * Math.sin(p.ph))})`; X.fill() }) }
-
-            // ─── Draw: Particles & Ripples ────────────────
-            function drawFX() {
-                ripples.forEach((rp, i) => { rp.r += (rp.mx - rp.r) * .06; rp.life -= .025; if (rp.life <= 0) { ripples.splice(i, 1); return } const [r, g, b] = hexRGB(rp.c); X.beginPath(); X.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); X.strokeStyle = `rgba(${r},${g},${b},${rp.life * .35})`; X.lineWidth = 2 * rp.life; X.stroke() });
-                particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vx *= .97; p.vy *= .97; p.life -= p.decay; if (p.life <= 0) { particles.splice(i, 1); return } const [r, g, b] = hexRGB(p.color); X.beginPath(); X.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); X.fillStyle = `rgba(${r},${g},${b},${p.life * .7})`; X.fill() });
-            }
-
-            // ─── Draw: Menu ───────────────────────────────
-            function drawMenu(dt) {
-                clearBtns(); menuT += dt;
-                drawNeonGrid(0.22, Math.sin(menuT * 2) * 0.5 + 0.5);
-                drawBg();
-                const cx = W / 2, cy = H * .30;
-
-                // v4.0 Glassmorphism title card
-                glassPanel(cx - W * 0.4, cy - 68, W * 0.8, 135, 24, [140, 123, 255], 0.05);
-
-                // Title
-                X.save(); X.translate(cx, cy); const sc = 1 + Math.sin(menuT * 1.5) * .02; X.scale(sc, sc);
-                X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(140,123,255,.6)'; X.fillText('A R K', 0, -38);
-                X.font = '700 38px Outfit'; X.fillStyle = 'rgba(255,255,255,.95)'; X.shadowBlur = 40; X.shadowColor = 'rgba(140,123,255,.5)'; X.fillText('Pulse Drop', 0, 2); X.shadowBlur = 0;
-                X.font = '400 11px Outfit'; X.fillStyle = 'rgba(140,123,255,.45)'; X.fillText('v5.0 — NEON ASCEND ULTRA', 0, 26);
-                X.restore();
-
-                // Ring anim with orbit
-                const rr2 = 50 + Math.sin(menuT * 2) * 15;
-                X.beginPath(); X.arc(cx, cy + 80, rr2, 0, Math.PI * 2);
-                X.strokeStyle = `rgba(127,224,255,${.4 + Math.sin(menuT * 2) * .2})`; X.lineWidth = 3; X.shadowBlur = 25; X.shadowColor = 'rgba(127,224,255,.4)'; X.stroke(); X.shadowBlur = 0;
-                X.beginPath(); X.arc(cx, cy + 80, 4, 0, Math.PI * 2); X.fillStyle = 'rgba(127,224,255,.8)'; X.fill();
-                drawOrbitRing(cx, cy + 80, rr2 * 2.2, dt);
-
-                // TAP TO START
-                const a = .4 + Math.sin(menuT * 3) * .3;
-                X.font = '500 15px Outfit'; X.textAlign = 'center'; X.fillStyle = `rgba(255,255,255,${a})`; X.fillText('TAP TO START', cx, cy + 160);
-                if (hi > 0) { X.font = '400 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText(`BEST  ${hi}`, cx, cy + 185) }
-
-                // Coins display
-                X.font = '600 13px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆ ' + SkinShop.getCoins(), W - 28, 38);
-
-                // v4.0 Glassmorphism bottom buttons
-                const btnW = W * .38, btnH = 48, btnY = H * .78, gap = 14;
-                const bx1 = (W - btnW * 2 - gap) / 2, bx2 = bx1 + btnW + gap;
-
-                glassPanel(bx1, btnY, btnW, btnH, 14, [140, 123, 255], 0.08);
-                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#8c7bff'; X.fillText('💎 SHOP', bx1 + btnW / 2, btnY + 30);
-                addBtn('shop', bx1, btnY, btnW, btnH);
-
-                glassPanel(bx2, btnY, btnW, btnH, 14, [98, 255, 179], 0.06);
-                X.font = '600 14px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3'; X.fillText('🏆 RANK', bx2 + btnW / 2, btnY + 30);
-                addBtn('board', bx2, btnY, btnW, btnH);
-
-                // Equipped skin
-                const sk = SkinShop.getCurrentSkin();
-                X.font = '400 11px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.22)';
-                X.fillText(`Skin: ${sk.name}`, cx, H - 32);
-                X.font = '300 10px Outfit'; X.fillStyle = 'rgba(140,123,255,.2)'; X.fillText('v5.0 NEON ASCEND ULTRA — ARK', cx, H - 14);
-            }
-
-            // ─── Draw: Game ───────────────────────────────
             function drawGame(dt) {
-                const cx = W / 2, cy = H * .44, sk = SkinShop.getCurrentSkin();
-                const baseR = Math.min(W, H) * .20, n = pv(t), r = baseR * (.35 + .65 * n);
+                const cx = W / 2, cy = H * 0.44;
+                const sk = SkinShop.getCurrentSkin();
+                const baseR = Math.min(W, H) * 0.20;
+                const n = pv(t), r = baseR * (0.35 + 0.65 * n);
                 const ringColor = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
                 const beatSync = 1 - n;
 
-                // v4.0 Neon grid synced to beat (boosted in fever)
+                // Background visuals
                 drawNeonGrid(0.18 + combo * 0.004 + (feverMode ? 0.15 : 0), beatSync);
                 drawBg();
-
-                // v4.0 Orbit ring (dual ring system)
                 drawOrbitRing(cx, cy, baseR, dt);
 
                 // Fever check
                 if (combo >= 15 && !feverMode) { feverMode = true; feverT = 0; }
                 if (feverMode && combo < 15) feverMode = false;
 
-                // Target ring
-                X.beginPath(); X.arc(cx, cy, baseR * .35, 0, Math.PI * 2);
-                X.strokeStyle = `rgba(255,255,255,${.06 + (n < .1 ? (.1 - n) * 1.5 : 0)})`; X.lineWidth = 2; X.setLineDash([4, 8]); X.stroke(); X.setLineDash([]);
+                // Target ring (dashed)
+                X.beginPath(); X.arc(cx, cy, baseR * 0.35, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(255,255,255,${0.06 + (n < .1 ? (.1 - n) * 1.5 : 0)})`;
+                X.lineWidth = 2; X.setLineDash([4, 8]); X.stroke(); X.setLineDash([]);
 
                 // Enhanced glow
                 const gg = X.createRadialGradient(cx, cy, r - 10, cx, cy, r + 50);
                 const [gr, ggr, gb] = hexRGB(sk.rainbow ? '#ffffff' : sk.ring);
-                gg.addColorStop(0, `rgba(${gr},${ggr},${gb},${.10 + n * .08})`); gg.addColorStop(1, `rgba(${gr},${ggr},${gb},0)`);
+                gg.addColorStop(0, `rgba(${gr},${ggr},${gb},${0.10 + n * 0.08})`);
+                gg.addColorStop(1, `rgba(${gr},${ggr},${gb},0)`);
                 X.fillStyle = gg; X.beginPath(); X.arc(cx, cy, r + 50, 0, Math.PI * 2); X.fill();
 
-                // Main ring (enhanced glow)
+                // Main ring
                 X.beginPath(); X.arc(cx, cy, r, 0, Math.PI * 2);
-                X.strokeStyle = ringColor; X.lineWidth = n < .08 ? 10 : 6; X.shadowBlur = 30 + (1 - n) * 20; X.shadowColor = ringColor; X.stroke(); X.shadowBlur = 0;
+                X.strokeStyle = ringColor; X.lineWidth = n < 0.08 ? 10 : 6;
+                X.shadowBlur = 30 + (1 - n) * 20; X.shadowColor = ringColor; X.stroke(); X.shadowBlur = 0;
 
                 // Center dot
-                X.beginPath(); X.arc(cx, cy, 3 + (1 - n) * 3, 0, Math.PI * 2); X.fillStyle = ringColor; X.shadowBlur = 12; X.shadowColor = ringColor; X.fill(); X.shadowBlur = 0;
+                X.beginPath(); X.arc(cx, cy, 3 + (1 - n) * 3, 0, Math.PI * 2);
+                X.fillStyle = ringColor; X.shadowBlur = 12; X.shadowColor = ringColor; X.fill(); X.shadowBlur = 0;
 
                 drawFX();
 
-                // HUD
-                X.font = '700 26px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText(score.toString(), cx, 46);
-                X.font = '400 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.3)'; X.fillText('SCORE', cx, 21);
-
-                // Level pill
-                pill(18, 18, 56, 24); X.font = '600 11px Outfit'; X.textAlign = 'center'; X.fillStyle = ringColor; X.fillText('LV ' + level, 46, 34);
-
-                // Lives
-                pill(W - 74, 18, 56, 24); let hStr = ''; for (let i = 0; i < 5; i++)hStr += i < lives ? '♥' : '♡';
-                X.font = '500 11px Outfit'; X.fillStyle = lives <= 2 ? '#ff5d7a' : 'rgba(255,255,255,.6)'; X.fillText(hStr, W - 46, 34);
-
-                // Coins
-                X.font = '600 11px Outfit'; X.fillStyle = '#ffd36a'; X.textAlign = 'right'; X.fillText('◆' + SkinShop.getCoins(), W - 20, 62);
-
-                // Combo (enhanced glow for high combos)
-                if (combo > 1) {
-                    const shX = cShk > 0 ? (Math.random() - .5) * cShk * 4 : 0; cShk *= .9;
-                    X.font = '700 15px Outfit'; X.textAlign = 'center';
-                    X.fillStyle = combo >= 10 ? '#ffd36a' : combo >= 5 ? '#62ffb3' : 'rgba(255,255,255,.6)';
-                    if (combo >= 10) { X.shadowBlur = 8; X.shadowColor = '#ffd36a'; }
-                    X.fillText(`${combo}x COMBO`, cx + shX, 65); X.shadowBlur = 0;
-                }
-
-                // v5.0 Enhanced Judgment Feedback (MOVED TO BOTTOM — Reddit fix)
+                // Edge flash on judgment
                 if (fbT > 0) {
-                    fbT -= dt; const pr = Math.max(0, fbT / 1.2);
-                    const rawP = Math.min(1, (1.2 - fbT) * 5);
-                    const sc2 = rawP < 0.5 ? eOB(rawP * 2) * 1.2 : 1 + 0.2 * Math.pow(1 - (rawP - 0.5) * 2, 2);
-                    const yo = (1 - pr) * -18;
-
-                    // Multi-ring flash effect (stays on center ring)
+                    fbT -= dt;
                     if (fbT > 0.4) {
                         const flashA = (fbT - 0.4) / 0.8;
                         const [fr, fg, fbb] = hexRGB(fbC);
                         for (let ri = 0; ri < 3; ri++) {
-                            X.beginPath(); X.arc(cx, cy, baseR * .35 + ri * 8, 0, Math.PI * 2);
+                            X.beginPath(); X.arc(cx, cy, baseR * 0.35 + ri * 8, 0, Math.PI * 2);
                             X.strokeStyle = `rgba(${fr},${fg},${fbb},${flashA * 0.5 * (1 - ri * 0.3)})`;
-                            X.lineWidth = 3 - ri; X.shadowBlur = 15 + flashA * 15; X.shadowColor = fbC;
-                            X.stroke();
+                            X.lineWidth = 3 - ri; X.shadowBlur = 15 + flashA * 15; X.shadowColor = fbC; X.stroke();
                         }
                         X.shadowBlur = 0;
                     }
-
-                    // v5.0 Edge flash effect (side bars glow with judgment color)
                     if (fbT > 0.3) {
                         const edgeA = (fbT - 0.3) / 0.9 * 0.4;
                         const [er, eg, eb] = hexRGB(fbC);
@@ -819,770 +875,225 @@
                         edgeGradR.addColorStop(0, `rgba(${er},${eg},${eb},${edgeA})`); edgeGradR.addColorStop(1, 'rgba(0,0,0,0)');
                         X.fillStyle = edgeGradR; X.fillRect(W - 30, 0, 30, H);
                     }
-
-                    // v5.0 Judgment text — BOTTOM position (near timing bar)
-                    X.save();
-                    const shakeX = fb === 'MISS' ? (Math.random() - 0.5) * 8 * pr : 0;
-                    const judgY = H - 105 + yo;
-                    X.translate(cx + shakeX, judgY); X.scale(sc2, sc2);
-                    X.font = '800 32px Outfit'; X.textAlign = 'center'; X.fillStyle = fbC;
-                    X.globalAlpha = pr; X.shadowBlur = 30; X.shadowColor = fbC; X.fillText(fb, 0, 0);
-                    X.shadowBlur = 50; X.globalAlpha = pr * 0.3; X.fillText(fb, 0, 0);
-                    X.shadowBlur = 0; X.restore(); X.globalAlpha = 1;
-
-                    // Score popup also at bottom
-                    if (spTm > 0) { spTm -= dt; X.font = '600 15px Outfit'; X.fillStyle = `rgba(255,255,255,${spTm / .8 * .7})`; X.textAlign = 'center'; X.fillText(spT, cx, H - 75 + (1 - spTm / .8) * -12) }
                 }
 
-                // Post-FX
                 drawPostFX(dt);
                 drawFeverOverlay(dt);
-                drawWaveAnn(dt);
-                drawAchPopup(dt);
 
-                // Difficulty badge
-                const dc = DIFF_CFG[difficulty];
-                pill(W / 2 - 28, H - 38, 56, 18, `rgba(${hexRGB(dc.color).join(',')},0.1)`);
-                X.font = '600 9px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
-                X.fillText(dc.emoji + ' ' + dc.name, W / 2, H - 25);
-
-                // Timing bar
-                const bW = W * .55, bH = 5, bX = (W - bW) / 2, bY = H - 58;
-                rr(bX, bY, bW, bH, 3); X.fillStyle = 'rgba(255,255,255,.05)'; X.fill();
-                const dPos = bX + n * bW; X.beginPath(); X.arc(dPos, bY + bH / 2, 4, 0, Math.PI * 2);
-                const th2 = thr(); X.fillStyle = n < th2.p ? '#7fe0ff' : n < th2.g ? '#62ffb3' : n < th2.o ? '#ffd36a' : 'rgba(255,255,255,.3)';
-                X.shadowBlur = 6; X.shadowColor = X.fillStyle; X.fill(); X.shadowBlur = 0;
-
-                X.font = '300 10px Outfit'; X.textAlign = 'left'; X.fillStyle = 'rgba(255,255,255,.18)'; X.fillText(`BEST ${hi}`, 24, H - 22);
-                X.textAlign = 'right'; X.fillText(`MAX ×${maxCombo}`, W - 24, H - 22);
+                // Timing bar (bottom center)
+                const bW = W * 0.45, bH = 5, bX = (W - bW) / 2, bY = H - 90;
+                rr(X, bX, bY, bW, bH, 3); X.fillStyle = 'rgba(255,255,255,0.04)'; X.fill();
+                const dPos = bX + n * bW;
+                X.beginPath(); X.arc(dPos, bY + bH / 2, 4, 0, Math.PI * 2);
+                const th2 = thr();
+                X.fillStyle = n < th2.p ? '#7fe0ff' : n < th2.g ? '#62ffb3' : n < th2.o ? '#ffd36a' : 'rgba(255,255,255,0.2)';
+                X.shadowBlur = 8; X.shadowColor = X.fillStyle; X.fill(); X.shadowBlur = 0;
             }
 
-            // ─── Draw: Game Over (v5.0 ULTRA — Mockup Match) ──
-            function drawGameOver(dt) {
-                clearBtns(); goT += dt; const cx = W / 2;
-                X.fillStyle = `rgba(5,6,10,${Math.min(.8, goT * .8)})`; X.fillRect(0, 0, W, H);
-                const fade = Math.min(1, goT * 2);
+            // ─── Tap Handler (gameplay) ──────────────────
+            function handleGameTap(px, py) {
+                const cx = W / 2, cy = H * 0.44;
+                const baseR = Math.min(W, H) * 0.20;
+                const hitR = baseR + 30;
+                const dx = px - cx, dy = py - cy;
+                if (dx * dx + dy * dy > hitR * hitR) return;
 
-                const cW = W * .92, cH = 560, cX = (W - cW) / 2, cY = H * .03;
-                X.save(); X.globalAlpha = fade;
-                glassPanel(cX, cY, cW, cH, 28, [127, 224, 255], 0.10);
-
-                // Difficulty badge — bigger, brighter pill
-                const dc = DIFF_CFG[difficulty];
-                const dbW = 100, dbH = 30, dbX = cx - dbW / 2;
-                rr(dbX, cY + 10, dbW, dbH, 15);
-                X.fillStyle = `rgba(${hexRGB(dc.color).join(',')},0.25)`; X.fill();
-                X.strokeStyle = `rgba(${hexRGB(dc.color).join(',')},0.5)`; X.lineWidth = 2; X.stroke();
-                X.font = '800 14px Outfit'; X.textAlign = 'center'; X.fillStyle = dc.color;
-                X.shadowBlur = 8; X.shadowColor = dc.color;
-                X.fillText(dc.emoji + ' ' + dc.name, cx, cY + 30); X.shadowBlur = 0;
-
-                // GAME OVER — massive with light ray glow
-                X.font = '900 38px Outfit'; X.fillStyle = 'rgba(255,255,255,.97)';
-                X.shadowBlur = 30; X.shadowColor = 'rgba(127,224,255,.5)';
-                X.fillText('GAME OVER', cx, cY + 68);
-                // Second glow pass
-                X.shadowBlur = 60; X.globalAlpha = .3;
-                X.fillText('GAME OVER', cx, cY + 68);
-                X.shadowBlur = 0; X.globalAlpha = 1;
-
-                // "FINAL SCORE" label
-                X.font = '500 12px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)'; X.fillText('FINAL SCORE', cx, cY + 88);
-
-                // MASSIVE score — quadruple glow (mockup: huge radiating number)
-                rollScore += (score - rollScore) * 0.08;
-                if (Math.abs(score - rollScore) < 1) rollScore = score;
-                const scoreStr = Math.round(rollScore).toLocaleString();
-                X.font = '800 72px Outfit'; X.fillStyle = '#7fe0ff';
-                // Glow layer 1
-                X.shadowBlur = 40; X.shadowColor = 'rgba(127,224,255,.7)';
-                X.fillText(scoreStr, cx, cY + 154);
-                // Glow layer 2
-                X.shadowBlur = 80; X.globalAlpha = .3;
-                X.fillText(scoreStr, cx, cY + 154);
-                // Glow layer 3 — wide diffuse
-                X.shadowBlur = 120; X.globalAlpha = .15;
-                X.fillText(scoreStr, cx, cY + 154);
-                X.shadowBlur = 0; X.globalAlpha = 1;
-
-                // NEW BEST — big golden with star pulse
-                let nextY = cY + 174;
-                if (score >= hi && score > 0) {
-                    const goldPulse = 22 + Math.sin(goT * 5) * 16;
-                    X.font = '800 20px Outfit'; X.fillStyle = '#ffd36a';
-                    X.shadowBlur = goldPulse; X.shadowColor = 'rgba(255,211,106,.8)';
-                    X.fillText('⭐ NEW BEST! ⭐', cx, nextY);
-                    X.shadowBlur = 0; nextY += 28;
-                } else { nextY += 4; }
-
-                // Coins earned — bigger with shine
-                X.font = '800 18px Outfit'; X.fillStyle = '#ffd36a';
-                X.shadowBlur = 16; X.shadowColor = 'rgba(255,211,106,.5)';
-                X.fillText(`◆ +${earnedCoins} coins`, cx, nextY);
-                X.shadowBlur = 0; nextY += 32;
-
-                // ACCURACY label + percentage — bigger
-                const total = accP + accG + accO + accM;
-                const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100).toFixed(1) : '0.0';
-                X.font = '800 15px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
-                X.fillText(`ACCURACY  ${accPct}%`, cx, nextY); nextY += 16;
-
-                // Rainbow gradient accuracy bar — THICKER, with rounded ends
-                const barW = cW - 36, barH = 16, barX = cX + 18;
-                rr(barX, nextY, barW, barH, 8); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill();
-                if (total > 0) {
-                    const pW = (accP / total) * barW, gW = (accG / total) * barW;
-                    const oW = (accO / total) * barW, mW = (accM / total) * barW;
-                    let bx = barX;
-                    if (pW > 0) {
-                        rr(bx, nextY, Math.max(pW, 8), barH, 8);
-                        X.fillStyle = '#7fe0ff'; X.shadowBlur = 12; X.shadowColor = '#7fe0ff';
-                        X.fill(); X.shadowBlur = 0; bx += pW;
-                    }
-                    if (gW > 0) { X.fillStyle = '#62ffb3'; X.fillRect(bx, nextY, gW, barH); bx += gW; }
-                    if (oW > 0) { X.fillStyle = '#ffd36a'; X.fillRect(bx, nextY, oW, barH); bx += oW; }
-                    if (mW > 0) {
-                        rr(bx, nextY, Math.max(mW, 8), barH, 0);
-                        X.fillStyle = '#ff5d7a'; X.fill();
-                    }
-                    // Percentage marker
-                    const markerX = barX + barW * parseFloat(accPct) / 100;
-                    X.font = '700 10px Outfit'; X.fillStyle = 'rgba(255,255,255,.6)'; X.textAlign = 'center';
-                    X.fillText(`${accPct}%`, Math.min(markerX, barX + barW - 16), nextY - 4);
-                }
-                nextY += barH + 18;
-
-                // Judgment counts — OVERSIZED colored pills with emoji icons
-                const jData = [
-                    ['PERFECT', accP, '#7fe0ff', 'rgba(127,224,255,.15)', '👑'],
-                    ['GOOD', accG, '#62ffb3', 'rgba(98,255,179,.12)', '👍'],
-                    ['OK', accO, '#ffd36a', 'rgba(255,211,106,.12)', '👌'],
-                    ['MISS', accM, '#ff5d7a', 'rgba(255,93,122,.12)', '❌']
-                ];
-                const pillW = (cW - 44) / 4 - 6, pillH = 70;
-                jData.forEach(([label, count, color, bg, emoji], i) => {
-                    const jx = cX + 12 + i * (pillW + 8);
-                    // Pill background with colored border
-                    rr(jx, nextY, pillW, pillH, 14);
-                    X.fillStyle = bg; X.fill();
-                    X.strokeStyle = color.replace(')', ',.3)').replace('rgb', 'rgba'); X.lineWidth = 1.5; X.stroke();
-                    // Big Emoji
-                    X.font = '700 20px Outfit'; X.textAlign = 'center';
-                    X.fillText(emoji, jx + pillW / 2, nextY + 24);
-                    // Label
-                    X.font = '600 9px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
-                    X.fillText(label, jx + pillW / 2, nextY + 38);
-                    // Big Count with glow
-                    X.font = '800 22px Outfit'; X.fillStyle = color;
-                    if (i === 0 && accP > 0) { X.shadowBlur = 10; X.shadowColor = color; }
-                    X.fillText(count.toString(), jx + pillW / 2, nextY + 60); X.shadowBlur = 0;
-                });
-                nextY += pillH + 16;
-
-                // Stats row — bigger glassmorphism cards with glow borders
-                const statW = (cW - 52) / 3 - 6, statH = 54;
-                [['LEVEL ⚡', level], ['MAX COMBO 🔥', '×' + maxCombo], ['BEST 🏆', hi]].forEach(([l, v], i) => {
-                    const sx = cX + 14 + i * (statW + 10);
-                    rr(sx, nextY, statW, statH, 12);
-                    X.fillStyle = 'rgba(255,255,255,.05)'; X.fill();
-                    X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
-                    X.font = '500 9px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.4)';
-                    X.fillText(l, sx + statW / 2, nextY + 18);
-                    X.font = '800 20px Outfit'; X.fillStyle = 'rgba(255,255,255,.9)';
-                    X.fillText(v.toString(), sx + statW / 2, nextY + 42);
-                });
-                nextY += statH + 12;
-
-                // Achievement badges
-                const sessionAch = ACHIEVEMENTS.filter(a => unlockedAch.has(a.id));
-                if (sessionAch.length > 0) {
-                    X.font = '600 11px Outfit'; X.fillStyle = 'rgba(255,255,255,.45)'; X.textAlign = 'center';
-                    X.fillText(`ACHIEVEMENTS (${sessionAch.length}/${ACHIEVEMENTS.length})`, cx, nextY + 4);
-                    const maxShow = Math.min(sessionAch.length, 8);
-                    const achW = Math.min(40, (cW - 28) / maxShow);
-                    const achStartX = cx - (maxShow * achW) / 2;
-                    sessionAch.slice(0, maxShow).forEach((a, i) => {
-                        X.font = '700 24px Outfit'; X.textAlign = 'center';
-                        X.fillStyle = a.color; X.shadowBlur = 14; X.shadowColor = a.color;
-                        X.fillText(a.icon, achStartX + i * achW + achW / 2, nextY + 30);
-                        X.shadowBlur = 0;
-                    });
-                }
-
-                // Restart — bigger, pulsing
-                const rY = cY + cH - 36;
-                const ra = .45 + Math.sin(goT * 3) * .35;
-                X.font = '700 16px Outfit'; X.fillStyle = `rgba(255,255,255,${ra})`;
-                X.fillText('TAP TO RESTART', cx, rY);
-                addBtn('restart', cX, rY - 22, cW, 44);
-
-                X.restore();
-            }
-
-
-            // ─── Draw: Shop (v5.0 ULTRA — Mockup Match) ──
-            function drawShop(dt) {
-                clearBtns();
-                drawNeonGrid(0.15, 0.4);
-                drawBg();
-                const cx = W / 2;
-
-                // Title — MASSIVE with triple glow
-                X.font = '900 34px Outfit'; X.textAlign = 'center';
-                X.fillStyle = '#fff';
-                X.shadowBlur = 40; X.shadowColor = 'rgba(140,123,255,.8)';
-                X.fillText('💎 SKIN SHOP', cx, 48);
-                X.shadowBlur = 60; X.globalAlpha = .4;
-                X.fillText('💎 SKIN SHOP', cx, 48);
-                X.shadowBlur = 0; X.globalAlpha = 1;
-
-                // Coin balance pill — bigger, gold glow
-                const balW = 120, balH = 32, balX = (W - balW) / 2;
-                rr(balX, 60, balW, balH, 16);
-                X.fillStyle = 'rgba(255,211,106,.15)'; X.fill();
-                X.strokeStyle = 'rgba(255,211,106,.5)'; X.lineWidth = 2;
-                X.shadowBlur = 12; X.shadowColor = '#ffd36a'; X.stroke(); X.shadowBlur = 0;
-                X.font = '800 16px Outfit'; X.fillStyle = '#ffd36a';
-                X.fillText('◆ ' + SkinShop.getCoins(), cx, 82);
-
-                shopScroll += (shopTarget - shopScroll) * .12;
-                const skins = SkinShop.getSkins();
-                const cardH = 105, gap = 14, startY = 108;
-
-                skins.forEach((sk, i) => {
-                    const y = startY + i * (cardH + gap) - shopScroll;
-                    if (y < 70 || y > H - 90) return;
-
-                    const owned = SkinShop.isUnlocked(sk.id), eq = SkinShop.getEquippedId() === sk.id;
-
-                    // Card background — stronger glass
-                    const borderColor = eq ? [140, 123, 255] : owned ? [98, 255, 179] : [255, 255, 255];
-                    const borderAlpha = eq ? 0.15 : owned ? 0.08 : 0.04;
-                    glassPanel(16, y, W - 32, cardH, 20, borderColor, borderAlpha);
-
-                    // THICK neon border with DOUBLE glow (mockup style)
-                    rr(16, y, W - 32, cardH, 20);
-                    if (eq) {
-                        const pa = 0.6 + Math.sin(t * 4) * 0.35;
-                        X.strokeStyle = `rgba(140,123,255,${pa})`; X.lineWidth = 3.5;
-                        X.shadowBlur = 30; X.shadowColor = '#8c7bff';
-                        X.stroke();
-                        // Second glow layer
-                        X.shadowBlur = 50; X.globalAlpha = 0.3;
-                        X.stroke(); X.globalAlpha = 1;
-                    } else if (owned) {
-                        X.strokeStyle = 'rgba(98,255,179,.45)'; X.lineWidth = 2.5;
-                        X.shadowBlur = 20; X.shadowColor = '#62ffb3';
-                        X.stroke();
-                    } else {
-                        X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1.5;
-                        X.stroke();
-                    }
-                    X.shadowBlur = 0;
-
-                    // Swatch — TRIPLE layer glow ring (mockup)
-                    const swC = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
-                    const swX = 56, swY = y + cardH / 2;
-                    // Layer 1: Outer diffuse glow
-                    X.beginPath(); X.arc(swX, swY, 28, 0, Math.PI * 2);
-                    X.fillStyle = swC; X.globalAlpha = .12; X.fill(); X.globalAlpha = 1;
-                    // Layer 2: Main ring — thick with glow
-                    X.beginPath(); X.arc(swX, swY, 20, 0, Math.PI * 2);
-                    X.strokeStyle = swC; X.lineWidth = 5;
-                    X.shadowBlur = 30; X.shadowColor = swC;
-                    X.stroke();
-                    // Second pass for stronger glow
-                    X.shadowBlur = 50; X.globalAlpha = .35;
-                    X.stroke(); X.globalAlpha = 1; X.shadowBlur = 0;
-                    // Layer 3: Inner filled dot
-                    X.beginPath(); X.arc(swX, swY, 7, 0, Math.PI * 2);
-                    X.fillStyle = swC; X.shadowBlur = 10; X.shadowColor = swC;
-                    X.fill(); X.shadowBlur = 0;
-
-                    // Name — BIGGER, bolder
-                    X.font = '800 18px Outfit'; X.textAlign = 'left';
-                    X.fillStyle = eq ? '#d4cbff' : '#fff';
-                    if (eq) { X.shadowBlur = 8; X.shadowColor = '#8c7bff'; }
-                    X.fillText(sk.name, 92, y + 34); X.shadowBlur = 0;
-                    // Description
-                    X.font = '400 13px Outfit'; X.fillStyle = 'rgba(255,255,255,.5)';
-                    X.fillText(sk.desc, 92, y + 54);
-                    // Trail tag
-                    if (sk.trail) {
-                        X.font = '700 10px Outfit'; X.fillStyle = '#ffd36a';
-                        X.shadowBlur = 6; X.shadowColor = '#ffd36a';
-                        X.fillText('✨ TRAIL', 92, y + 72); X.shadowBlur = 0;
-                    }
-
-                    // Action button — WIDER, BOLDER fills
-                    const bW2 = 100, bH2 = 40, bX2 = W - 32 - bW2 - 12, bY2 = y + (cardH - bH2) / 2;
-                    if (eq) {
-                        // EQUIPPED — intense purple fill
-                        rr(bX2, bY2, bW2, bH2, 12);
-                        X.fillStyle = 'rgba(140,123,255,.3)'; X.fill();
-                        X.strokeStyle = 'rgba(140,123,255,.65)'; X.lineWidth = 2;
-                        X.shadowBlur = 14; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
-                        X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#d4cbff';
-                        X.fillText('EQUIPPED', bX2 + bW2 / 2, bY2 + 26);
-                    } else if (owned) {
-                        // EQUIP — intense green fill
-                        rr(bX2, bY2, bW2, bH2, 12);
-                        X.fillStyle = 'rgba(98,255,179,.2)'; X.fill();
-                        X.strokeStyle = 'rgba(98,255,179,.55)'; X.lineWidth = 2;
-                        X.shadowBlur = 14; X.shadowColor = '#62ffb3'; X.stroke(); X.shadowBlur = 0;
-                        X.font = '800 13px Outfit'; X.textAlign = 'center'; X.fillStyle = '#62ffb3';
-                        X.fillText('EQUIP', bX2 + bW2 / 2, bY2 + 26);
-                        addBtn('equip_' + sk.id, bX2, bY2, bW2, bH2);
-                    } else {
-                        // PRICE — gold fill with glow
-                        const canBuy = SkinShop.getCoins() >= sk.price;
-                        rr(bX2, bY2, bW2, bH2, 12);
-                        X.fillStyle = canBuy ? 'rgba(255,211,106,.2)' : 'rgba(255,255,255,.04)'; X.fill();
-                        X.strokeStyle = canBuy ? 'rgba(255,211,106,.55)' : 'rgba(255,255,255,.1)';
-                        X.lineWidth = 2;
-                        if (canBuy) { X.shadowBlur = 10; X.shadowColor = '#ffd36a'; }
-                        X.stroke(); X.shadowBlur = 0;
-                        X.font = '800 14px Outfit'; X.textAlign = 'center';
-                        X.fillStyle = canBuy ? '#ffd36a' : 'rgba(255,255,255,.3)';
-                        X.fillText('◆ ' + sk.price, bX2 + bW2 / 2, bY2 + 26);
-                        if (canBuy) addBtn('buy_' + sk.id, bX2, bY2, bW2, bH2);
-                    }
-                });
-
-                // BUY COINS — gradient glow button
-                const bcW = (W - 48 - 12) / 2, bcH = 50;
-                rr(20, H - 72, bcW, bcH, 16);
-                X.fillStyle = 'rgba(0,255,204,.15)'; X.fill();
-                const bcGl = 0.5 + Math.sin(t * 3) * 0.3;
-                X.strokeStyle = `rgba(0,255,204,${bcGl})`; X.lineWidth = 2.5;
-                X.shadowBlur = 24; X.shadowColor = '#00ffcc'; X.stroke();
-                X.shadowBlur = 40; X.globalAlpha = .2; X.stroke();
-                X.shadowBlur = 0; X.globalAlpha = 1;
-                X.font = '900 15px Outfit'; X.textAlign = 'center'; X.fillStyle = '#00ffcc';
-                X.shadowBlur = 8; X.shadowColor = '#00ffcc';
-                X.fillText('💰 BUY COINS', 20 + bcW / 2, H - 41); X.shadowBlur = 0;
-                addBtn('buy_coins', 20, H - 72, bcW, bcH);
-
-                // BACK button — brighter
-                rr(20 + bcW + 12, H - 72, bcW, bcH, 16);
-                X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
-                X.strokeStyle = 'rgba(255,255,255,.18)'; X.lineWidth = 1.5; X.stroke();
-                X.font = '700 15px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.75)';
-                X.fillText('← BACK', 20 + bcW + 12 + bcW / 2, H - 41);
-                addBtn('back', 20 + bcW + 12, H - 72, bcW, bcH);
-            }
-
-            // ─── Draw: Leaderboard (v5.0 ULTRA — Mockup Match) ──
-            function drawBoard(dt) {
-                clearBtns();
-                drawNeonGrid(0.15, 0.4);
-                drawBg();
-                const cx = W / 2;
-
-                // Title — MASSIVE with golden triple glow
-                X.font = '900 34px Outfit'; X.textAlign = 'center';
-                X.fillStyle = '#fff';
-                X.shadowBlur = 40; X.shadowColor = 'rgba(255,211,106,.7)';
-                X.fillText('🏆 LEADERBOARD', cx, 48);
-                X.shadowBlur = 60; X.globalAlpha = .35;
-                X.fillText('🏆 LEADERBOARD', cx, 48);
-                X.shadowBlur = 0; X.globalAlpha = 1;
-
-                const name = Leaderboard.getPlayerName();
-                if (name) {
-                    // Player name pill — bigger, glowing
-                    const pnW = 160, pnH = 30, pnX = (W - pnW) / 2;
-                    rr(pnX, 60, pnW, pnH, 15);
-                    X.fillStyle = 'rgba(140,123,255,.12)'; X.fill();
-                    X.strokeStyle = 'rgba(140,123,255,.35)'; X.lineWidth = 1.5;
-                    X.shadowBlur = 10; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
-                    X.font = '700 14px Outfit'; X.fillStyle = '#d4cbff';
-                    X.fillText(`Player: ${name}`, cx, 80);
-                } else {
-                    X.font = '400 14px Outfit'; X.fillStyle = 'rgba(255,255,255,.4)';
-                    X.fillText('Set your name to rank!', cx, 72);
-                }
-
-                // Name set button — bigger, brighter
-                if (!name) {
-                    const nbW = 150, nbH = 42, nbX = (W - nbW) / 2, nbY = 82;
-                    rr(nbX, nbY, nbW, nbH, 14);
-                    X.fillStyle = 'rgba(140,123,255,.18)'; X.fill();
-                    X.strokeStyle = 'rgba(140,123,255,.5)'; X.lineWidth = 2;
-                    X.shadowBlur = 14; X.shadowColor = '#8c7bff'; X.stroke(); X.shadowBlur = 0;
-                    X.font = '800 14px Outfit'; X.fillStyle = '#d4cbff'; X.fillText('SET NAME', cx, nbY + 27);
-                    addBtn('set_name', nbX, nbY, nbW, nbH);
-                }
-
-                // Entries — DRAMATICALLY larger cards 
-                const startY = name ? 104 : 136;
-                const entryH = 66, entryGap = 10;
-                const medalBgColors = ['rgba(255,211,106,.15)', 'rgba(200,200,210,.10)', 'rgba(205,127,50,.10)'];
-                const medalBorderColors = ['rgba(255,211,106,.6)', 'rgba(200,200,210,.45)', 'rgba(205,127,50,.45)'];
-                const medalGlowColors = ['#ffd36a', '#c8c8d2', '#cd7f32'];
-
-                boardData.forEach((e, i) => {
-                    const y = startY + i * (entryH + entryGap);
-                    if (y > H - 130) return;
-                    const isMe = e.name === name;
-
-                    // Card background with thick colored borders
-                    rr(16, y, W - 32, entryH, 16);
-                    if (isMe) {
-                        X.fillStyle = 'rgba(140,123,255,.15)'; X.fill();
-                        X.strokeStyle = 'rgba(140,123,255,.6)'; X.lineWidth = 3;
-                        X.shadowBlur = 24; X.shadowColor = '#8c7bff'; X.stroke();
-                        X.shadowBlur = 40; X.globalAlpha = .25; X.stroke();
-                        X.globalAlpha = 1; X.shadowBlur = 0;
-                    } else if (i < 3) {
-                        X.fillStyle = medalBgColors[i]; X.fill();
-                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 3;
-                        X.shadowBlur = 20; X.shadowColor = medalGlowColors[i]; X.stroke();
-                        X.shadowBlur = 35; X.globalAlpha = .2; X.stroke();
-                        X.globalAlpha = 1; X.shadowBlur = 0;
-                    } else {
-                        X.fillStyle = 'rgba(255,255,255,.04)'; X.fill();
-                        X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1.5; X.stroke();
-                    }
-
-                    // Rank — large colored circles with glow
-                    const rkX = 48, rkY = y + entryH / 2;
-                    if (i < 3) {
-                        // Medal circle — bigger with intense glow
-                        X.beginPath(); X.arc(rkX, rkY, 22, 0, Math.PI * 2);
-                        X.fillStyle = medalBgColors[i]; X.fill();
-                        X.strokeStyle = medalBorderColors[i]; X.lineWidth = 2.5;
-                        X.shadowBlur = 18; X.shadowColor = medalGlowColors[i]; X.stroke(); X.shadowBlur = 0;
-                        const medals = ['🥇', '🥈', '🥉'];
-                        X.font = '700 20px Outfit'; X.textAlign = 'center'; X.fillStyle = '#fff';
-                        X.fillText(medals[i], rkX, rkY + 7);
-                    } else {
-                        X.beginPath(); X.arc(rkX, rkY, 18, 0, Math.PI * 2);
-                        X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
-                        X.strokeStyle = 'rgba(255,255,255,.12)'; X.lineWidth = 1.5; X.stroke();
-                        X.font = '800 16px Outfit'; X.textAlign = 'center';
-                        X.fillStyle = 'rgba(255,255,255,.55)';
-                        X.fillText('#' + (i + 1), rkX, rkY + 6);
-                    }
-
-                    // Name — BIGGER, bolder
-                    X.font = isMe ? '800 18px Outfit' : '600 17px Outfit'; X.textAlign = 'left';
-                    X.fillStyle = isMe ? '#d4cbff' : 'rgba(255,255,255,.9)';
-                    if (isMe) { X.shadowBlur = 6; X.shadowColor = '#8c7bff'; }
-                    X.fillText(e.name, 82, y + entryH / 2 + 6); X.shadowBlur = 0;
-
-                    // Score — MUCH bigger, with intense glow for top
-                    X.font = '800 22px Outfit'; X.textAlign = 'right';
-                    if (i === 0) {
-                        X.fillStyle = '#ffd36a';
-                        X.shadowBlur = 20; X.shadowColor = '#ffd36a';
-                    } else if (i < 3) {
-                        X.fillStyle = medalGlowColors[i];
-                        X.shadowBlur = 10; X.shadowColor = medalGlowColors[i];
-                    } else if (isMe) {
-                        X.fillStyle = '#d4cbff';
-                        X.shadowBlur = 8; X.shadowColor = '#8c7bff';
-                    } else {
-                        X.fillStyle = 'rgba(255,255,255,.8)';
-                    }
-                    X.fillText(e.score.toLocaleString(), W - 72, y + entryH / 2 + 7);
-                    X.shadowBlur = 0;
-
-                    // Delete button (✕) — bigger
-                    const delX = W - 58, delY = y + 6, delS = 30;
-                    X.font = '700 16px Outfit'; X.textAlign = 'center';
-                    X.fillStyle = 'rgba(255,93,122,.45)'; X.fillText('✕', delX + delS / 2, delY + 21);
-                    addBtn('del_' + i, delX, delY, delS, delS);
-                });
-
-                if (boardData.length === 0) {
-                    X.font = '500 16px Outfit'; X.fillStyle = 'rgba(255,255,255,.35)'; X.textAlign = 'center';
-                    X.fillText('No scores yet. Play to rank!', cx, H * .45);
-                }
-
-                // Clear All — bigger, more prominent
-                if (boardData.length > 0) {
-                    const clW = 120, clH = 38, clX = W - clW - 20, clY = H - 124;
-                    rr(clX, clY, clW, clH, 12);
-                    X.fillStyle = 'rgba(255,93,122,.12)'; X.fill();
-                    X.strokeStyle = 'rgba(255,93,122,.4)'; X.lineWidth = 2;
-                    X.shadowBlur = 10; X.shadowColor = '#ff5d7a'; X.stroke(); X.shadowBlur = 0;
-                    X.font = '800 12px Outfit'; X.textAlign = 'center'; X.fillStyle = '#ff5d7a';
-                    X.fillText('🗑 CLEAR ALL', clX + clW / 2, clY + 24);
-                    addBtn('clear_board', clX, clY, clW, clH);
-                }
-
-                // Back button — bigger, brighter
-                rr(16, H - 72, W - 32, 50, 16);
-                X.fillStyle = 'rgba(255,255,255,.07)'; X.fill();
-                X.strokeStyle = 'rgba(255,255,255,.18)'; X.lineWidth = 1.5; X.stroke();
-                X.font = '700 16px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.75)';
-                X.fillText('← BACK', cx, H - 41);
-                addBtn('back', 16, H - 72, W - 32, 50);
-            }
-
-            // ─── Draw: Name Input ─────────────────────────
-            function drawNameInput(dt) {
-                clearBtns();
-                X.fillStyle = 'rgba(7,8,12,.85)'; X.fillRect(0, 0, W, H);
-                const cx = W / 2, cy = H * .4;
-                const cW2 = W * .8, cH2 = 180, cX2 = (W - cW2) / 2;
-                rr(cX2, cy - 40, cW2, cH2, 20); X.fillStyle = 'rgba(255,255,255,.06)'; X.fill(); X.strokeStyle = 'rgba(255,255,255,.1)'; X.lineWidth = 1; X.stroke();
-
-                X.font = '600 16px Outfit'; X.textAlign = 'center'; X.fillStyle = 'rgba(255,255,255,.9)'; X.fillText('Enter Your Name', cx, cy);
-
-                // Input field
-                const iW = cW2 - 48, iH = 36, iX = cX2 + 24, iY = cy + 16;
-                rr(iX, iY, iW, iH, 10); X.fillStyle = 'rgba(255,255,255,.08)'; X.fill(); X.strokeStyle = 'rgba(140,123,255,.4)'; X.lineWidth = 1; X.stroke();
-
-                nameCursor += dt;
-                const cursor = Math.sin(nameCursor * 4) > .2 ? '|' : '';
-                X.font = '500 15px Outfit'; X.textAlign = 'center'; X.fillStyle = nameInput ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.3)';
-                X.fillText(nameInput ? (nameInput + cursor) : 'Type name...' + cursor, cx, iY + 24);
-
-                // Confirm
-                const cbW = 100, cbH = 36, cbX = (W - cbW) / 2, cbY = cy + 70;
-                rr(cbX, cbY, cbW, cbH, 10); X.fillStyle = nameInput.length > 0 ? 'rgba(98,255,179,.12)' : 'rgba(255,255,255,.03)'; X.fill();
-                X.strokeStyle = nameInput.length > 0 ? 'rgba(98,255,179,.3)' : 'rgba(255,255,255,.06)'; X.lineWidth = 1; X.stroke();
-                X.font = '600 13px Outfit'; X.textAlign = 'center'; X.fillStyle = nameInput.length > 0 ? '#62ffb3' : 'rgba(255,255,255,.25)'; X.fillText('CONFIRM', cx, cbY + 23);
-                if (nameInput.length > 0) addBtn('confirm_name', cbX, cbY, cbW, cbH);
-
-                addBtn('back', 0, 0, 50, 50);
-            }
-
-            // ─── Input ────────────────────────────────────
-            function handleTap(px, py) {
-                Audio.init();
-                const btn = hitBtn(px, py);
-
-                if (state === S.NAME) {
-                    if (btn?.id === 'confirm_name' && nameInput.length > 0) {
-                        Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD;
-                        Leaderboard.getTopScores(10).then(d => { boardData = d });
-                    }
-                    return;
-                }
-
-                if (state === S.MENU) {
-                    if (btn?.id === 'shop') { Audio.ui(); state = S.SHOP; shopScroll = 0; shopTarget = 0; return }
-                    if (btn?.id === 'board') { Audio.ui(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); return }
-                    // Go to difficulty selection
-                    Audio.ui(); state = S.DIFF; return;
-                }
-
-                if (state === S.DIFF) {
-                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
-                    if (btn?.id?.startsWith('diff_')) { difficulty = parseInt(btn.id.slice(5)); Audio.ui(); return }
-                    if (btn?.id === 'start_game') {
-                        const dc = DIFF_CFG[difficulty];
-                        state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1;
-                        lives = dc.lives; t = 0; bpm = dc.bpmBase; fbT = 0;
-                        feverMode = false; feverT = 0; rollScore = 0;
-                        accP = 0; accG = 0; accO = 0; accM = 0;
-                        particles = []; ripples = []; initBg(); return;
-                    }
-                    return;
-                }
-
-                if (state === S.SHOP) {
-                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
-                    if (btn?.id === 'buy_coins') { Audio.ui(); openCoinShop(); return }
-                    if (btn?.id.startsWith('buy_')) { const id = btn.id.slice(4); const r = SkinShop.buySkin(id); if (r.ok) { Audio.buy(); SkinShop.equipSkin(id) } return }
-                    if (btn?.id.startsWith('equip_')) { const id = btn.id.slice(6); SkinShop.equipSkin(id); Audio.ui(); return }
-                    return;
-                }
-
-                if (state === S.BOARD) {
-                    if (btn?.id === 'back') { Audio.ui(); state = S.MENU; return }
-                    if (btn?.id === 'set_name') { Audio.ui(); state = S.NAME; nameInput = ''; nameInputActive = true; const mi = document.getElementById('mobileNameInput'); if (mi) { mi.value = ''; setTimeout(() => mi.focus(), 100); } return }
-                    if (btn?.id?.startsWith('del_')) {
-                        const idx = parseInt(btn.id.slice(4));
-                        Leaderboard.deleteByIndex(idx);
-                        Leaderboard.getTopScores(10).then(d => { boardData = d });
-                        Audio.ui(); return;
-                    }
-                    if (btn?.id === 'clear_board') {
-                        if (confirm('🗑 랭킹 기록을 전부 삭제하시겠습니까?\nClear all ranking records?')) {
-                            Leaderboard.clearAll(); boardData = []; Audio.ui();
-                        }
-                        return;
-                    }
-                    return;
-                }
-
-                if (state === S.OVER) {
-                    if (btn?.id === 'restart' && goT > .8) { state = S.MENU; goT = 0; menuT = 0; return }
-                    return;
-                }
-
-                // ── Playing tap ──
                 const sm = scoreMult();
-                const n = pv(t), th2 = thr(), cx = W / 2, cy = H * .44;
+                const n = pv(t), th2 = thr();
+
                 if (n < th2.p) {
                     const pts = Math.round((15 + combo * 2) * sm);
                     score += pts; combo++; maxCombo = Math.max(maxCombo, combo); accP++;
-                    fb = 'PERFECT!'; fbC = '#7fe0ff'; fbT = 1.2; spT = `+${pts}`; spTm = .8; cShk = 1;
-                    Audio.perfect(); burst(cx, cy, '#7fe0ff', 25); ripple(cx, cy, '#7fe0ff'); ripple(cx, cy, '#7fe0ff');
+                    showFeedback('PERFECT!', '#7fe0ff');
+                    showScorePopup(`+${pts}`);
+                    fbC = '#7fe0ff'; fbT = 1.2; cShk = 1;
+                    Audio.perfect(); burst(cx, cy, '#7fe0ff', 25); ripple(cx, cy, '#7fe0ff');
                     screenFlashT = 1; screenFlashC = '#7fe0ff';
                 } else if (n < th2.g) {
                     const pts = Math.round((10 + combo) * sm);
                     score += pts; combo++; maxCombo = Math.max(maxCombo, combo); accG++;
-                    fb = 'GOOD!'; fbC = '#62ffb3'; fbT = 1; spT = `+${pts}`; spTm = .8;
-                    Audio.good(); burst(cx, cy, '#62ffb3', 15); ripple(cx, cy, '#62ffb3')
+                    showFeedback('GOOD!', '#62ffb3');
+                    showScorePopup(`+${pts}`);
+                    fbC = '#62ffb3'; fbT = 1;
+                    Audio.good(); burst(cx, cy, '#62ffb3', 15); ripple(cx, cy, '#62ffb3');
                 } else if (n < th2.o) {
                     const pts = Math.round(3 * sm);
                     score += pts; combo = 0; accO++;
-                    fb = 'OK'; fbC = '#ffd36a'; fbT = .8; spT = `+${pts}`; spTm = .6;
-                    Audio.ok(); burst(cx, cy, '#ffd36a', 8)
+                    showFeedback('OK', '#ffd36a');
+                    showScorePopup(`+${pts}`);
+                    fbC = '#ffd36a'; fbT = 0.8;
+                    Audio.ok(); burst(cx, cy, '#ffd36a', 8);
                 } else {
                     combo = 0; lives--; accM++;
-                    fb = 'MISS'; fbC = '#ff5d7a'; fbT = .8; spT = ''; Audio.miss(); cShk = 2;
+                    showFeedback('MISS', '#ff5d7a');
+                    fbC = '#ff5d7a'; fbT = 0.8; cShk = 2;
                     vignetteT = 1;
+                    Audio.miss();
                     if (lives <= 0) {
                         feverMode = false;
-                        checkAchievements(true); // v4.0 final achievement check
-                        state = S.OVER; goT = 0; earnedCoins = SkinShop.calcEarnedCoins(score, maxCombo, level); SkinShop.addCoins(earnedCoins); Audio.coin();
-                        if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()) }
-                        if (Leaderboard.hasName()) Leaderboard.submitScore(score, level, maxCombo); Audio.gameOver(); return
+                        checkAchievements(true);
+                        earnedCoins = SkinShop.calcEarnedCoins(score, maxCombo, level);
+                        SkinShop.addCoins(earnedCoins);
+                        if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()); }
+
+                        // Leaderboard: Google user → submit directly, Anonymous → prompt login
+                        const fbUser = window.FirebaseService ? FirebaseService.getUser() : null;
+                        if (fbUser && window.Leaderboard) {
+                            // Set name: Google users use display name, Guest uses "Guest"
+                            if (!Leaderboard.hasName()) {
+                                const displayName = fbUser.isAnonymous ? 'Guest' : (fbUser.displayName || 'Player');
+                                Leaderboard.setPlayerName(displayName);
+                            }
+                            Leaderboard.submitScore(score, level, maxCombo, difficulty,
+                                Math.round((accP / Math.max(1, accP + accG + accO + accM)) * 100));
+                        }
+
+                        Audio.gameOver(); Audio.coin();
+                        state = S.OVER;
+                        goT = 0;
+                        updateGameOver();
+                        showScreen('over-screen');
+                        return;
                     }
                 }
 
-                // Level up → Wave announcement
+                updateHUD();
+
+                // Level up
                 const needed = 80 + (level - 1) * 40;
                 if (score >= needed * level) {
-                    level++; bpm = DIFF_CFG[difficulty].bpmBase + (level - 1) * 6;
-                    Audio.levelUp(); fb = 'LEVEL ' + level;
-                    const sk = SkinShop.getCurrentSkin(); fbC = sk.ring; fbT = 2;
-                    burst(cx, cy, fbC, 30);
-                    triggerWave(level); // v4.0 wave announcement
+                    level++;
+                    bpm = DIFF_CFG[difficulty].bpmBase + (level - 1) * 6;
+                    Audio.levelUp();
+                    showFeedback('LEVEL ' + level, SkinShop.getCurrentSkin().ring);
+                    burst(W / 2, H * 0.44, SkinShop.getCurrentSkin().ring, 30);
+                    updateHUD();
                 }
-                checkAchievements(); // v4.0 achievement check
+                checkAchievements();
             }
 
-            C.addEventListener('click', e => { const r = C.getBoundingClientRect(); handleTap(e.clientX - r.left, e.clientY - r.top) });
-            C.addEventListener('touchstart', e => { e.preventDefault(); const tc = e.touches[0], r = C.getBoundingClientRect(); handleTap(tc.clientX - r.left, tc.clientY - r.top) }, { passive: false });
+            // ─── Event Listeners ─────────────────────────
 
-            // Keyboard for name input (desktop)
-            addEventListener('keydown', e => {
-                if (state !== S.NAME) return;
-                if (e.key === 'Backspace') { nameInput = nameInput.slice(0, -1); const mi = document.getElementById('mobileNameInput'); if (mi) mi.value = nameInput; return }
-                if (e.key === 'Enter' && nameInput.length > 0) { Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD; Leaderboard.getTopScores(10).then(d => { boardData = d }); const mi = document.getElementById('mobileNameInput'); if (mi) { mi.value = ''; mi.blur(); } return }
-                if (e.key.length === 1 && nameInput.length < 12) { nameInput += e.key; const mi = document.getElementById('mobileNameInput'); if (mi) mi.value = nameInput; }
+            // Menu
+            $('menuTap').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.DIFF; showScreen('diff-screen'); });
+            $('btnShop').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.SHOP; updateShop(); showScreen('shop-screen'); });
+            $('btnRank').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.BOARD; updateBoard(); showScreen('board-screen'); });
+
+            // Difficulty
+            document.querySelectorAll('.diff-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    difficulty = parseInt(card.dataset.diff);
+                    Audio.ui();
+                });
             });
 
-            // Mobile name input sync (virtual keyboard)
-            const mobileInput = document.getElementById('mobileNameInput');
-            if (mobileInput) {
-                mobileInput.addEventListener('input', e => {
-                    if (state !== S.NAME) return;
-                    nameInput = (e.target.value || '').slice(0, 12);
-                });
-                mobileInput.addEventListener('keydown', e => {
-                    if (state !== S.NAME) return;
-                    if (e.key === 'Enter' && nameInput.length > 0) {
-                        e.preventDefault();
-                        Leaderboard.setPlayerName(nameInput); nameInput = ''; Audio.buy(); state = S.BOARD;
-                        Leaderboard.getTopScores(10).then(d => { boardData = d });
-                        mobileInput.value = ''; mobileInput.blur();
-                    }
-                });
-            }
+            $('btnStartGame').addEventListener('click', () => {
+                Audio.init(); Audio.ui();
+                const dc = DIFF_CFG[difficulty];
+                state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1;
+                lives = dc.lives; t = 0; bpm = dc.bpmBase; fbT = 0;
+                feverMode = false; feverT = 0;
+                accP = 0; accG = 0; accO = 0; accM = 0;
+                newAchievements = [];
+                particles = []; ripples = []; initBg();
+                updateHUD();
+                showScreen('play-screen');
+            });
 
-            // Shop scroll
-            C.addEventListener('wheel', e => { if (state === S.SHOP) { shopTarget = Math.max(0, shopTarget + e.deltaY * .5) } }, { passive: true });
+            $('btnDiffBack').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
 
-            // ─── Coin Shop (PayPal Modal) ────────────────
-            function openCoinShop() {
-                const modal = document.getElementById('coinShopModal');
-                const container = document.getElementById('coinPacksContainer');
-                const balanceEl = document.getElementById('coinShopBalance');
-                if (!modal || !container) return;
+            // Game canvas tap
+            canvas.addEventListener('click', e => {
+                if (state !== S.PLAY) return;
+                Audio.init();
+                const r = canvas.getBoundingClientRect();
+                handleGameTap(e.clientX - r.left, e.clientY - r.top);
+            });
 
-                // Update balance display
-                if (balanceEl && window.SkinShop) {
-                    balanceEl.textContent = `Your Balance: ◆ ${SkinShop.getCoins()}`;
+            // Game Over restart
+            $('overRestart').addEventListener('click', () => {
+                Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen');
+            });
+
+            // Shop
+            $('shopClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
+            $('shopBody').addEventListener('click', e => {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                const skinId = btn.dataset.skin;
+                if (action === 'buy') {
+                    const r = SkinShop.buySkin(skinId);
+                    if (r.ok) { Audio.buy(); SkinShop.equipSkin(skinId); updateShop(); }
+                } else if (action === 'equip') {
+                    SkinShop.equipSkin(skinId); Audio.ui(); updateShop();
                 }
+            });
 
-                container.innerHTML = '';
-                const packs = PayPalShop.getPacks();
-                const tierMap = ['starter', 'plus', 'pro', 'ultra'];
-                const coinEmojis = ['🪙', '💰', '💎', '👑'];
+            // Board
+            $('boardClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
 
-                packs.forEach((pack, i) => {
-                    const card = document.createElement('div');
-                    card.className = `coin-pack-card tier-${tierMap[i]}`;
+            // Pause / Resume
+            $('btnPause').addEventListener('click', () => {
+                if (state !== S.PLAY) return;
+                Audio.ui();
+                state = S.PAUSE;
+                showScreen('pause-screen');
+            });
 
-                    // Badges
-                    let badge = '';
-                    if (i === 2) badge = '<span class="badge-popular">POPULAR</span>';
-                    if (i === 3) badge = '<span class="badge-bestvalue">⭐ BEST VALUE</span>';
+            $('btnResume').addEventListener('click', () => {
+                Audio.ui();
+                state = S.PLAY;
+                last = performance.now(); // reset dt so no jump
+                showScreen('play-screen');
+            });
 
-                    // Bonus badge
-                    let bonusBadge = '';
-                    if (pack.bonus && pack.bonus !== 'BEST VALUE') {
-                        const badgeColor = i <= 1 ? 'cyan' : 'gold';
-                        bonusBadge = `<span class="badge-bonus ${badgeColor}">${pack.bonus}</span>`;
-                    }
+            $('btnQuit').addEventListener('click', () => {
+                Audio.ui();
+                state = S.MENU;
+                updateMenuUI();
+                showScreen('menu-screen');
+            });
 
-                    card.innerHTML = `${badge}
-                        <div class="coin-pack-header">
-                            <div>
-                                <span class="coin-pack-label">${coinEmojis[i]} ${pack.label}</span>${bonusBadge}
-                            </div>
-                            <span class="coin-pack-price">$${pack.price}</span>
-                        </div>
-                        <div id="pp-btn-${pack.id}" style="min-height:45px;"></div>
-                    `;
-                    container.appendChild(card);
-                });
-
-                modal.style.display = 'block';
-
-                // Load SDK and render buttons
-                PayPalShop.loadSDK().then(() => {
-                    packs.forEach(pack => {
-                        PayPalShop.renderButtons(`pp-btn-${pack.id}`, pack.id,
-                            (p, details) => {
-                                console.log(`[CoinShop] ✅ Purchased ${p.coins} coins! Order: ${details.id}`);
-                                closeCoinShop();
-                                fb = `+${p.coins} COINS!`; fbC = '#ffd36a'; fbT = 2.5;
-                                // Update balance
-                                if (balanceEl) balanceEl.textContent = `Your Balance: ◆ ${SkinShop.getCoins()}`;
-                            },
-                            (err) => {
-                                console.error('[CoinShop] Payment failed:', err);
-                            }
-                        );
-                    });
-                }).catch(err => {
-                    console.error('[CoinShop] SDK load failed:', err);
-                    container.innerHTML = '<p style="text-align:center;color:#ff5d7a;font-family:Outfit,sans-serif;padding:20px;">Failed to load payment system. Please try again.</p>';
-                });
-            }
-
-            function closeCoinShop() {
-                const modal = document.getElementById('coinShopModal');
-                if (modal) modal.style.display = 'none';
-            }
-
-            document.getElementById('coinShopClose')?.addEventListener('click', closeCoinShop);
-
-            // ─── Loop ─────────────────────────────────────
+            // ─── Game Loop ───────────────────────────────
             let last = performance.now();
+
             function loop(now) {
-                const dt = Math.min((now - last) / 1000, .05); last = now; resize(); X.clearRect(0, 0, W, H);
+                const dt = Math.min((now - last) / 1000, 0.05);
+                last = now;
+                resize();
+                X.clearRect(0, 0, W, H);
+                menuT += dt;
+
                 switch (state) {
-                    case S.MENU: drawMenu(dt); break;
-                    case S.DIFF: drawDifficulty(dt); break;
-                    case S.PLAY: t += dt * spd(); drawGame(dt); break;
-                    case S.OVER: drawGame(dt); drawGameOver(dt); break;
-                    case S.SHOP: drawShop(dt); break;
-                    case S.BOARD: drawBoard(dt); break;
-                    case S.NAME: drawNameInput(dt); break;
+                    case S.MENU:
+                    case S.DIFF:
+                    case S.SHOP:
+                    case S.BOARD:
+                        drawMenuRing(dt);
+                        break;
+                    case S.PLAY:
+                        t += dt * spd();
+                        drawGame(dt);
+                        break;
+                    case S.PAUSE:
+                        drawGame(0); // freeze game but keep drawing
+                        break;
+                    case S.OVER:
+                        drawGame(dt); // keep background animating
+                        break;
                 }
+
                 requestAnimationFrame(loop);
             }
-            initBg(); requestAnimationFrame(loop);
+
+            // ─── Initialize ──────────────────────────────
+            initBg();
+            updateMenuUI();
+            requestAnimationFrame(loop);
+
         })();
     </script>
 </body>
