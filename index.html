@@ -449,17 +449,23 @@
                 }
             }
 
-            function handleGuestLogin() {
+            async function handleGuestLogin() {
                 const input = $('guestNickname');
                 const name = (input.value || '').trim();
                 if (name.length < 2 || name.length > 12) return;
 
-                // Sign in anonymously to Firebase
+                // Sign in anonymously to Firebase (await to ensure auth is ready)
                 if (window.FirebaseService && !FirebaseService.isSignedIn()) {
-                    FirebaseService.signInAnon();
+                    await FirebaseService.signInAnon();
                 }
 
                 setPlayerName(name, 'guest');
+
+                // Init leaderboard global mode now that we're signed in
+                if (window.Leaderboard && Leaderboard.initGlobal) {
+                    Leaderboard.initGlobal();
+                }
+
                 // Update profile badge with guest name
                 $('profileName').textContent = name;
                 $('profileAvatar').textContent = '👤';
@@ -1090,10 +1096,9 @@
                         SkinShop.addCoins(earnedCoins);
                         if (score > hi) { hi = score; localStorage.setItem('arkPD_hi', hi.toString()); }
 
-                        // Leaderboard: submit with stored playerName from login gate
-                        const fbUser = window.FirebaseService ? FirebaseService.getUser() : null;
-                        if (fbUser && window.Leaderboard) {
-                            if (!Leaderboard.hasName() && isNameSet()) {
+                        // Leaderboard: always submit if name is set (Leaderboard handles local/global internally)
+                        if (window.Leaderboard && isNameSet()) {
+                            if (!Leaderboard.hasName()) {
                                 Leaderboard.setPlayerName(playerName);
                             }
                             Leaderboard.submitScore(score, level, maxCombo, difficulty,
