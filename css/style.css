@@ -821,7 +821,7 @@ body {
     box-shadow:
         0 0 60px rgba(255, 40, 60, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    padding: 18px 14px 14px;
+    padding: 24px 16px 18px;
     width: 100%;
     max-width: 400px;
     position: relative;
@@ -843,7 +843,7 @@ body {
 /* Header */
 .over-header {
     text-align: center;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
 }
 
 .over-diff-badge {
@@ -854,7 +854,7 @@ body {
     border-radius: var(--radius-pill);
     font-size: 11px;
     font-weight: 800;
-    margin: 0 auto 4px;
+    margin: 0 auto 6px;
     letter-spacing: 0.5px;
 }
 
@@ -867,7 +867,7 @@ body {
         0 0 50px rgba(255, 50, 80, 0.55),
         0 0 100px rgba(255, 50, 80, 0.25),
         0 4px 20px rgba(0, 0, 0, 0.5);
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     letter-spacing: 2px;
 }
 
@@ -883,8 +883,8 @@ body {
 .over-split {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    gap: 8px;
-    margin: 10px 0 6px;
+    gap: 12px;
+    margin: 14px 0 10px;
     align-items: center;
 }
 
@@ -1003,8 +1003,8 @@ body {
 .over-judgments {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-    margin: 8px 0;
+    gap: 6px;
+    margin: 12px 0;
 }
 
 .judgment-card {
@@ -1085,8 +1085,8 @@ body {
 .over-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 12px;
 }
 
 .stat-pill {
@@ -1118,7 +1118,7 @@ body {
 
 /* ── Achievements Row ── */
 .over-achievements {
-    margin: 4px 0 6px;
+    margin: 10px 0 10px;
 }
 
 .ach-header {
@@ -1212,7 +1212,7 @@ body {
 /* ── Restart CTA ── */
 .over-restart {
     text-align: center;
-    padding: 10px 0 4px;
+    padding: 14px 0 6px;
     cursor: pointer;
 }
 
