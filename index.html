@@ -704,23 +704,27 @@
                 const el = $('feedbackText');
                 clearTimeout(el._fadeTimer);
                 clearTimeout(el._hideTimer);
-                el.textContent = text;
-                el.style.color = color;
-                // Instant show: pop in
+                // 1) Reset — kill all transitions, set visible instantly
                 el.style.transition = 'none';
                 el.style.opacity = '1';
                 el.style.transform = 'translate(-50%, -60%) scale(1.05)';
-                // Settle
-                requestAnimationFrame(() => {
-                    el.style.transition = 'transform 0.15s ease-out';
-                    el.style.transform = 'translate(-50%, -55%) scale(1)';
-                });
-                // Fade out after 400ms
+                el.textContent = text;
+                el.style.color = color;
+                // 2) Force browser to paint the "visible" state NOW
+                void el.offsetHeight;
+                // 3) Settle animation (scale down slightly)
+                el.style.transition = 'transform 0.15s ease-out';
+                el.style.transform = 'translate(-50%, -55%) scale(1)';
+                // 4) Fade out after hold time
                 el._fadeTimer = setTimeout(() => {
-                    el.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                    el.style.transition = 'opacity 0.35s ease-out, transform 0.35s ease-out';
                     el.style.opacity = '0';
                     el.style.transform = 'translate(-50%, -70%) scale(0.9)';
-                }, 400);
+                    // 5) Fully hide after fade completes
+                    el._hideTimer = setTimeout(() => {
+                        el.textContent = '';
+                    }, 400);
+                }, 500);
             }
 
             function showScorePopup(text) {
