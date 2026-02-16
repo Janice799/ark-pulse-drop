@@ -979,7 +979,7 @@
             }
 
             // ─── Share Score ───────────────────────────────
-            function shareScore() {
+            async function shareScore() {
                 const dc = DIFF_CFG[difficulty];
                 const total = accP + accG + accO + accM;
                 const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100) : 0;
@@ -991,20 +991,52 @@
                     `⚡ Level: ${level}\n\n` +
                     `Play now → https://arkdeck7.itch.io/ark-pulse-drop`;
 
+                // Web Share API — works on mobile browsers when NOT inside restricted iframe
                 if (navigator.share) {
-                    navigator.share({ title: 'ARK Pulse Drop Score', text })
-                        .catch(() => fallbackCopy(text));
-                } else {
-                    fallbackCopy(text);
+                    try {
+                        await navigator.share({ title: 'ARK Pulse Drop Score', text });
+                        showShareToast('✅ Shared!');
+                        return;
+                    } catch (err) {
+                        // User cancelled share → do nothing
+                        if (err.name === 'AbortError') return;
+                        // NotAllowedError = iframe security restriction (itch.io etc.)
+                        // Fall through to clipboard copy
+                        console.log('[Share] Native share blocked, falling back to copy:', err.name);
+                    }
                 }
+
+                // Fallback: clipboard copy (works in iframes)
+                fallbackCopy(text);
             }
 
             function fallbackCopy(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showShareToast('📋 Score copied!');
-                }).catch(() => {
+                // Try modern clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showShareToast('📋 Copied! Paste to share');
+                    }).catch(() => {
+                        // clipboard API also blocked in iframe — use textarea hack
+                        textareaCopy(text);
+                    });
+                } else {
+                    textareaCopy(text);
+                }
+            }
+
+            function textareaCopy(text) {
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showShareToast('📋 Copied! Paste to share');
+                } catch {
                     showShareToast('❌ Copy failed');
-                });
+                }
             }
 
             function showShareToast(msg) {
