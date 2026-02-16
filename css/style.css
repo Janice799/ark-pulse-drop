@@ -2076,3 +2076,76 @@ body {
 .hud-sound-btn:active {
     transform: scale(0.9);
 }
+
+/* ── Mobile HUD Responsive ── */
+@media (max-height: 700px),
+(max-width: 420px) {
+    .hud-top {
+        padding: 10px 12px 0;
+    }
+
+    .hud-pill {
+        padding: 3px 10px;
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .hud-level .dot {
+        width: 6px;
+        height: 6px;
+    }
+
+    .hud-score-value {
+        font-size: 28px;
+    }
+
+    .hud-score-label {
+        font-size: 8px;
+    }
+
+    .hud-combo {
+        font-size: 10px;
+        padding: 2px 10px;
+        margin-top: 3px;
+    }
+
+    .hud-hearts .heart {
+        font-size: 11px;
+    }
+
+    .hud-right {
+        gap: 5px;
+    }
+
+    .hud-pause-btn,
+    .hud-sound-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .hud-bottom {
+        padding: 10px 14px 14px;
+    }
+
+    .hud-stat .label {
+        font-size: 9px;
+    }
+
+    .hud-stat .value {
+        font-size: 12px;
+    }
+
+    .hud-diff-badge {
+        padding: 3px 10px;
+        font-size: 10px;
+    }
+
+    .feedback-text {
+        font-size: 22px;
+    }
+
+    .score-popup {
+        font-size: 14px;
+    }
+}
