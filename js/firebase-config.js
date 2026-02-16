@@ -29,12 +29,12 @@ const FirebaseService = (() => {
     async function init() {
         if (isReady) return true;
         try {
-            // Dynamic import from CDN
-            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js');
-            const { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut: fbSignOut }
-                = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js');
-            const { getDatabase, ref, push, set, get, query, orderByChild, limitToLast, onValue, remove }
-                = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js');
+            // Single bundled import — no more CDN round-trips!
+            const {
+                initializeApp,
+                getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut: fbSignOut,
+                getDatabase, ref, push, set, get, query, orderByChild, limitToLast, onValue, remove
+            } = await import('./firebase-sdk.min.js');
 
             app = initializeApp(CONFIG);
             auth = getAuth(app);

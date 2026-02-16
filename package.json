@@ -1,0 +1,25 @@
+{
+  "name": "ark-pulse-drop",
+  "version": "1.0.0",
+  "description": "> A premium rhythm timing game. Tap the pulse at the perfect moment!",
+  "main": "sw.js",
+  "scripts": {
+    "build:firebase": "npx esbuild src/firebase-exports.js --bundle --format=esm --minify --outfile=js/firebase-sdk.min.js --target=es2020",
+    "test": "echo \"No tests\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Janice799/ark-pulse-drop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Janice799/ark-pulse-drop/issues"
+  },
+  "homepage": "https://github.com/Janice799/ark-pulse-drop#readme",
+  "dependencies": {
+    "firebase": "^12.9.0"
+  }
+}
