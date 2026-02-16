@@ -1023,17 +1023,77 @@
                 orbitAngle += dt * 0.8;
                 const sk = SkinShop.getCurrentSkin();
                 const col = sk.rainbow ? rainbowColor(orbitAngle * 2) : sk.ring;
-                const orbitR = baseR + 28;
+                const [cr, cg, cb] = hexRGB(col);
                 X.save();
+
+                // ── Outer pulsing dashed ring ──
+                const pulseR = baseR + 36 + Math.sin(orbitAngle * 1.5) * 4;
+                X.beginPath(); X.arc(cx, cy, pulseR, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(${cr},${cg},${cb},${0.06 + Math.sin(orbitAngle * 2) * 0.04})`;
+                X.lineWidth = 1; X.setLineDash([3, 8]); X.stroke(); X.setLineDash([]);
+
+                // ── Second outer dashed ring (counter-rotate) ──
+                const pulseR2 = baseR + 50 + Math.sin(orbitAngle * 1.2 + 1) * 3;
+                X.beginPath(); X.arc(cx, cy, pulseR2, 0, Math.PI * 2);
+                X.strokeStyle = `rgba(${cr},${cg},${cb},${0.03 + Math.sin(orbitAngle * 1.8 + 2) * 0.02})`;
+                X.lineWidth = 0.5; X.setLineDash([2, 12]); X.stroke(); X.setLineDash([]);
+
+                // ── Breathing aura glow ──
+                const auraR = baseR + 30 + Math.sin(orbitAngle * 1.5) * 8;
+                const aura = X.createRadialGradient(cx, cy, baseR * 0.6, cx, cy, auraR);
+                aura.addColorStop(0, `rgba(${cr},${cg},${cb},0)`);
+                aura.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.03 + Math.sin(orbitAngle * 2) * 0.02})`);
+                aura.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+                X.fillStyle = aura; X.fillRect(cx - auraR, cy - auraR, auraR * 2, auraR * 2);
+
+                // ── Inner orbit: 4 particles (fast) ──
+                const orbitR1 = baseR + 22;
                 for (let i = 0; i < 4; i++) {
                     const a = orbitAngle + (Math.PI * 2 * i / 4);
-                    const ox = cx + Math.cos(a) * orbitR;
-                    const oy = cy + Math.sin(a) * orbitR;
-                    X.beginPath(); X.arc(ox, oy, 1.5, 0, Math.PI * 2);
-                    X.fillStyle = col; X.globalAlpha = 0.25 + Math.sin(orbitAngle * 3 + i) * 0.15;
-                    X.shadowBlur = 6; X.shadowColor = col;
+                    const ox = cx + Math.cos(a) * orbitR1;
+                    const oy = cy + Math.sin(a) * orbitR1;
+                    // Particle trail
+                    for (let tr = 1; tr <= 3; tr++) {
+                        const ta = a - tr * 0.08;
+                        const tx = cx + Math.cos(ta) * orbitR1;
+                        const ty = cy + Math.sin(ta) * orbitR1;
+                        X.beginPath(); X.arc(tx, ty, 1.2 - tr * 0.3, 0, Math.PI * 2);
+                        X.fillStyle = col; X.globalAlpha = (0.15 - tr * 0.04);
+                        X.fill();
+                    }
+                    X.beginPath(); X.arc(ox, oy, 2, 0, Math.PI * 2);
+                    X.fillStyle = col; X.globalAlpha = 0.35 + Math.sin(orbitAngle * 3 + i) * 0.2;
+                    X.shadowBlur = 10; X.shadowColor = col;
                     X.fill();
                 }
+
+                // ── Outer orbit: 4 particles (slow, counter-rotate) ──
+                const orbitR2 = baseR + 42;
+                for (let i = 0; i < 4; i++) {
+                    const a = -orbitAngle * 0.6 + (Math.PI * 2 * i / 4) + Math.PI / 4;
+                    const ox = cx + Math.cos(a) * orbitR2;
+                    const oy = cy + Math.sin(a) * orbitR2;
+                    X.beginPath(); X.arc(ox, oy, 1.5, 0, Math.PI * 2);
+                    X.fillStyle = `rgba(${cr},${cg},${cb},${0.15 + Math.sin(orbitAngle * 2 + i) * 0.1})`;
+                    X.globalAlpha = 1;
+                    X.shadowBlur = 8; X.shadowColor = col;
+                    X.fill();
+                }
+
+                // ── Accent sparkle dots on ring arc ──
+                for (let i = 0; i < 12; i++) {
+                    const sa = (Math.PI * 2 * i / 12) + orbitAngle * 0.3;
+                    const sr = baseR + 8 + Math.sin(orbitAngle * 4 + i * 0.7) * 3;
+                    const sx = cx + Math.cos(sa) * sr;
+                    const sy = cy + Math.sin(sa) * sr;
+                    const sparkleA = 0.08 + Math.sin(orbitAngle * 5 + i * 1.2) * 0.08;
+                    if (sparkleA > 0.04) {
+                        X.beginPath(); X.arc(sx, sy, 0.8, 0, Math.PI * 2);
+                        X.fillStyle = `rgba(255,255,255,${sparkleA})`;
+                        X.globalAlpha = 1; X.fill();
+                    }
+                }
+
                 X.globalAlpha = 1; X.shadowBlur = 0;
                 X.restore();
             }
@@ -1102,9 +1162,9 @@
             }
 
             function drawGame(dt) {
-                const cx = W / 2, cy = H * 0.48;
+                const cx = W / 2, cy = H * 0.52;
                 const sk = SkinShop.getCurrentSkin();
-                const baseR = Math.min(W, H) * 0.25;
+                const baseR = Math.min(W, H) * 0.32;
                 const n = pv(t), r = baseR * (0.35 + 0.65 * n);
                 const ringColor = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
                 const beatSync = 1 - n;
@@ -1181,8 +1241,8 @@
 
             // ─── Tap Handler (gameplay) ──────────────────
             function handleGameTap(px, py) {
-                const cx = W / 2, cy = H * 0.48;
-                const baseR = Math.min(W, H) * 0.25;
+                const cx = W / 2, cy = H * 0.52;
+                const baseR = Math.min(W, H) * 0.32;
                 const hitR = baseR + 30;
                 const dx = px - cx, dy = py - cy;
                 if (dx * dx + dy * dy > hitR * hitR) return;
@@ -1255,7 +1315,7 @@
                     bpm = DIFF_CFG[difficulty].bpmBase + (level - 1) * 6;
                     Audio.levelUp();
                     showFeedback('LEVEL ' + level, SkinShop.getCurrentSkin().ring);
-                    burst(W / 2, H * 0.48, SkinShop.getCurrentSkin().ring, 30);
+                    burst(W / 2, H * 0.52, SkinShop.getCurrentSkin().ring, 30);
                     updateHUD();
                 }
                 checkAchievements();
@@ -1318,7 +1378,7 @@
                 screenFlashC = '#62ffb3';
                 screenFlashT = 0.5;
                 showFeedback('REVIVED!', '#62ffb3');
-                burst(W / 2, H * 0.48, '#62ffb3', 30);
+                burst(W / 2, H * 0.52, '#62ffb3', 30);
             }
 
             // ─── Event Listeners ─────────────────────────
