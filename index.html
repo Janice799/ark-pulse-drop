@@ -1094,9 +1094,9 @@
             }
 
             function drawGame(dt) {
-                const cx = W / 2, cy = H * 0.44;
+                const cx = W / 2, cy = H * 0.48;
                 const sk = SkinShop.getCurrentSkin();
-                const baseR = Math.min(W, H) * 0.20;
+                const baseR = Math.min(W, H) * 0.25;
                 const n = pv(t), r = baseR * (0.35 + 0.65 * n);
                 const ringColor = sk.rainbow ? rainbowColor(t * 3) : sk.ring;
                 const beatSync = 1 - n;
@@ -1173,8 +1173,8 @@
 
             // ─── Tap Handler (gameplay) ──────────────────
             function handleGameTap(px, py) {
-                const cx = W / 2, cy = H * 0.44;
-                const baseR = Math.min(W, H) * 0.20;
+                const cx = W / 2, cy = H * 0.48;
+                const baseR = Math.min(W, H) * 0.25;
                 const hitR = baseR + 30;
                 const dx = px - cx, dy = py - cy;
                 if (dx * dx + dy * dy > hitR * hitR) return;
@@ -1247,7 +1247,7 @@
                     bpm = DIFF_CFG[difficulty].bpmBase + (level - 1) * 6;
                     Audio.levelUp();
                     showFeedback('LEVEL ' + level, SkinShop.getCurrentSkin().ring);
-                    burst(W / 2, H * 0.44, SkinShop.getCurrentSkin().ring, 30);
+                    burst(W / 2, H * 0.48, SkinShop.getCurrentSkin().ring, 30);
                     updateHUD();
                 }
                 checkAchievements();
@@ -1310,7 +1310,7 @@
                 screenFlashC = '#62ffb3';
                 screenFlashT = 0.5;
                 showFeedback('REVIVED!', '#62ffb3');
-                burst(W / 2, H * 0.44, '#62ffb3', 30);
+                burst(W / 2, H * 0.48, '#62ffb3', 30);
             }
 
             // ─── Event Listeners ─────────────────────────
