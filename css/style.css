@@ -675,7 +675,7 @@ body {
     border-radius: 50%;
 }
 
-/* Feedback text (PERFECT!, GOOD!, etc.) */
+/* Feedback text (PERFECT!, GOOD!, etc.) — animation controlled by JS inline styles */
 .feedback-text {
     position: absolute;
     top: 55%;
@@ -689,32 +689,6 @@ body {
     pointer-events: none;
     font-style: italic;
     z-index: 5;
-}
-
-.feedback-text.show {
-    animation: feedbackPop 0.7s ease-out forwards;
-}
-
-@keyframes feedbackPop {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -40%) scale(0.8);
-    }
-
-    15% {
-        opacity: 1;
-        transform: translate(-50%, -60%) scale(1.1);
-    }
-
-    30% {
-        opacity: 1;
-        transform: translate(-50%, -55%) scale(1.0);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -70%) scale(0.95);
-    }
 }
 
 .score-popup {

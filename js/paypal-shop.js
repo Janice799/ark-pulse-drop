@@ -31,7 +31,7 @@ const PayPalShop = (() => {
 
             const script = document.createElement('script');
             script.id = 'paypal-sdk';
-            script.src = `https://www.paypal.com/sdk/js?client-id=${CLIENT_ID}&currency=USD&intent=capture`;
+            script.src = `https://www.paypal.com/sdk/js?client-id=${CLIENT_ID}&currency=USD&intent=capture&locale=en_US`;
             script.addEventListener('load', () => {
                 sdkLoaded = true;
                 console.log('[PayPal] ✅ SDK loaded');

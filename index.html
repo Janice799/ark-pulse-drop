@@ -699,12 +699,25 @@
 
             function showFeedback(text, color) {
                 const el = $('feedbackText');
+                clearTimeout(el._fadeTimer);
+                clearTimeout(el._hideTimer);
                 el.textContent = text;
                 el.style.color = color;
-                // Restart CSS keyframe animation
-                el.classList.remove('show');
-                void el.offsetWidth; // force reflow to reset animation
-                el.classList.add('show');
+                // Instant show: pop in
+                el.style.transition = 'none';
+                el.style.opacity = '1';
+                el.style.transform = 'translate(-50%, -60%) scale(1.05)';
+                // Settle
+                requestAnimationFrame(() => {
+                    el.style.transition = 'transform 0.15s ease-out';
+                    el.style.transform = 'translate(-50%, -55%) scale(1)';
+                });
+                // Fade out after 400ms
+                el._fadeTimer = setTimeout(() => {
+                    el.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translate(-50%, -70%) scale(0.9)';
+                }, 400);
             }
 
             function showScorePopup(text) {
