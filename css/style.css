@@ -686,14 +686,35 @@ body {
     color: var(--perfect);
     text-shadow: 0 0 30px currentColor;
     opacity: 0;
-    transition: opacity 0.15s, transform 0.15s;
     pointer-events: none;
     font-style: italic;
+    z-index: 5;
 }
 
 .feedback-text.show {
-    opacity: 1;
-    transform: translate(-50%, -60%);
+    animation: feedbackPop 0.7s ease-out forwards;
+}
+
+@keyframes feedbackPop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -40%) scale(0.8);
+    }
+
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -60%) scale(1.1);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translate(-50%, -55%) scale(1.0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -70%) scale(0.95);
+    }
 }
 
 .score-popup {

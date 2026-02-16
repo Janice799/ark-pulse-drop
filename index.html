@@ -274,7 +274,7 @@
                     <button class="continue-btn" id="btnContinue">
                         <span class="continue-icon">🔄</span>
                         <span class="continue-label">CONTINUE?</span>
-                        <span class="continue-cost">◆ 200</span>
+                        <span class="continue-cost" id="continueCostLabel">◆ 200</span>
                     </button>
                     <div class="continue-timer" id="continueTimer">
                         <div class="continue-timer-bar" id="continueTimerBar"></div>
@@ -562,10 +562,11 @@
             let accP = 0, accG = 0, accO = 0, accM = 0;
             let gridOffset = 0, orbitAngle = 0;
             let vignetteT = 0, screenFlashT = 0, screenFlashC = '#7fe0ff';
-            let reviveUsed = false;
+            let reviveCount = 0;
             let continueTimerId = null;
-            const REVIVE_COST = 200;
+            const REVIVE_BASE_COST = 200;
             const REVIVE_TIMEOUT = 5000; // 5 seconds
+            function getReviveCost() { return REVIVE_BASE_COST * Math.pow(2, reviveCount); }
 
             const DIFF_CFG = [
                 { name: 'EASY', emoji: '🌿', color: '#62ffb3', lives: 7, bpmBase: 56, thrMult: 1.4, scoreMult: 0.8 },
@@ -700,9 +701,10 @@
                 const el = $('feedbackText');
                 el.textContent = text;
                 el.style.color = color;
+                // Restart CSS keyframe animation
+                el.classList.remove('show');
+                void el.offsetWidth; // force reflow to reset animation
                 el.classList.add('show');
-                clearTimeout(el._timer);
-                el._timer = setTimeout(() => el.classList.remove('show'), 600);
             }
 
             function showScorePopup(text) {
@@ -1136,12 +1138,14 @@
             function showContinueOption() {
                 if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
 
-                const canContinue = !reviveUsed && SkinShop.getCoins() >= REVIVE_COST;
+                const cost = getReviveCost();
+                const canContinue = SkinShop.getCoins() >= cost;
                 const el = $('overContinue');
 
                 if (canContinue) {
                     el.style.display = '';
                     $('btnContinue').disabled = false;
+                    $('continueCostLabel').textContent = `◆ ${cost}`;
                     // Start countdown timer bar
                     const bar = $('continueTimerBar');
                     bar.style.transition = 'none';
@@ -1163,12 +1167,13 @@
             }
 
             function doContinue() {
-                if (reviveUsed || SkinShop.getCoins() < REVIVE_COST) return;
+                const cost = getReviveCost();
+                if (SkinShop.getCoins() < cost) return;
                 if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
 
-                // Deduct coins
-                SkinShop.addCoins(-REVIVE_COST);
-                reviveUsed = true;
+                // Deduct coins (cost doubles each revive)
+                SkinShop.addCoins(-cost);
+                reviveCount++;
                 $('overContinue').style.display = 'none';
 
                 // Restore half max lives (at least 1)
@@ -1221,7 +1226,7 @@
                 feverMode = false; feverT = 0;
                 accP = 0; accG = 0; accO = 0; accM = 0;
                 newAchievements = [];
-                reviveUsed = false;
+                reviveCount = 0;
                 particles = []; ripples = []; initBg();
                 updateHUD();
                 showScreen('play-screen');
