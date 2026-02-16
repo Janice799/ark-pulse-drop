@@ -942,10 +942,13 @@
 
             // ─── Menu Ring Animation ─────────────────────
             function drawMenuRing(dt) {
-                const w = menuRingCanvas.width / (devicePixelRatio || 1);
-                const h = menuRingCanvas.height / (devicePixelRatio || 1);
+                // Must use same capped DPR as resize() — otherwise on iPhone (DPR=3)
+                // the ring center shifts left because canvas size uses d=2 but drawing divides by 3
+                const d = Math.min(devicePixelRatio || 1, 2);
+                const w = menuRingCanvas.width / d;
+                const h = menuRingCanvas.height / d;
                 const cx = w / 2, cy = h / 2;
-                MX.clearRect(0, 0, w, h);
+                MX.clearRect(0, 0, menuRingCanvas.width, menuRingCanvas.height);
 
                 const sk = SkinShop.getCurrentSkin();
                 const col = sk.rainbow ? rainbowColor(menuT * 3) : sk.ring;
