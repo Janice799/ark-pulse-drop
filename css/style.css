@@ -810,7 +810,7 @@ body {
     align-items: center;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 16px 12px;
+    padding: 10px 10px;
     z-index: 15;
 }
 
@@ -821,7 +821,7 @@ body {
     box-shadow:
         0 0 60px rgba(255, 40, 60, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    padding: 24px 16px 18px;
+    padding: 16px 14px 12px;
     width: 100%;
     max-width: 400px;
     position: relative;
@@ -843,7 +843,7 @@ body {
 /* Header */
 .over-header {
     text-align: center;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
 }
 
 .over-diff-badge {
@@ -859,16 +859,17 @@ body {
 }
 
 .over-title {
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 900;
     color: #fff;
     line-height: 1;
+    white-space: nowrap;
     text-shadow:
         0 0 50px rgba(255, 50, 80, 0.55),
         0 0 100px rgba(255, 50, 80, 0.25),
         0 4px 20px rgba(0, 0, 0, 0.5);
-    margin-bottom: 4px;
-    letter-spacing: 2px;
+    margin-bottom: 1px;
+    letter-spacing: 3px;
 }
 
 .over-subtitle {
@@ -883,8 +884,8 @@ body {
 .over-split {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    gap: 12px;
-    margin: 14px 0 10px;
+    gap: 10px;
+    margin: 8px 0 6px;
     align-items: center;
 }
 
@@ -1003,8 +1004,8 @@ body {
 .over-judgments {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin: 12px 0;
+    gap: 5px;
+    margin: 6px 0;
 }
 
 .judgment-card {
@@ -1085,8 +1086,8 @@ body {
 .over-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 5px;
+    margin-bottom: 6px;
 }
 
 .stat-pill {
@@ -1118,7 +1119,7 @@ body {
 
 /* ── Achievements Row ── */
 .over-achievements {
-    margin: 10px 0 10px;
+    margin: 4px 0 4px;
 }
 
 .ach-header {
@@ -1211,8 +1212,8 @@ body {
 
 /* ── Next Achievement Progress ── */
 .over-next-ach {
-    margin: 10px 0 12px;
-    padding: 10px 12px;
+    margin: 4px 0 6px;
+    padding: 8px 10px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1222,7 +1223,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .next-ach-label {
@@ -1241,11 +1242,11 @@ body {
 
 .next-ach-bar {
     width: 100%;
-    height: 6px;
+    height: 5px;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.06);
     overflow: hidden;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .next-ach-fill {
@@ -1300,7 +1301,7 @@ body {
 
 /* ── Share Score Button ── */
 .over-share {
-    margin: 8px 0 10px;
+    margin: 4px 0 4px;
 }
 
 .share-btn {
@@ -1309,7 +1310,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 10px 16px;
     background: linear-gradient(135deg, rgba(127, 224, 255, 0.08), rgba(178, 123, 255, 0.08));
     border: 1px solid rgba(127, 224, 255, 0.2);
     border-radius: 12px;
@@ -1340,7 +1341,7 @@ body {
 /* ── Restart CTA ── */
 .over-restart {
     text-align: center;
-    padding: 14px 0 6px;
+    padding: 8px 0 4px;
     cursor: pointer;
 }
 
