@@ -294,6 +294,30 @@
                     <div class="ach-badges" id="overAchBadges"></div>
                 </div>
 
+                <!-- Next Achievement Progress -->
+                <div class="over-next-ach" id="overNextAch" style="display:none;">
+                    <div class="next-ach-header">
+                        <span class="next-ach-label">NEXT GOAL</span>
+                        <span class="next-ach-name" id="nextAchName"></span>
+                    </div>
+                    <div class="next-ach-bar">
+                        <div class="next-ach-fill" id="nextAchFill"></div>
+                    </div>
+                    <div class="next-ach-detail">
+                        <span class="next-ach-icon" id="nextAchIcon"></span>
+                        <span class="next-ach-desc" id="nextAchDesc"></span>
+                        <span class="next-ach-pct" id="nextAchPct"></span>
+                    </div>
+                </div>
+
+                <!-- Share Score -->
+                <div class="over-share">
+                    <button class="share-btn" id="btnShareScore">
+                        <span class="share-icon">📤</span>
+                        <span class="share-label">SHARE SCORE</span>
+                    </button>
+                </div>
+
                 <!-- Continue (coin revive) -->
                 <div class="over-continue" id="overContinue" style="display:none;">
                     <button class="continue-btn" id="btnContinue">
@@ -597,6 +621,7 @@
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
             $('btnGuestPlay').addEventListener('click', handleGuestLogin);
+            $('btnShareScore').addEventListener('click', shareScore);
 
             (async () => {
                 try {
@@ -894,6 +919,103 @@
                     const bg = isUnlocked ? `background:${a.color}22;` : '';
                     return `<div class="${cls}" style="color:${a.color};border-color:${isUnlocked ? a.color + '55' : ''};${bg}" title="${a.name}: ${a.desc}">${a.icon}</div>`;
                 }).join('');
+
+                // Next Achievement Progress
+                updateNextAchievement();
+            }
+
+            // ─── Next Achievement Progress ──────────────
+            function getAchProgress(achId) {
+                // Returns { current, target, pct } for the given achievement
+                switch (achId) {
+                    case 'first_perfect': return { current: accP, target: 1, pct: Math.min(100, accP / 1 * 100) };
+                    case 'combo5': return { current: maxCombo, target: 5, pct: Math.min(100, maxCombo / 5 * 100) };
+                    case 'combo15': return { current: maxCombo, target: 15, pct: Math.min(100, maxCombo / 15 * 100) };
+                    case 'combo30': return { current: maxCombo, target: 30, pct: Math.min(100, maxCombo / 30 * 100) };
+                    case 'lv5': return { current: level, target: 5, pct: Math.min(100, level / 5 * 100) };
+                    case 'lv10': return { current: level, target: 10, pct: Math.min(100, level / 10 * 100) };
+                    case 'score1k': return { current: score, target: 1000, pct: Math.min(100, score / 1000 * 100) };
+                    case 'perfect20': return { current: accP, target: 20, pct: Math.min(100, accP / 20 * 100) };
+                    default: return { current: 0, target: 1, pct: 0 };
+                }
+            }
+
+            function updateNextAchievement() {
+                // Find the closest locked achievement (highest progress %)
+                const locked = ACHIEVEMENTS.filter(a => !unlockedAch.has(a.id));
+                if (locked.length === 0) {
+                    $('overNextAch').style.display = 'none';
+                    return;
+                }
+
+                // Pick the one closest to completion
+                let bestAch = null, bestProg = null;
+                locked.forEach(a => {
+                    const prog = getAchProgress(a.id);
+                    if (!bestProg || prog.pct > bestProg.pct) {
+                        bestAch = a;
+                        bestProg = prog;
+                    }
+                });
+
+                if (!bestAch) return;
+
+                $('overNextAch').style.display = '';
+                $('nextAchName').textContent = bestAch.name;
+                $('nextAchName').style.color = bestAch.color;
+                $('nextAchIcon').textContent = bestAch.icon;
+                $('nextAchDesc').textContent = bestAch.desc;
+                $('nextAchPct').textContent = Math.round(bestProg.pct) + '%';
+                $('nextAchPct').style.color = bestAch.color;
+
+                // Animate fill bar
+                const fill = $('nextAchFill');
+                fill.style.width = '0%';
+                fill.style.background = `linear-gradient(90deg, ${bestAch.color}, ${bestAch.color}cc)`;
+                fill.style.boxShadow = `0 0 10px ${bestAch.color}`;
+                requestAnimationFrame(() => {
+                    fill.style.width = Math.round(bestProg.pct) + '%';
+                });
+            }
+
+            // ─── Share Score ───────────────────────────────
+            function shareScore() {
+                const dc = DIFF_CFG[difficulty];
+                const total = accP + accG + accO + accM;
+                const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100) : 0;
+                const text = `🎮 ARK Pulse Drop\n` +
+                    `${dc.emoji} ${dc.name} Mode\n` +
+                    `🏆 Score: ${score.toLocaleString()}\n` +
+                    `🎯 Accuracy: ${accPct.toFixed(1)}%\n` +
+                    `🔥 Max Combo: ×${maxCombo}\n` +
+                    `⚡ Level: ${level}\n\n` +
+                    `Play now → https://arkdeck7.itch.io/ark-pulse-drop`;
+
+                if (navigator.share) {
+                    navigator.share({ title: 'ARK Pulse Drop Score', text })
+                        .catch(() => fallbackCopy(text));
+                } else {
+                    fallbackCopy(text);
+                }
+            }
+
+            function fallbackCopy(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showShareToast('📋 Score copied!');
+                }).catch(() => {
+                    showShareToast('❌ Copy failed');
+                });
+            }
+
+            function showShareToast(msg) {
+                const btn = $('btnShareScore');
+                const orig = btn.innerHTML;
+                btn.innerHTML = `<span class="share-icon">✅</span><span class="share-label">${msg}</span>`;
+                btn.style.borderColor = 'rgba(98, 255, 179, 0.5)';
+                setTimeout(() => {
+                    btn.innerHTML = orig;
+                    btn.style.borderColor = '';
+                }, 2000);
             }
 
             function updateShop() {

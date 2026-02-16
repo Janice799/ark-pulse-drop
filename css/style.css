@@ -1209,6 +1209,134 @@ body {
     }
 }
 
+/* ── Next Achievement Progress ── */
+.over-next-ach {
+    margin: 10px 0 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.next-ach-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.next-ach-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.next-ach-name {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-light);
+}
+
+.next-ach-bar {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.next-ach-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--perfect), var(--accent-light));
+    box-shadow: 0 0 10px var(--perfect);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.next-ach-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 50%, rgba(255, 255, 255, 0.25) 75%, transparent 100%);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+.next-ach-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.next-ach-icon {
+    font-size: 14px;
+}
+
+.next-ach-desc {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.next-ach-pct {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--perfect);
+}
+
+/* ── Share Score Button ── */
+.over-share {
+    margin: 8px 0 10px;
+}
+
+.share-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(127, 224, 255, 0.08), rgba(178, 123, 255, 0.08));
+    border: 1px solid rgba(127, 224, 255, 0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.share-btn:hover,
+.share-btn:active {
+    background: linear-gradient(135deg, rgba(127, 224, 255, 0.16), rgba(178, 123, 255, 0.16));
+    border-color: rgba(127, 224, 255, 0.4);
+    box-shadow: 0 0 20px rgba(127, 224, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.share-icon {
+    font-size: 16px;
+}
+
+.share-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--perfect);
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 8px rgba(127, 224, 255, 0.3);
+}
+
 /* ── Restart CTA ── */
 .over-restart {
     text-align: center;
