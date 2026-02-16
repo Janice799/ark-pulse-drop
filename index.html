@@ -630,6 +630,14 @@
                             updateProfileBadge(user);
                             if (user && !user.isAnonymous && user.displayName) {
                                 setPlayerName(user.displayName, 'google');
+                                // FIX: If login modal is visible, auto-proceed to game
+                                // This handles iframe popup communication failures:
+                                // Google popup succeeds but signInWithPopup returns null
+                                const modal = $('loginModal');
+                                if (modal && modal.style.display !== 'none') {
+                                    console.log('[ARK] 🔑 Google auth detected via onAuthStateChanged — auto-proceeding');
+                                    proceedToGame();
+                                }
                             }
                         });
 
