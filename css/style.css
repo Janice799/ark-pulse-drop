@@ -331,8 +331,10 @@ body {
     position: relative;
     width: 260px;
     height: 260px;
-    margin: 0 0 4px 0;
+    margin: 0 auto 4px auto !important;
     flex-shrink: 0;
+    align-self: center !important;
+    display: block;
 }
 
 .menu-ring canvas {

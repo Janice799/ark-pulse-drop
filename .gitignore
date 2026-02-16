@@ -5,3 +5,4 @@ node_modules/
 .vercel
 src/
 package-lock.json
+*.zip
