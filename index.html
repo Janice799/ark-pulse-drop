@@ -546,24 +546,37 @@
                 try {
                     if (window.FirebaseService) {
                         await FirebaseService.init();
-                        if (!FirebaseService.isSignedIn()) {
+
+                        // Wait for Firebase to restore existing auth session
+                        // onAuthStateChanged fires once immediately with the restored user (or null)
+                        const restoredUser = await new Promise((resolve) => {
+                            const unsub = FirebaseService.onAuthChange((user) => {
+                                resolve(user);
+                                // Note: we keep listening (don't unsub) for future auth changes
+                            });
+                        });
+
+                        if (restoredUser) {
+                            console.log('[ARK] 🔑 Session restored:', restoredUser.isAnonymous ? 'Anonymous' : restoredUser.displayName);
+                            updateProfileBadge(restoredUser);
+                            // Restore Google user name
+                            if (!restoredUser.isAnonymous && restoredUser.displayName) {
+                                setPlayerName(restoredUser.displayName, 'google');
+                            }
+                        } else {
+                            // No existing session — sign in anonymously
+                            console.log('[ARK] 🔑 No session found, signing in anonymously');
                             await FirebaseService.signInAnon();
                         }
+
+                        // Continue listening for future auth changes (e.g. Google login mid-session)
                         FirebaseService.onAuthChange((user) => {
                             updateProfileBadge(user);
-                            // If Google user, update name
                             if (user && !user.isAnonymous && user.displayName) {
                                 setPlayerName(user.displayName, 'google');
                             }
                         });
-                        const curUser = FirebaseService.getUser();
-                        if (curUser) {
-                            updateProfileBadge(curUser);
-                            // Restore Google user name
-                            if (!curUser.isAnonymous && curUser.displayName) {
-                                setPlayerName(curUser.displayName, 'google');
-                            }
-                        }
+
                         if (window.Leaderboard) {
                             await Leaderboard.initGlobal();
                             if (isNameSet()) Leaderboard.setPlayerName(playerName);
