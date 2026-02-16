@@ -67,6 +67,11 @@
                         👤 PLAY AS GUEST
                     </button>
                 </div>
+
+                <!-- Sign Out -->
+                <button class="login-logout-btn" id="btnLogout" style="display:none;">
+                    🚪 Sign Out
+                </button>
             </div>
         </div>
 
@@ -505,12 +510,34 @@
             // Profile badge click — allow re-login / switch
             $('profileBadge').addEventListener('click', () => {
                 showLoginModal();
+                // Show logout button if already logged in
+                $('btnLogout').style.display = isNameSet() ? 'block' : 'none';
                 // Pre-fill current name if guest
                 if (loginMode === 'guest' && playerName) {
                     nicknameInput.value = playerName;
                     nicknameInput.dispatchEvent(new Event('input'));
                 }
             });
+
+            // Logout handler
+            async function handleLogout() {
+                // Sign out from Firebase
+                if (window.FirebaseService && FirebaseService.isSignedIn()) {
+                    await FirebaseService.signOut();
+                }
+                // Clear local storage
+                localStorage.removeItem('arkPD_name');
+                localStorage.removeItem('arkPD_loginMode');
+                playerName = '';
+                loginMode = '';
+                // Reset profile badge
+                $('profileName').textContent = 'Guest';
+                $('profileAvatar').textContent = '👤';
+                // Hide modal
+                hideLoginModal();
+                console.log('[ARK] 👋 Signed out');
+            }
+            $('btnLogout').addEventListener('click', handleLogout);
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
             $('btnGuestPlay').addEventListener('click', handleGuestLogin);
