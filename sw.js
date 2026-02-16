@@ -2,26 +2,27 @@
  * ARK Pulse Drop — Service Worker v5.0
  * Offline-first caching strategy
  */
-const CACHE_NAME = 'ark-pulse-drop-v5.0.0';
+const CACHE_NAME = 'ark-pulse-drop-v6.0.0';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/js/shop.js',
-    '/js/leaderboard.js',
-    '/js/audio.js',
-    '/js/ads.js',
-    '/js/paypal-shop.js',
-    '/js/firebase-config.js',
-    '/manifest.json',
-    '/icons/icon-48.png',
-    '/icons/icon-72.png',
-    '/icons/icon-96.png',
-    '/icons/icon-120.png',
-    '/icons/icon-144.png',
-    '/icons/icon-152.png',
-    '/icons/icon-180.png',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png'
+    './',
+    './index.html',
+    './css/style.css',
+    './js/shop.js',
+    './js/leaderboard.js',
+    './js/audio.js',
+    './js/ads.js',
+    './js/paypal-shop.js',
+    './js/firebase-config.js',
+    './manifest.json',
+    './icons/icon-48.png',
+    './icons/icon-72.png',
+    './icons/icon-96.png',
+    './icons/icon-120.png',
+    './icons/icon-144.png',
+    './icons/icon-152.png',
+    './icons/icon-180.png',
+    './icons/icon-192.png',
+    './icons/icon-512.png'
 ];
 
 // Install — cache all assets
