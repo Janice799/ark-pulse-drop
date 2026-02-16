@@ -81,11 +81,16 @@
             <div class="neon-grid"></div>
 
             <!-- Profile Badge (top-left) -->
-            <div class="profile-badge" id="profileBadge">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
-                <span class="profile-name" id="profileName">Guest</span>
-                <button class="profile-signout-btn" id="btnMenuSignOut" style="display:none;"
-                    title="Sign Out">✕</button>
+            <div class="profile-area" id="profileArea">
+                <div class="profile-badge" id="profileBadge">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <span class="profile-name" id="profileName">Guest</span>
+                </div>
+                <!-- Sign Out dropdown (hidden by default) -->
+                <div class="profile-dropdown" id="profileDropdown" style="display:none;">
+                    <div class="dropdown-user-info" id="dropdownUserInfo">Signed in</div>
+                    <button class="dropdown-signout-btn" id="btnMenuSignOut">🚪 Sign Out</button>
+                </div>
             </div>
 
             <div class="coin-badge">
@@ -392,7 +397,6 @@
             function updateProfileBadge(user) {
                 const avatar = $('profileAvatar');
                 const nameEl = $('profileName');
-                const signOutBtn = $('btnMenuSignOut');
                 if (user && !user.isAnonymous && user.displayName) {
                     nameEl.textContent = user.displayName.split(' ')[0];
                     if (user.photoURL) {
@@ -401,18 +405,14 @@
                         avatar.textContent = '🟢';
                     }
                     $('menuUID').textContent = user.uid.slice(0, 6);
-                    signOutBtn.style.display = 'flex';
                 } else if (loginMode === 'guest' && isNameSet()) {
-                    // Guest with nickname set
                     nameEl.textContent = playerName;
                     avatar.textContent = '👤';
                     $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
-                    signOutBtn.style.display = 'flex';
                 } else {
                     nameEl.textContent = 'Tap to Login';
                     avatar.textContent = '🔒';
                     $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
-                    signOutBtn.style.display = 'none';
                 }
             }
 
@@ -515,20 +515,51 @@
                 if (e.key === 'Enter' && !guestBtn.disabled) handleGuestLogin();
             });
 
-            // Profile badge click — allow re-login / switch
-            $('profileBadge').addEventListener('click', () => {
-                showLoginModal();
-                // Show logout button if already logged in
-                $('btnLogout').style.display = isNameSet() ? 'block' : 'none';
-                // Pre-fill current name if guest
-                if (loginMode === 'guest' && playerName) {
-                    nicknameInput.value = playerName;
-                    nicknameInput.dispatchEvent(new Event('input'));
+            // Profile badge click — toggle dropdown or open login modal
+            let dropdownOpen = false;
+            function toggleProfileDropdown() {
+                const dropdown = $('profileDropdown');
+                if (dropdownOpen) {
+                    dropdown.style.display = 'none';
+                    dropdownOpen = false;
+                } else {
+                    // Update dropdown info
+                    const user = window.FirebaseService ? FirebaseService.getUser() : null;
+                    if (user && !user.isAnonymous && user.displayName) {
+                        $('dropdownUserInfo').textContent = '✅ ' + user.displayName;
+                    } else if (loginMode === 'guest' && playerName) {
+                        $('dropdownUserInfo').textContent = '👤 Guest: ' + playerName;
+                    }
+                    dropdown.style.display = 'block';
+                    dropdownOpen = true;
+                }
+            }
+
+            $('profileBadge').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isNameSet() || (window.FirebaseService && FirebaseService.getUser() && !FirebaseService.getUser().isAnonymous)) {
+                    // Logged in — show dropdown
+                    toggleProfileDropdown();
+                } else {
+                    // Not logged in — show login modal
+                    showLoginModal();
+                    $('btnLogout').style.display = 'none';
+                }
+            });
+
+            // Close dropdown when tapping outside
+            document.addEventListener('click', (e) => {
+                if (dropdownOpen && !$('profileArea').contains(e.target)) {
+                    $('profileDropdown').style.display = 'none';
+                    dropdownOpen = false;
                 }
             });
 
             // Logout handler
             async function handleLogout() {
+                // Close dropdown
+                $('profileDropdown').style.display = 'none';
+                dropdownOpen = false;
                 // Sign out from Firebase
                 if (window.FirebaseService && FirebaseService.isSignedIn()) {
                     await FirebaseService.signOut();
@@ -539,9 +570,8 @@
                 playerName = '';
                 loginMode = '';
                 // Reset profile badge
-                $('profileName').textContent = 'Guest';
-                $('profileAvatar').textContent = '👤';
-                $('btnMenuSignOut').style.display = 'none';
+                $('profileName').textContent = 'Tap to Login';
+                $('profileAvatar').textContent = '🔒';
                 // Hide modal
                 hideLoginModal();
                 // Re-sign in anonymously so leaderboard still works
@@ -552,7 +582,7 @@
             }
             $('btnLogout').addEventListener('click', handleLogout);
             $('btnMenuSignOut').addEventListener('click', (e) => {
-                e.stopPropagation(); // Don't open login modal
+                e.stopPropagation();
                 handleLogout();
             });
 
