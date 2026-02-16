@@ -83,6 +83,8 @@
             <div class="profile-badge" id="profileBadge">
                 <div class="profile-avatar" id="profileAvatar">👤</div>
                 <span class="profile-name" id="profileName">Guest</span>
+                <button class="profile-signout-btn" id="btnMenuSignOut" style="display:none;"
+                    title="Sign Out">✕</button>
             </div>
 
             <div class="coin-badge">
@@ -389,6 +391,7 @@
             function updateProfileBadge(user) {
                 const avatar = $('profileAvatar');
                 const nameEl = $('profileName');
+                const signOutBtn = $('btnMenuSignOut');
                 if (user && !user.isAnonymous && user.displayName) {
                     nameEl.textContent = user.displayName.split(' ')[0];
                     if (user.photoURL) {
@@ -397,15 +400,18 @@
                         avatar.textContent = '🟢';
                     }
                     $('menuUID').textContent = user.uid.slice(0, 6);
+                    signOutBtn.style.display = 'flex';
                 } else if (loginMode === 'guest' && isNameSet()) {
                     // Guest with nickname set
                     nameEl.textContent = playerName;
                     avatar.textContent = '👤';
                     $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
+                    signOutBtn.style.display = 'flex';
                 } else {
                     nameEl.textContent = 'Tap to Login';
                     avatar.textContent = '🔒';
                     $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
+                    signOutBtn.style.display = 'none';
                 }
             }
 
@@ -477,6 +483,7 @@
                 // Update profile badge with guest name
                 $('profileName').textContent = name;
                 $('profileAvatar').textContent = '👤';
+                $('btnMenuSignOut').style.display = 'flex';
                 proceedToGame();
             }
 
@@ -533,11 +540,20 @@
                 // Reset profile badge
                 $('profileName').textContent = 'Guest';
                 $('profileAvatar').textContent = '👤';
+                $('btnMenuSignOut').style.display = 'none';
                 // Hide modal
                 hideLoginModal();
+                // Re-sign in anonymously so leaderboard still works
+                if (window.FirebaseService) {
+                    await FirebaseService.signInAnon();
+                }
                 console.log('[ARK] 👋 Signed out');
             }
             $('btnLogout').addEventListener('click', handleLogout);
+            $('btnMenuSignOut').addEventListener('click', (e) => {
+                e.stopPropagation(); // Don't open login modal
+                handleLogout();
+            });
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
             $('btnGuestPlay').addEventListener('click', handleGuestLogin);

@@ -197,6 +197,31 @@ body {
     white-space: nowrap;
 }
 
+.profile-signout-btn {
+    width: 22px;
+    height: 22px;
+    margin-left: 2px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 93, 122, 0.3);
+    background: rgba(255, 93, 122, 0.12);
+    color: #ff5d7a;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+    font-family: var(--font);
+}
+
+.profile-signout-btn:active {
+    transform: scale(0.9);
+    background: rgba(255, 93, 122, 0.25);
+}
+
 /* Title area */
 .menu-title {
     text-align: center;
