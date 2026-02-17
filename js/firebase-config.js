@@ -32,7 +32,7 @@ const FirebaseService = (() => {
             // Single bundled import — no more CDN round-trips!
             const {
                 initializeApp,
-                getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut: fbSignOut,
+                getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut: fbSignOut,
                 getDatabase, ref, push, set, get, query, orderByChild, limitToLast, onValue, remove
             } = await import('./firebase-sdk.min.js');
 
@@ -41,7 +41,7 @@ const FirebaseService = (() => {
             db = getDatabase(app);
 
             // Store module references for later use
-            FirebaseService._authModule = { signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, fbSignOut };
+            FirebaseService._authModule = { signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fbSignOut };
             FirebaseService._dbModule = { ref, push, set, get, query, orderByChild, limitToLast, onValue, remove };
 
             // Listen for auth changes
@@ -50,6 +50,17 @@ const FirebaseService = (() => {
                 onAuthChangeCbs.forEach(cb => cb(user));
                 console.log('[Firebase] Auth state:', user ? `uid=${user.uid}` : 'signed out');
             });
+
+            // Handle redirect result (if user was redirected back after Google sign-in)
+            try {
+                const redirectResult = await getRedirectResult(auth);
+                if (redirectResult && redirectResult.user) {
+                    console.log('[Firebase] ✅ Redirect sign-in result:', redirectResult.user.displayName);
+                }
+            } catch (redirectErr) {
+                // Ignore — no redirect pending
+                console.log('[Firebase] No redirect result pending');
+            }
 
             isReady = true;
             console.log('[Firebase] ✅ Initialized successfully');
@@ -75,15 +86,50 @@ const FirebaseService = (() => {
     }
 
     // ─── Auth: Google ───────────────────────────
+    // Hybrid: tries popup first, falls back to redirect
+    // This fixes the "sometimes works, sometimes doesn't" issue
     async function signInGoogle() {
         if (!auth) return null;
+        const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = FirebaseService._authModule;
+        const provider = new GoogleAuthProvider();
+
+        // Detect if we should skip popup entirely
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const isInIframe = window !== window.top;
+        const isInAppBrowser = /FBAN|FBAV|Instagram|Line|KakaoTalk|NAVER/i.test(navigator.userAgent);
+
+        // Mobile, iframe (itch.io), or in-app browsers → go straight to redirect
+        if (isMobile || isInIframe || isInAppBrowser) {
+            console.log('[Firebase] 📱 Mobile/iframe/in-app detected → using redirect');
+            try {
+                await signInWithRedirect(auth, provider);
+                return null; // page will redirect, won't reach here
+            } catch (err) {
+                console.error('[Firebase] Redirect sign-in failed:', err);
+                return null;
+            }
+        }
+
+        // Desktop → try popup first, fallback to redirect
         try {
-            const { GoogleAuthProvider, signInWithPopup } = FirebaseService._authModule;
-            const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
-            console.log('[Firebase] Google sign-in OK:', result.user.displayName);
+            console.log('[Firebase] ✅ Google popup sign-in OK:', result.user.displayName);
             return result.user;
         } catch (err) {
+            // Popup blocked or failed — try redirect
+            if (err.code === 'auth/popup-blocked' ||
+                err.code === 'auth/popup-closed-by-user' ||
+                err.code === 'auth/cancelled-popup-request' ||
+                err.code === 'auth/internal-error') {
+                console.warn('[Firebase] ⚠️ Popup failed, trying redirect...', err.code);
+                try {
+                    await signInWithRedirect(auth, provider);
+                    return null; // page will redirect
+                } catch (redirectErr) {
+                    console.error('[Firebase] Redirect also failed:', redirectErr);
+                    return null;
+                }
+            }
             console.error('[Firebase] Google sign-in failed:', err);
             return null;
         }
