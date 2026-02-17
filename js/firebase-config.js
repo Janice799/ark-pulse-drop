@@ -86,21 +86,19 @@ const FirebaseService = (() => {
     }
 
     // ─── Auth: Google ───────────────────────────
-    // Hybrid: tries popup first, falls back to redirect
-    // This fixes the "sometimes works, sometimes doesn't" issue
+    // v2: Popup-first strategy for ALL browsers (including mobile)
+    // Only use redirect for iframe/in-app browsers where popups are blocked
     async function signInGoogle() {
         if (!auth) return null;
         const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = FirebaseService._authModule;
         const provider = new GoogleAuthProvider();
 
-        // Detect if we should skip popup entirely
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        // Only iframe (itch.io) or in-app browsers truly need redirect
         const isInIframe = window !== window.top;
         const isInAppBrowser = /FBAN|FBAV|Instagram|Line|KakaoTalk|NAVER/i.test(navigator.userAgent);
 
-        // Mobile, iframe (itch.io), or in-app browsers → go straight to redirect
-        if (isMobile || isInIframe || isInAppBrowser) {
-            console.log('[Firebase] 📱 Mobile/iframe/in-app detected → using redirect');
+        if (isInIframe || isInAppBrowser) {
+            console.log('[Firebase] 🔄 iframe/in-app detected → using redirect');
             try {
                 await signInWithRedirect(auth, provider);
                 return null; // page will redirect, won't reach here
@@ -110,13 +108,14 @@ const FirebaseService = (() => {
             }
         }
 
-        // Desktop → try popup first, fallback to redirect
+        // All normal browsers (desktop + mobile) → popup first, redirect fallback
         try {
+            console.log('[Firebase] 🔐 Attempting popup sign-in...');
             const result = await signInWithPopup(auth, provider);
-            console.log('[Firebase] ✅ Google popup sign-in OK:', result.user.displayName);
+            console.log('[Firebase] ✅ Google sign-in OK:', result.user.displayName);
             return result.user;
         } catch (err) {
-            // Popup blocked or failed — try redirect
+            // Popup blocked or failed — try redirect as last resort
             if (err.code === 'auth/popup-blocked' ||
                 err.code === 'auth/popup-closed-by-user' ||
                 err.code === 'auth/cancelled-popup-request' ||
