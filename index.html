@@ -46,7 +46,7 @@
                 <div class="login-title">WELCOME</div>
                 <div class="login-desc">Choose how you want to play</div>
 
-                <!-- Option 1: Google Sign In -->
+                <!-- Option 1: Google Sign In (hidden in iframe, replaced with redirect banner) -->
                 <button class="login-google-btn" id="btnGoogleLogin">
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path fill="#4285F4"
@@ -60,6 +60,17 @@
                     </svg>
                     Sign in with Google
                 </button>
+
+                <!-- iframe banner: shown instead of Google btn when in iframe (itch.io) -->
+                <a class="login-fullver-btn" id="iframeFullVerBtn" href="https://ark-pulse-drop.web.app" target="_blank"
+                    rel="noopener" style="display:none;">
+                    <span class="fullver-icon">🔥</span>
+                    <span class="fullver-text">
+                        <strong>Play Full Version</strong>
+                        <small>Google Login · Leaderboard · Skins</small>
+                    </span>
+                    <span class="fullver-arrow">→</span>
+                </a>
 
                 <!-- Divider -->
                 <div class="login-divider">
@@ -106,6 +117,13 @@
                 <span class="icon">◆</span>
                 <span id="menuCoins">0</span>
             </div>
+
+            <!-- itch.io floating banner (only visible in iframe) -->
+            <a class="iframe-float-banner" id="iframeFloatBanner" href="https://ark-pulse-drop.web.app" target="_blank"
+                rel="noopener" style="display:none;">
+                <span class="ifb-fire">🔥</span>
+                <span class="ifb-text">Full Version with Google Login →</span>
+            </a>
 
             <div class="menu-title">
                 <div class="sub">A R K</div>
@@ -622,6 +640,17 @@
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
             $('btnGuestPlay').addEventListener('click', handleGuestLogin);
             $('btnShareScore').addEventListener('click', shareScore);
+
+            // ─── iframe detection (itch.io) ───────────────
+            const isInIframe = window !== window.top;
+            if (isInIframe) {
+                console.log('[ARK] 🖼️ Running in iframe — showing Full Version banner');
+                // Hide Google login, show redirect banner
+                $('btnGoogleLogin').style.display = 'none';
+                $('iframeFullVerBtn').style.display = 'flex';
+                // Show floating menu banner
+                $('iframeFloatBanner').style.display = 'flex';
+            }
 
             (async () => {
                 try {

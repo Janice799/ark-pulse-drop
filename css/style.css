@@ -2063,6 +2063,133 @@ body {
     }
 }
 
+/* ── iframe Full Version Banner (login modal) ── */
+.login-fullver-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, #ff6b35, #ff4500, #ff2200);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.35);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.login-fullver-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 28px rgba(255, 69, 0, 0.5);
+}
+
+.login-fullver-btn:active {
+    transform: scale(0.98);
+}
+
+.fullver-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.fullver-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    flex: 1;
+}
+
+.fullver-text strong {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.fullver-text small {
+    font-size: 11px;
+    opacity: 0.85;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.fullver-arrow {
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 20px rgba(255, 69, 0, 0.35);
+    }
+
+    50% {
+        box-shadow: 0 4px 30px rgba(255, 69, 0, 0.55), 0 0 40px rgba(255, 69, 0, 0.2);
+    }
+}
+
+/* ── iframe Floating Banner (menu screen) ── */
+.iframe-float-banner {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.9), rgba(255, 34, 0, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.4), 0 0 40px rgba(255, 69, 0, 0.15);
+    animation: floatBannerPulse 3s ease-in-out infinite;
+    transition: all 0.2s ease;
+}
+
+.iframe-float-banner:hover {
+    transform: translateX(-50%) scale(1.05);
+}
+
+.iframe-float-banner:active {
+    transform: translateX(-50%) scale(0.97);
+}
+
+.ifb-fire {
+    font-size: 16px;
+}
+
+.ifb-text {
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes floatBannerPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 20px rgba(255, 69, 0, 0.4), 0 0 40px rgba(255, 69, 0, 0.15);
+    }
+
+    50% {
+        box-shadow: 0 4px 28px rgba(255, 69, 0, 0.6), 0 0 50px rgba(255, 69, 0, 0.25);
+    }
+}
+
 /* ══════════════════════════════════════════════════
    PAUSE UI
    ══════════════════════════════════════════════════ */
