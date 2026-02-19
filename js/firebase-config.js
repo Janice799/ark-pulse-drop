@@ -8,7 +8,7 @@
 const FirebaseService = (() => {
     // ─── Config ─────────────────────────────────
     const CONFIG = {
-        apiKey: "AIzaSyD_wMX3L6LO067j2lLJB9eVDZzO8evcD5g",
+        apiKey: "AIzaSyCjyO7dghOu4NFwvBCzNegSsRx-jEsDDGc",
         authDomain: "ark-pulse-drop.firebaseapp.com",
         databaseURL: "https://ark-pulse-drop-default-rtdb.firebaseio.com",
         projectId: "ark-pulse-drop",
