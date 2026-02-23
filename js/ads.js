@@ -1,86 +1,161 @@
 /**
- * ARK Pulse Drop — Ad Manager (State Machine)
- * Ready for: AdMob, Unity Ads, ironSource, AppLovin
- * Replace mock methods with real SDK calls.
+ * ARK Pulse Drop — Ad Manager (H5 Games Ads / Ad Placement API)
+ * Uses Google AdSense H5 Games Ads for Interstitial & Rewarded ads.
+ * Publisher: ca-pub-3355425794806318
  */
 const AdManager = (() => {
-  // ─── Ad States ──────────────────────────────
-  const AD_STATE = {
-    IDLE: 'idle',
-    LOADING: 'loading',
-    READY: 'ready',
-    SHOWING: 'showing',
-    COMPLETED: 'completed',
-    FAILED: 'failed',
-  };
+  // ─── Config ───────────────────────────────────
+  const INTERSTITIAL_FREQUENCY = 3; // show ad every N games
 
-  // ─── Reward Types ───────────────────────────
-  const REWARD = { REVIVE: 'revive', DOUBLE: 'double_score' };
-
-  let state = AD_STATE.IDLE;
-  let pendingReward = null;
+  // ─── State ────────────────────────────────────
+  let gameCount = parseInt(localStorage.getItem('arkPD_adcount') || '0');
   let reviveUsed = false;
-  let onRewardCallback = null;
-  let onCloseCallback = null;
+  let isShowingAd = false;
+  let sdkReady = false;
 
-  // ─── Mock Ad (replace with real SDK) ────────
-  function _mockLoadAd() {
-    state = AD_STATE.LOADING;
-    return new Promise(resolve => {
-      setTimeout(() => { state = AD_STATE.READY; resolve(true); }, 300);
-    });
-  }
-
-  function _mockShowAd() {
-    state = AD_STATE.SHOWING;
-    return new Promise(resolve => {
-      // Simulate user watching ad for 2 seconds
-      setTimeout(() => { state = AD_STATE.COMPLETED; resolve(true); }, 2000);
-    });
-  }
-
-  // ─── SDK Integration Points ─────────────────
-  // TODO: Replace these with real SDK calls
-  // AdMob example:
-  //   admob.rewardedAd.load(adUnitId).then(...)
-  //   admob.rewardedAd.show().then(...)
-  // Unity Ads example:
-  //   UnityAds.load(placementId, callbacks)
-  //   UnityAds.show(placementId, callbacks)
-
-  async function requestRewardedAd(rewardType, onReward, onClose) {
-    if (rewardType === REWARD.REVIVE && reviveUsed) return false;
-    pendingReward = rewardType;
-    onRewardCallback = onReward;
-    onCloseCallback = onClose;
-
-    try {
-      await _mockLoadAd();
-      const watched = await _mockShowAd();
-      if (watched && state === AD_STATE.COMPLETED) {
-        if (pendingReward === REWARD.REVIVE) reviveUsed = true;
-        if (onRewardCallback) onRewardCallback(pendingReward);
-      }
-    } catch (e) {
-      state = AD_STATE.FAILED;
-    } finally {
-      state = AD_STATE.IDLE;
-      if (onCloseCallback) onCloseCallback();
+  // ─── SDK Check ────────────────────────────────
+  function checkSDK() {
+    if (typeof adBreak === 'function' && typeof adConfig === 'function') {
+      sdkReady = true;
+      // Configure the SDK
+      adConfig({
+        preloadAdBreaks: 'on',
+        sound: 'on',
+        onReady: () => {
+          console.log('[AdManager] H5 Games Ads SDK ready');
+          sdkReady = true;
+        }
+      });
+      return true;
     }
+    return false;
+  }
+
+  // Init on load
+  setTimeout(() => checkSDK(), 1000);
+
+  // ─── Interstitial (between games) ─────────────
+  function showInterstitial(callbacks = {}) {
+    if (!sdkReady && !checkSDK()) {
+      console.log('[AdManager] SDK not ready — skip interstitial');
+      if (callbacks.afterAd) callbacks.afterAd();
+      return;
+    }
+
+    isShowingAd = true;
+    adBreak({
+      type: 'next',           // between levels/games
+      name: 'game-over',
+      beforeAd: () => {
+        console.log('[AdManager] Interstitial showing');
+        if (callbacks.beforeAd) callbacks.beforeAd();
+      },
+      afterAd: () => {
+        console.log('[AdManager] Interstitial done');
+        isShowingAd = false;
+        if (callbacks.afterAd) callbacks.afterAd();
+      },
+      adBreakDone: (info) => {
+        console.log('[AdManager] adBreakDone:', info.breakStatus);
+        isShowingAd = false;
+        // If no ad was shown, still call afterAd
+        if (info.breakStatus !== 'viewed' && callbacks.afterAd) {
+          callbacks.afterAd();
+        }
+      }
+    });
+  }
+
+  // Called on every game over — decides whether to show
+  function onGameOver(callbacks = {}) {
+    gameCount++;
+    localStorage.setItem('arkPD_adcount', String(gameCount));
+
+    if (gameCount % INTERSTITIAL_FREQUENCY !== 0) {
+      console.log(`[AdManager] Game #${gameCount} — skip interstitial`);
+      if (callbacks.afterAd) callbacks.afterAd();
+      return;
+    }
+
+    console.log(`[AdManager] Game #${gameCount} — showing interstitial`);
+    showInterstitial(callbacks);
+  }
+
+  // ─── Rewarded Ad ──────────────────────────────
+  function requestRewardedAd(rewardType, onReward, onClose) {
+    if (rewardType === 'revive' && reviveUsed) {
+      if (onClose) onClose();
+      return false;
+    }
+
+    if (!sdkReady && !checkSDK()) {
+      console.log('[AdManager] SDK not ready — granting reward (dev mode)');
+      if (rewardType === 'revive') reviveUsed = true;
+      if (onReward) onReward(rewardType);
+      if (onClose) onClose();
+      return true;
+    }
+
+    isShowingAd = true;
+    adBreak({
+      type: 'reward',
+      name: rewardType === 'revive' ? 'reward-revive' : 'reward-bonus',
+      beforeAd: () => {
+        console.log('[AdManager] Rewarded ad showing');
+      },
+      afterAd: () => {
+        console.log('[AdManager] Rewarded ad finished');
+        isShowingAd = false;
+      },
+      beforeReward: (showAdFn) => {
+        showAdFn(); // actually show the ad
+      },
+      adDismissed: () => {
+        console.log('[AdManager] Rewarded ad dismissed (no reward)');
+        isShowingAd = false;
+        if (onClose) onClose();
+      },
+      adViewed: () => {
+        console.log('[AdManager] Rewarded ad watched — granting reward!');
+        isShowingAd = false;
+        if (rewardType === 'revive') reviveUsed = true;
+        if (onReward) onReward(rewardType);
+        if (onClose) onClose();
+      },
+      adBreakDone: (info) => {
+        console.log('[AdManager] Rewarded adBreakDone:', info.breakStatus);
+        isShowingAd = false;
+        if (info.breakStatus === 'notReady' || info.breakStatus === 'other') {
+          // No ad available — grant reward anyway (dev/test)
+          console.log('[AdManager] No rewarded ad available — granting reward');
+          if (rewardType === 'revive') reviveUsed = true;
+          if (onReward) onReward(rewardType);
+          if (onClose) onClose();
+        }
+      }
+    });
+
     return true;
   }
 
   function resetSession() {
     reviveUsed = false;
-    state = AD_STATE.IDLE;
-    pendingReward = null;
+    isShowingAd = false;
   }
 
   function canRevive() { return !reviveUsed; }
-  function getState() { return state; }
-  function isShowing() { return state === AD_STATE.SHOWING || state === AD_STATE.LOADING; }
+  function isShowing() { return isShowingAd; }
 
-  return { AD_STATE, REWARD, requestRewardedAd, resetSession, canRevive, getState, isShowing };
+  // Legacy compat
+  const AD_STATE = { IDLE: 'idle', LOADING: 'loading', READY: 'ready', SHOWING: 'showing', COMPLETED: 'completed', FAILED: 'failed' };
+  const REWARD = { REVIVE: 'revive', DOUBLE: 'double_score' };
+  function getState() { return isShowingAd ? AD_STATE.SHOWING : AD_STATE.IDLE; }
+
+  return {
+    AD_STATE, REWARD,
+    requestRewardedAd, resetSession, canRevive, getState, isShowing,
+    onGameOver, showInterstitial
+  };
 })();
 
 window.AdManager = AdManager;

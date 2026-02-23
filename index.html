@@ -23,6 +23,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="css/style.css?v=6.3.1" />
+
+    <!-- Google H5 Games Ads (Ad Placement API) -->
+    <script>
+        window.adsbygoogle = window.adsbygoogle || [];
+        var adBreak = adConfig = function (o) { adsbygoogle.push(o); };
+    </script>
+    <script async data-adbreak-test="on" data-ad-client="ca-pub-3355425794806318"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3355425794806318"
+        crossorigin="anonymous"></script>
+
     <!-- iOS Safari / KakaoTalk viewport height fix -->
     <script>
         function setVH() {
@@ -31,6 +41,15 @@
         setVH();
         window.addEventListener('resize', setVH);
         window.addEventListener('orientationchange', function () { setTimeout(setVH, 150); });
+    </script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G9Y6M2G3YZ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-G9Y6M2G3YZ');
     </script>
 </head>
 
@@ -1483,6 +1502,11 @@
                         goT = 0;
                         updateGameOver();
                         showScreen('over-screen');
+
+                        // Interstitial ad (every N games)
+                        if (window.AdManager && AdManager.onGameOver) {
+                            AdManager.onGameOver();
+                        }
 
                         // ── Show Continue button if eligible ──
                         showContinueOption();
