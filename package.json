@@ -4,7 +4,9 @@
   "description": "> A premium rhythm timing game. Tap the pulse at the perfect moment!",
   "main": "sw.js",
   "scripts": {
+    "build:config": "node build-config.js",
     "build:firebase": "npx esbuild src/firebase-exports.js --bundle --format=esm --minify --outfile=js/firebase-sdk.min.js --target=es2020",
+    "predeploy": "node build-config.js",
     "test": "echo \"No tests\" && exit 0"
   },
   "repository": {

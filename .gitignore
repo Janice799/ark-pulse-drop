@@ -6,3 +6,11 @@ node_modules/
 src/
 package-lock.json
 *.zip
+
+# Environment variables (API keys — NEVER commit!)
+.env
+.env.local
+.env.production
+
+# Auto-generated from .env by build-config.js
+js/firebase-config.js
