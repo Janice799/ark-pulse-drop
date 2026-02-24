@@ -2,7 +2,7 @@
  * ARK Pulse Drop — Service Worker v5.0
  * Offline-first caching strategy
  */
-const CACHE_NAME = 'ark-pulse-drop-v6.3.0';
+const CACHE_NAME = 'ark-pulse-drop-v6.3.1';
 const ASSETS = [
     './',
     './index.html',
