@@ -30,6 +30,17 @@
         ".read": "auth != null && auth.uid == $uid",
         ".write": false
       }
+    },
+    "gravity_drop": {
+      "leaderboard": {
+        ".read": true,
+        ".indexOn": [
+          "score"
+        ],
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      }
     }
   }
 }
