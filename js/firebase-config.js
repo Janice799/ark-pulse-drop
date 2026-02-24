@@ -238,6 +238,39 @@ const FirebaseService = (() => {
         }
     }
 
+    // ─── Daily Attendance Check (출석체크) ───────
+    async function dailyAttendanceCheck() {
+        if (!db || !currentUser) return { awarded: false, coins: 0 };
+        const DAILY_BONUS = 50;
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        try {
+            const { ref, get, set } = FirebaseService._dbModule;
+            const userRef = ref(db, `users/${currentUser.uid}`);
+            const snapshot = await get(userRef);
+            const data = snapshot.exists() ? snapshot.val() : {};
+            const lastDate = data.lastLoginDate || '';
+
+            if (lastDate === today) {
+                console.log('[Firebase] 📅 Already checked in today');
+                return { awarded: false, coins: data.coins || 0 };
+            }
+
+            // Award daily bonus
+            const newCoins = (data.coins || 0) + DAILY_BONUS;
+            await set(userRef, {
+                ...data,
+                coins: newCoins,
+                lastLoginDate: today,
+                lastUpdated: Date.now()
+            });
+            console.log(`[Firebase] 🎁 Daily bonus! +${DAILY_BONUS} coins (total: ${newCoins})`);
+            return { awarded: true, coins: newCoins };
+        } catch (err) {
+            console.error('[Firebase] Attendance check failed:', err);
+            return { awarded: false, coins: 0 };
+        }
+    }
+
     // ─── Purchase Record (server-side write only in production) ──
     async function recordPurchase(purchaseData) {
         if (!db || !currentUser) return false;
@@ -265,6 +298,8 @@ const FirebaseService = (() => {
         submitScore, getTopScores, onScoresUpdate,
         // User Data
         saveUserData, loadUserData,
+        // Attendance
+        dailyAttendanceCheck,
         // Purchases
         recordPurchase,
         // Internal (for module refs)

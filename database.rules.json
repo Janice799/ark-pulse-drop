@@ -3,15 +3,26 @@
     "leaderboard": {
       ".read": true,
       ".write": "auth != null",
-      ".indexOn": ["score"],
+      ".indexOn": [
+        "score"
+      ],
       "$entry": {
-        ".validate": "newData.hasChildren(['name','score','level','combo','date'])"
+        ".validate": "newData.hasChildren(['name','score','level','combo','date']) && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 50000 && newData.child('level').isNumber() && newData.child('level').val() >= 1 && newData.child('level').val() <= 100 && newData.child('combo').isNumber() && newData.child('combo').val() >= 0 && newData.child('combo').val() <= 1000"
       }
     },
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid == $uid",
-        ".write": "auth != null && auth.uid == $uid"
+        ".write": "auth != null && auth.uid == $uid",
+        "coins": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+        },
+        "lastLoginDate": {
+          ".validate": "newData.isString() && newData.val().length == 10"
+        },
+        "lastUpdated": {
+          ".validate": "newData.isNumber()"
+        }
       }
     },
     "purchases": {

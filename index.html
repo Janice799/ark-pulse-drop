@@ -29,7 +29,7 @@
         window.adsbygoogle = window.adsbygoogle || [];
         var adBreak = adConfig = function (o) { adsbygoogle.push(o); };
     </script>
-    <script async data-adbreak-test="on" data-ad-client="ca-pub-3355425794806318"
+    <script async data-ad-client="ca-pub-3355425794806318"
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3355425794806318"
         crossorigin="anonymous"></script>
 
@@ -556,6 +556,17 @@
                 $('profileName').textContent = name;
                 $('profileAvatar').textContent = '👤';
                 $('btnMenuSignOut').style.display = 'flex';
+
+                // Daily attendance check (출석체크)
+                if (window.FirebaseService) {
+                    const att = await FirebaseService.dailyAttendanceCheck();
+                    if (att.awarded && window.SkinShop) {
+                        SkinShop.addCoins(50);
+                        $('menuCoins').textContent = SkinShop.getCoins();
+                        console.log('[ARK] 🎁 Daily login bonus applied (guest)!');
+                    }
+                }
+
                 proceedToGame();
             }
 
@@ -692,6 +703,13 @@
                             // Restore Google user name
                             if (!restoredUser.isAnonymous && restoredUser.displayName) {
                                 setPlayerName(restoredUser.displayName, 'google');
+                                // Daily attendance check (출석체크)
+                                const att = await FirebaseService.dailyAttendanceCheck();
+                                if (att.awarded && window.SkinShop) {
+                                    SkinShop.addCoins(50);
+                                    $('menuCoins').textContent = SkinShop.getCoins();
+                                    console.log('[ARK] 🎁 Daily login bonus applied!');
+                                }
                             }
                         } else {
                             // No existing session — sign in anonymously
@@ -700,10 +718,17 @@
                         }
 
                         // Continue listening for future auth changes (e.g. Google login mid-session)
-                        FirebaseService.onAuthChange((user) => {
+                        FirebaseService.onAuthChange(async (user) => {
                             updateProfileBadge(user);
                             if (user && !user.isAnonymous && user.displayName) {
                                 setPlayerName(user.displayName, 'google');
+                                // Daily attendance check (출석체크)
+                                const att = await FirebaseService.dailyAttendanceCheck();
+                                if (att.awarded && window.SkinShop) {
+                                    SkinShop.addCoins(50);
+                                    $('menuCoins').textContent = SkinShop.getCoins();
+                                    console.log('[ARK] 🎁 Daily login bonus applied!');
+                                }
                                 // FIX: If login modal is visible, auto-proceed to game
                                 // This handles iframe popup communication failures:
                                 // Google popup succeeds but signInWithPopup returns null
@@ -1032,18 +1057,19 @@
                 const dc = DIFF_CFG[difficulty];
                 const total = accP + accG + accO + accM;
                 const accPct = total > 0 ? ((accP * 100 + accG * 75 + accO * 30) / (total * 100) * 100) : 0;
+                const shareUrl = 'https://ark-pulse-drop.web.app/';
                 const text = `🎮 ARK Pulse Drop\n` +
                     `${dc.emoji} ${dc.name} Mode\n` +
                     `🏆 Score: ${score.toLocaleString()}\n` +
                     `🎯 Accuracy: ${accPct.toFixed(1)}%\n` +
                     `🔥 Max Combo: ×${maxCombo}\n` +
                     `⚡ Level: ${level}\n\n` +
-                    `Play now → https://arkdeck7.itch.io/ark-pulse-drop`;
+                    `Play now → ${shareUrl}`;
 
                 // Web Share API — works on mobile browsers when NOT inside restricted iframe
                 if (navigator.share) {
                     try {
-                        await navigator.share({ title: 'ARK Pulse Drop Score', text });
+                        await navigator.share({ title: 'ARK Pulse Drop Score', text, url: shareUrl });
                         showShareToast('✅ Shared!');
                         return;
                     } catch (err) {
@@ -1461,6 +1487,8 @@
                     fbC = '#7fe0ff'; fbT = 1.2; cShk = 1;
                     Audio.perfect(); burst(cx, cy, '#7fe0ff', 25); ripple(cx, cy, '#7fe0ff');
                     screenFlashT = 1; screenFlashC = '#7fe0ff';
+                    canvas.classList.add('shake-effect');
+                    setTimeout(() => canvas.classList.remove('shake-effect'), 200);
                 } else if (n < th2.g) {
                     const pts = Math.round((10 + combo) * sm);
                     score += pts; combo++; maxCombo = Math.max(maxCombo, combo); accG++;
@@ -1563,30 +1591,55 @@
 
             function doContinue() {
                 const cost = getReviveCost();
-                if (SkinShop.getCoins() < cost) return;
                 if (continueTimerId) { clearTimeout(continueTimerId); continueTimerId = null; }
+                $('btnContinue').disabled = true;
 
-                // Deduct coins (cost doubles each revive)
+                // ── Inner revive logic (shared by ad success & coin fallback) ──
+                function performRevive() {
+                    reviveCount++;
+                    $('overContinue').style.display = 'none';
+
+                    // Restore 1 life
+                    lives = 1;
+
+                    // Resume game
+                    Audio.ui();
+                    state = S.PLAY;
+                    last = performance.now();
+                    updateHUD();
+                    showScreen('play-screen');
+
+                    // Visual feedback
+                    screenFlashC = '#62ffb3';
+                    screenFlashT = 0.5;
+                    showFeedback('REVIVED!', '#62ffb3');
+                    burst(W / 2, H * 0.52, '#62ffb3', 30);
+                }
+
+                // ── Strategy 1: Rewarded Ad (free revive) ──
+                if (window.AdManager && AdManager.canRevive()) {
+                    AdManager.requestRewardedAd(
+                        'revive',
+                        // onReward — ad watched successfully
+                        () => {
+                            console.log('[ARK] 🎬 Rewarded ad watched — free revive!');
+                            performRevive();
+                        },
+                        // onClose — ad dismissed without reward (re-enable button)
+                        () => {
+                            $('btnContinue').disabled = false;
+                        }
+                    );
+                    return;
+                }
+
+                // ── Strategy 2: Coin-based revive (fallback) ──
+                if (SkinShop.getCoins() < cost) {
+                    $('btnContinue').disabled = false;
+                    return;
+                }
                 SkinShop.addCoins(-cost);
-                reviveCount++;
-                $('overContinue').style.display = 'none';
-
-                // Restore half max lives (at least 1)
-                const maxLives = DIFF_CFG[difficulty].lives;
-                lives = Math.max(1, Math.ceil(maxLives / 2));
-
-                // Resume game
-                Audio.ui();
-                state = S.PLAY;
-                last = performance.now();
-                updateHUD();
-                showScreen('play-screen');
-
-                // Visual feedback
-                screenFlashC = '#62ffb3';
-                screenFlashT = 0.5;
-                showFeedback('REVIVED!', '#62ffb3');
-                burst(W / 2, H * 0.52, '#62ffb3', 30);
+                performRevive();
             }
 
             // ─── Event Listeners ─────────────────────────
