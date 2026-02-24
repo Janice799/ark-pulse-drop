@@ -357,7 +357,7 @@
                 </div>
 
                 <!-- Continue (coin revive) -->
-                <div class="over-continue" id="overContinue" style="display:none;">
+                <div class="over-continue" id="overContinue" style="display:none;position:relative;z-index:10;">
                     <button class="continue-btn" id="btnContinue">
                         <span class="continue-icon">🔄</span>
                         <span class="continue-label">CONTINUE?</span>
@@ -1618,19 +1618,41 @@
 
                 // ── Strategy 1: Rewarded Ad (free revive) ──
                 if (window.AdManager && AdManager.canRevive()) {
-                    AdManager.requestRewardedAd(
+                    // Safety: if ad callbacks never fire within 5s, fall to coin revive
+                    const adSafetyTimer = setTimeout(() => {
+                        if ($('btnContinue').disabled) {
+                            console.log('[ARK] ⏰ Ad timeout — falling back to coin revive');
+                            if (SkinShop.getCoins() >= cost) {
+                                SkinShop.addCoins(-cost);
+                                performRevive();
+                            } else {
+                                $('btnContinue').disabled = false;
+                            }
+                        }
+                    }, 5000);
+
+                    const adResult = AdManager.requestRewardedAd(
                         'revive',
                         // onReward — ad watched successfully
                         () => {
+                            clearTimeout(adSafetyTimer);
                             console.log('[ARK] 🎬 Rewarded ad watched — free revive!');
                             performRevive();
                         },
-                        // onClose — ad dismissed without reward (re-enable button)
+                        // onClose — ad dismissed without reward → try coin revive
                         () => {
-                            $('btnContinue').disabled = false;
+                            clearTimeout(adSafetyTimer);
+                            if (SkinShop.getCoins() >= cost) {
+                                SkinShop.addCoins(-cost);
+                                performRevive();
+                            } else {
+                                $('btnContinue').disabled = false;
+                            }
                         }
                     );
-                    return;
+                    if (adResult) return; // Ad is showing, wait for callback
+                    // If adResult is false (reviveUsed=true), fall through to coin path
+                    clearTimeout(adSafetyTimer);
                 }
 
                 // ── Strategy 2: Coin-based revive (fallback) ──
@@ -1698,7 +1720,7 @@
             });
 
             // Continue / Revive
-            $('btnContinue').addEventListener('click', () => { doContinue(); });
+            $('btnContinue').addEventListener('click', (e) => { e.stopPropagation(); doContinue(); });
 
             // Shop
             $('shopClose').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
