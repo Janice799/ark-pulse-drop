@@ -2470,3 +2470,144 @@ body {
         font-size: 14px;
     }
 }
+
+/* ════════════════════════════════════════════════════
+   SCREEN: Energy Gate
+   ════════════════════════════════════════════════════ */
+#energy-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 30%, rgba(140, 123, 255, 0.08), transparent 60%),
+        var(--bg);
+}
+
+.energy-gate-card {
+    width: 100%;
+    max-width: 340px;
+    padding: 36px 28px 28px;
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 211, 106, 0.12);
+    box-shadow: 0 0 40px rgba(255, 211, 106, 0.06),
+        0 20px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    animation: energyFadeIn 0.4s ease;
+}
+
+@keyframes energyFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.energy-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 12px rgba(255, 211, 106, 0.5));
+}
+
+.energy-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255, 211, 106, 0.4);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.energy-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.energy-timer {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(127, 224, 255, 0.7);
+    margin-bottom: 6px;
+}
+
+.energy-used {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+}
+
+.energy-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    margin-bottom: 16px;
+}
+
+.energy-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.5px;
+}
+
+.energy-btn:active {
+    transform: scale(0.97);
+}
+
+.energy-btn-ad {
+    background: linear-gradient(135deg, rgba(255, 211, 106, 0.15), rgba(255, 211, 106, 0.08));
+    border: 1px solid rgba(255, 211, 106, 0.3);
+    color: var(--gold);
+}
+
+.energy-ad-info {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+}
+
+.energy-btn-login {
+    background: rgba(127, 224, 255, 0.08);
+    border: 1px solid rgba(127, 224, 255, 0.2);
+    color: var(--perfect);
+}
+
+.energy-btn-vip {
+    background: linear-gradient(135deg, rgba(140, 123, 255, 0.15), rgba(140, 123, 255, 0.08));
+    border: 1px solid rgba(140, 123, 255, 0.3);
+    color: var(--accent-light);
+}
+
+.energy-back {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.energy-back:hover {
+    color: var(--text);
+}
+
+/* ── Menu Energy Indicator ── */
+.menu-energy-info {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}

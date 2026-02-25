@@ -423,11 +423,29 @@
                 <div class="board-empty">No scores yet. Play a game!</div>
             </div>
         </div>
+
+        <!-- ═══ SCREEN: Energy Gate ═══ -->
+        <div id="energy-screen" class="screen">
+            <div class="energy-gate-card">
+                <div class="energy-icon">⚡</div>
+                <div class="energy-title">PLAYS EXHAUSTED</div>
+                <div class="energy-subtitle">Today's free plays are used up!</div>
+                <div class="energy-timer" id="energyTimer">🕐 Resets in: --:--:--</div>
+                <div class="energy-used" id="energyUsed">0 / 0 plays used today</div>
+                <div class="energy-divider"></div>
+                <button class="energy-btn energy-btn-ad" id="btnEnergyAd">🎬 Watch Ad (+1 Play)</button>
+                <div class="energy-ad-info" id="energyAdInfo">5 ad plays left today</div>
+                <button class="energy-btn energy-btn-login" id="btnEnergyLogin">🔑 Sign In (5 plays/day)</button>
+                <button class="energy-btn energy-btn-vip" id="btnEnergyVip">👑 VIP — Unlimited Plays</button>
+                <div class="energy-back" id="btnEnergyBack">← Back to Menu</div>
+            </div>
+        </div>
     </div>
 
-    <!-- External JS modules (unchanged) -->
+    <!-- External JS modules -->
     <script src="js/audio.js"></script>
     <script src="js/shop.js"></script>
+    <script src="js/energy.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="js/ads.js"></script>
@@ -756,7 +774,7 @@
             })();
 
             // ─── Game State ──────────────────────────────
-            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, DIFF: 5, PAUSE: 6 };
+            const S = { MENU: 0, PLAY: 1, OVER: 2, SHOP: 3, BOARD: 4, DIFF: 5, PAUSE: 6, ENERGY: 7 };
             let state = S.MENU;
             let t = 0, score = 0, combo = 0, maxCombo = 0, level = 1, lives = 5, bpm = 66;
             let hi = +(localStorage.getItem('arkPD_hi') || 0);
@@ -853,6 +871,12 @@
             }
 
             // ─── UI Updates ─────────────────────────────
+            function _getUserType() {
+                if (loginMode === 'google') return 'google';
+                if (loginMode === 'guest' && isNameSet()) return 'login';
+                return 'guest';
+            }
+
             function updateMenuUI() {
                 $('menuCoins').textContent = SkinShop.getCoins();
                 if (hi > 0) {
@@ -864,6 +888,35 @@
                 if (SkinShop.getPlayerUID) {
                     $('menuUID').textContent = SkinShop.getPlayerUID();
                 }
+                // Energy indicator
+                updateEnergyDisplay();
+            }
+
+            function updateEnergyDisplay() {
+                let el = $('menuEnergyInfo');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'menuEnergyInfo';
+                    el.className = 'menu-energy-info';
+                    const cta = $('menuTap');
+                    if (cta && cta.parentNode) cta.parentNode.insertBefore(el, cta.nextSibling);
+                }
+                if (!window.EnergySystem) { el.style.display = 'none'; return; }
+                const ut = _getUserType();
+                if (EnergySystem.isUnlimited(ut)) {
+                    el.textContent = '👑 VIP — Unlimited Plays';
+                    el.style.color = 'rgba(139,92,246,0.7)';
+                } else {
+                    const rem = EnergySystem.getRemainingPlays(ut);
+                    if (rem > 0) {
+                        el.textContent = `⚡ ${rem} play${rem !== 1 ? 's' : ''} left today`;
+                        el.style.color = rem <= 1 ? 'rgba(251,146,60,0.8)' : 'rgba(255,255,255,0.45)';
+                    } else {
+                        el.textContent = '⚡ No plays left — Watch ad or upgrade!';
+                        el.style.color = 'rgba(239,68,68,0.7)';
+                    }
+                }
+                el.style.display = '';
             }
 
             function updateHUD() {
@@ -1673,6 +1726,14 @@
                     showLoginModal();
                     return;
                 }
+                // ── Energy Gate: check remaining plays ──
+                if (window.EnergySystem) {
+                    const ut = _getUserType();
+                    if (!EnergySystem.canPlay(ut)) {
+                        showEnergyGate();
+                        return;
+                    }
+                }
                 Audio.init(); Audio.ui(); state = S.DIFF; showScreen('diff-screen');
             });
             $('btnShop').addEventListener('click', () => { Audio.init(); Audio.ui(); state = S.SHOP; updateShop(); showScreen('shop-screen'); });
@@ -1689,6 +1750,14 @@
             });
 
             $('btnStartGame').addEventListener('click', () => {
+                // ── Consume energy play ──
+                if (window.EnergySystem) {
+                    const ut = _getUserType();
+                    if (!EnergySystem.consumePlay(ut)) {
+                        showEnergyGate();
+                        return;
+                    }
+                }
                 Audio.init(); Audio.ui();
                 const dc = DIFF_CFG[difficulty];
                 state = S.PLAY; score = 0; combo = 0; maxCombo = 0; level = 1;
@@ -1703,6 +1772,65 @@
             });
 
             $('btnDiffBack').addEventListener('click', () => { Audio.ui(); state = S.MENU; updateMenuUI(); showScreen('menu-screen'); });
+
+            // ─── Energy Gate ──────────────────────────────
+            let energyTimerInterval = null;
+
+            function showEnergyGate() {
+                state = S.ENERGY;
+                showScreen('energy-screen');
+                const ut = _getUserType();
+                const max = EnergySystem.getMaxPlays(ut);
+                $('energyUsed').textContent = `${max} / ${max} plays used today`;
+                const adRem = EnergySystem.getRemainingAdBonuses(ut);
+                $('energyAdInfo').textContent = `${adRem} ad play${adRem !== 1 ? 's' : ''} left today`;
+                // Show/hide login button based on login state
+                const loginBtn = $('btnEnergyLogin');
+                if (loginBtn) loginBtn.style.display = loginMode === 'google' ? 'none' : '';
+                // Timer update
+                if (energyTimerInterval) clearInterval(energyTimerInterval);
+                energyTimerInterval = setInterval(() => {
+                    $('energyTimer').textContent = '🕐 Resets in: ' + EnergySystem.getResetTimeFormatted();
+                }, 1000);
+                $('energyTimer').textContent = '🕐 Resets in: ' + EnergySystem.getResetTimeFormatted();
+            }
+
+            $('btnEnergyBack').addEventListener('click', () => {
+                Audio.ui();
+                if (energyTimerInterval) { clearInterval(energyTimerInterval); energyTimerInterval = null; }
+                state = S.MENU; updateMenuUI(); showScreen('menu-screen');
+            });
+
+            $('btnEnergyAd').addEventListener('click', () => {
+                Audio.ui();
+                const ut = _getUserType();
+                if (EnergySystem.getRemainingAdBonuses(ut) <= 0) return;
+                if (window.AdManager && AdManager.showRewardedAd) {
+                    AdManager.showRewardedAd(() => {
+                        EnergySystem.addAdBonus(ut);
+                        if (energyTimerInterval) { clearInterval(energyTimerInterval); energyTimerInterval = null; }
+                        // Start game directly
+                        state = S.DIFF; showScreen('diff-screen');
+                    });
+                } else {
+                    // No ad SDK — grant directly (dev/testing)
+                    EnergySystem.addAdBonus(ut);
+                    if (energyTimerInterval) { clearInterval(energyTimerInterval); energyTimerInterval = null; }
+                    state = S.DIFF; showScreen('diff-screen');
+                }
+            });
+
+            $('btnEnergyLogin').addEventListener('click', () => {
+                Audio.ui();
+                if (energyTimerInterval) { clearInterval(energyTimerInterval); energyTimerInterval = null; }
+                showLoginModal();
+            });
+
+            $('btnEnergyVip').addEventListener('click', () => {
+                Audio.ui();
+                if (energyTimerInterval) { clearInterval(energyTimerInterval); energyTimerInterval = null; }
+                state = S.SHOP; updateShop(); showScreen('shop-screen');
+            });
 
             // Game canvas tap
             canvas.addEventListener('click', e => {
