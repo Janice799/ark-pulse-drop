@@ -129,6 +129,8 @@
                 <!-- Sign Out dropdown (hidden by default) -->
                 <div class="profile-dropdown" id="profileDropdown" style="display:none;">
                     <div class="dropdown-user-info" id="dropdownUserInfo">Signed in</div>
+                    <button class="dropdown-signout-btn" id="btnMenuGoogleSwitch"
+                        style="display:none;background:rgba(66,133,244,0.15);color:#4285F4;">🔑 Google 연결</button>
                     <button class="dropdown-signout-btn" id="btnMenuSignOut">🚪 Sign Out</button>
                 </div>
             </div>
@@ -627,8 +629,10 @@
                     const user = window.FirebaseService ? FirebaseService.getUser() : null;
                     if (user && !user.isAnonymous && user.displayName) {
                         $('dropdownUserInfo').textContent = '✅ ' + user.displayName;
+                        $('btnMenuGoogleSwitch').style.display = 'none';
                     } else if (loginMode === 'guest' && playerName) {
                         $('dropdownUserInfo').textContent = '👤 Guest: ' + playerName;
+                        $('btnMenuGoogleSwitch').style.display = 'block';
                     }
                     dropdown.style.display = 'block';
                     dropdownOpen = true;
@@ -684,6 +688,12 @@
             $('btnMenuSignOut').addEventListener('click', (e) => {
                 e.stopPropagation();
                 handleLogout();
+            });
+            $('btnMenuGoogleSwitch').addEventListener('click', (e) => {
+                e.stopPropagation();
+                $('profileDropdown').style.display = 'none';
+                dropdownOpen = false;
+                handleGoogleLogin();
             });
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
