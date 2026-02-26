@@ -92,22 +92,7 @@
                     <span class="fullver-arrow">→</span>
                 </a>
 
-                <!-- Divider -->
-                <div class="login-divider">
-                    <div class="login-divider-line"></div>
-                    <span class="login-divider-text">OR</span>
-                    <div class="login-divider-line"></div>
-                </div>
 
-                <!-- Option 2: Guest with Nickname -->
-                <div class="login-guest-section">
-                    <input type="text" id="guestNickname" class="login-nickname-input" placeholder="Enter your nickname"
-                        maxlength="12" autocomplete="off" spellcheck="false" />
-                    <div class="login-nickname-hint" id="nicknameHint">2-12 characters required</div>
-                    <button class="login-guest-btn" id="btnGuestPlay" disabled>
-                        👤 PLAY AS GUEST
-                    </button>
-                </div>
 
                 <!-- Sign Out -->
                 <button class="login-logout-btn" id="btnLogout" style="display:none;">
@@ -496,10 +481,10 @@
                         avatar.textContent = '🟢';
                     }
                     $('menuUID').textContent = user.uid.slice(0, 6);
-                } else if (loginMode === 'guest' && isNameSet()) {
-                    nameEl.textContent = playerName;
-                    avatar.textContent = '👤';
-                    $('menuUID').textContent = user ? user.uid.slice(0, 6) : '---';
+                } else if (user && user.isAnonymous) {
+                    nameEl.textContent = 'Tap to Login';
+                    avatar.textContent = '🔒';
+                    $('menuUID').textContent = user.uid.slice(0, 6);
                 } else {
                     nameEl.textContent = 'Tap to Login';
                     avatar.textContent = '🔒';
@@ -512,7 +497,7 @@
 
             // Check if user has a registered name (Google or Guest)
             let playerName = localStorage.getItem('arkPD_name') || '';
-            let loginMode = localStorage.getItem('arkPD_loginMode') || ''; // 'google' or 'guest'
+            let loginMode = localStorage.getItem('arkPD_loginMode') || ''; // 'google' or ''
 
             function isNameSet() {
                 return playerName.length >= 2;
@@ -555,67 +540,7 @@
                 }
             }
 
-            async function handleGuestLogin() {
-                const input = $('guestNickname');
-                const name = (input.value || '').trim();
-                if (name.length < 2 || name.length > 12) return;
 
-                // Sign in anonymously to Firebase (await to ensure auth is ready)
-                if (window.FirebaseService && !FirebaseService.isSignedIn()) {
-                    await FirebaseService.signInAnon();
-                }
-
-                setPlayerName(name, 'guest');
-
-                // Init leaderboard global mode now that we're signed in
-                if (window.Leaderboard && Leaderboard.initGlobal) {
-                    Leaderboard.initGlobal();
-                }
-
-                // Update profile badge with guest name
-                $('profileName').textContent = name;
-                $('profileAvatar').textContent = '👤';
-                $('btnMenuSignOut').style.display = 'flex';
-
-                // Daily attendance check (출석체크)
-                if (window.FirebaseService) {
-                    const att = await FirebaseService.dailyAttendanceCheck();
-                    if (att.awarded && window.SkinShop) {
-                        SkinShop.addCoins(50);
-                        $('menuCoins').textContent = SkinShop.getCoins();
-                        console.log('[ARK] 🎁 Daily login bonus applied (guest)!');
-                    }
-                }
-
-                proceedToGame();
-            }
-
-            // Nickname input validation
-            const nicknameInput = $('guestNickname');
-            const guestBtn = $('btnGuestPlay');
-            const nicknameHint = $('nicknameHint');
-
-            nicknameInput.addEventListener('input', () => {
-                const val = nicknameInput.value.trim();
-                if (val.length >= 2 && val.length <= 12) {
-                    guestBtn.disabled = false;
-                    nicknameHint.textContent = '✓ Looks good!';
-                    nicknameHint.style.color = '#62ffb3';
-                } else if (val.length > 0 && val.length < 2) {
-                    guestBtn.disabled = true;
-                    nicknameHint.textContent = 'Too short (min 2 characters)';
-                    nicknameHint.style.color = '#ff5d7a';
-                } else {
-                    guestBtn.disabled = true;
-                    nicknameHint.textContent = '2-12 characters required';
-                    nicknameHint.style.color = '';
-                }
-            });
-
-            // Enter key on nickname input
-            nicknameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !guestBtn.disabled) handleGuestLogin();
-            });
 
             // Profile badge click — toggle dropdown or open login modal
             let dropdownOpen = false;
@@ -630,8 +555,8 @@
                     if (user && !user.isAnonymous && user.displayName) {
                         $('dropdownUserInfo').textContent = '✅ ' + user.displayName;
                         $('btnMenuGoogleSwitch').style.display = 'none';
-                    } else if (loginMode === 'guest' && playerName) {
-                        $('dropdownUserInfo').textContent = '👤 Guest: ' + playerName;
+                    } else {
+                        $('dropdownUserInfo').textContent = 'Not signed in';
                         $('btnMenuGoogleSwitch').style.display = 'block';
                     }
                     dropdown.style.display = 'block';
@@ -678,10 +603,9 @@
                 $('profileAvatar').textContent = '🔒';
                 // Hide modal
                 hideLoginModal();
-                // Re-sign in anonymously so leaderboard still works
-                if (window.FirebaseService) {
-                    await FirebaseService.signInAnon();
-                }
+                // Show login modal so user can sign in again
+                showLoginModal();
+                $('btnLogout').style.display = 'none';
                 console.log('[ARK] 👋 Signed out');
             }
             $('btnLogout').addEventListener('click', handleLogout);
@@ -697,7 +621,7 @@
             });
 
             $('btnGoogleLogin').addEventListener('click', handleGoogleLogin);
-            $('btnGuestPlay').addEventListener('click', handleGuestLogin);
+
             $('btnShareScore').addEventListener('click', shareScore);
 
             // ─── iframe detection (itch.io) ───────────────
@@ -776,11 +700,7 @@
                     }
                 } catch (e) { console.warn('[ARK] Firebase boot skipped:', e); }
 
-                // Restore saved guest name to profile badge
-                if (loginMode === 'guest' && isNameSet()) {
-                    $('profileName').textContent = playerName;
-                    $('profileAvatar').textContent = '👤';
-                }
+
             })();
 
             // ─── Game State ──────────────────────────────
@@ -883,8 +803,7 @@
             // ─── UI Updates ─────────────────────────────
             function _getUserType() {
                 if (loginMode === 'google') return 'google';
-                if (loginMode === 'guest' && isNameSet()) return 'login';
-                return 'guest';
+                return 'login';
             }
 
             function updateMenuUI() {

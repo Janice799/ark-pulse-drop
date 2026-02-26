@@ -6,7 +6,7 @@ const EnergySystem = (() => {
     const STORAGE_KEY = 'arkPD_energy';
 
     const LIMITS = {
-        guest: { maxPlays: 3, maxAdBonus: 5 },
+        guest: { maxPlays: 5, maxAdBonus: 5 },
         login: { maxPlays: 5, maxAdBonus: 5 },
         google: { maxPlays: 5, maxAdBonus: 5 },
         vip: { maxPlays: Infinity, maxAdBonus: 0 }
