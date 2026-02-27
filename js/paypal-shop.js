@@ -7,8 +7,8 @@
 const PayPalShop = (() => {
     // ─── Config ─────────────────────────────────
     const SANDBOX_CLIENT_ID = 'AaG5r1RQWNIYr30P21qOaHXUC242afKF97UtmHrHCq0fKSl4s7B02BFwqcZIxneJ3rz2BqTnSGmq1YvW';
-    const LIVE_CLIENT_ID = ''; // Replace with real live client ID
-    const IS_SANDBOX = true;
+    const LIVE_CLIENT_ID = 'AXJw2d9PQDi7il28yfa9pIaUa6jcvqsVMsxmjvVeSuAVKw-WxYIbFBwezJHr4jV6wjaCnEY78MKhfwnl';
+    const IS_SANDBOX = false; // 🔴 LIVE MODE — Real payments enabled
     const CLIENT_ID = IS_SANDBOX ? SANDBOX_CLIENT_ID : LIVE_CLIENT_ID;
 
     // ─── Coin Packs (synced with SkinShop.COIN_PACKS) ───
