@@ -655,21 +655,22 @@
                             // Restore Google user name
                             if (!restoredUser.isAnonymous && restoredUser.displayName) {
                                 setPlayerName(restoredUser.displayName, 'google');
-                                // Daily attendance check (출석체크)
-                                const att = await FirebaseService.dailyAttendanceCheck();
-                                if (att.awarded && window.SkinShop) {
-                                    SkinShop.addCoins(50);
-                                    $('menuCoins').textContent = SkinShop.getCoins();
-                                    console.log('[ARK] 🎁 Daily login bonus applied!');
+                                // Daily attendance check (non-blocking)
+                                try {
+                                    const att = await FirebaseService.dailyAttendanceCheck();
+                                    if (att.awarded && window.SkinShop) {
+                                        SkinShop.addCoins(50);
+                                        $('menuCoins').textContent = SkinShop.getCoins();
+                                        console.log('[ARK] 🎁 Daily login bonus applied!');
+                                    }
+                                } catch (attErr) {
+                                    console.warn('[ARK] Attendance check skipped:', attErr.message);
                                 }
 
                                 // ★ FIX: If returning from Google redirect, auto-proceed
                                 if (FirebaseService.redirectUserReady) {
                                     console.log('[ARK] 🔑 Google redirect completed — auto-proceeding');
-                                    const modal = $('loginModal');
-                                    if (modal && modal.style.display !== 'none') {
-                                        proceedToGame();
-                                    }
+                                    proceedToGame();
                                 }
                             }
                         } else if (FirebaseService.redirectUserReady) {
@@ -687,19 +688,21 @@
                             updateProfileBadge(user);
                             if (user && !user.isAnonymous && user.displayName) {
                                 setPlayerName(user.displayName, 'google');
-                                // Daily attendance check (출석체크)
-                                const att = await FirebaseService.dailyAttendanceCheck();
-                                if (att.awarded && window.SkinShop) {
-                                    SkinShop.addCoins(50);
-                                    $('menuCoins').textContent = SkinShop.getCoins();
-                                    console.log('[ARK] 🎁 Daily login bonus applied!');
+                                // Daily attendance check (non-blocking)
+                                try {
+                                    const att = await FirebaseService.dailyAttendanceCheck();
+                                    if (att.awarded && window.SkinShop) {
+                                        SkinShop.addCoins(50);
+                                        $('menuCoins').textContent = SkinShop.getCoins();
+                                        console.log('[ARK] 🎁 Daily login bonus applied!');
+                                    }
+                                } catch (attErr) {
+                                    console.warn('[ARK] Attendance check skipped:', attErr.message);
                                 }
-                                // FIX: If login modal is visible, auto-proceed to game
-                                // This handles iframe popup communication failures:
-                                // Google popup succeeds but signInWithPopup returns null
+                                // Auto-proceed if login modal is visible
                                 const modal = $('loginModal');
                                 if (modal && modal.style.display !== 'none') {
-                                    console.log('[ARK] 🔑 Google auth detected via onAuthStateChanged — auto-proceeding');
+                                    console.log('[ARK] 🔑 Google auth detected — auto-proceeding');
                                     proceedToGame();
                                 }
                             }

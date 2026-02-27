@@ -31,6 +31,12 @@
         ".write": false
       }
     },
+    "attendance": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
     "gravity_drop": {
       "leaderboard": {
         ".read": true,
