@@ -8,7 +8,7 @@ const FirebaseService = (() => {
     // ─── Config ─────────────────────────────────
     const CONFIG = {
         apiKey: "AIzaSyBmCSRvmrJ_UbjtEPnrN6zkkSZNuGdBWGU",
-        authDomain: "ark-pulse-drop.firebaseapp.com",
+        authDomain: "ark-pulse-drop.web.app",
         databaseURL: "https://ark-pulse-drop-default-rtdb.firebaseio.com",
         projectId: "ark-pulse-drop",
         storageBucket: "ark-pulse-drop.firebasestorage.app",
@@ -23,6 +23,7 @@ const FirebaseService = (() => {
     let currentUser = null;
     let isReady = false;
     let onAuthChangeCbs = [];
+    let _redirectUserReady = false; // Flag: redirect sign-in just completed
 
     // ─── Initialize ─────────────────────────────
     async function init() {
@@ -41,21 +42,28 @@ const FirebaseService = (() => {
             FirebaseService._authModule = { signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fbSignOut };
             FirebaseService._dbModule = { ref, push, set, get, query, orderByChild, limitToLast, onValue, remove };
 
-            onAuthStateChanged(auth, (user) => {
-                currentUser = user;
-                onAuthChangeCbs.forEach(cb => cb(user));
-                console.log('[Firebase] Auth state:', user ? `uid=${user.uid}` : 'signed out');
-            });
-
-            // Handle redirect result (returning from Google sign-in redirect)
+            // ★ CRITICAL FIX: Process redirect result BEFORE registering
+            // onAuthStateChanged to prevent race condition where anonymous
+            // sign-in fires before redirect result is available.
             try {
                 const redirectResult = await getRedirectResult(auth);
                 if (redirectResult && redirectResult.user) {
-                    console.log('[Firebase] ✅ Redirect sign-in result:', redirectResult.user.displayName);
+                    _redirectUserReady = true;
+                    currentUser = redirectResult.user;
+                    console.log('[Firebase] ✅ Redirect sign-in SUCCESS:', redirectResult.user.displayName);
+                } else {
+                    console.log('[Firebase] No redirect result pending');
                 }
             } catch (redirectErr) {
-                console.log('[Firebase] No redirect result pending');
+                console.warn('[Firebase] Redirect result error:', redirectErr.code || redirectErr.message);
             }
+
+            // Now register auth state listener (fires immediately with current state)
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                onAuthChangeCbs.forEach(cb => cb(user));
+                console.log('[Firebase] Auth state:', user ? `uid=${user.uid} anon=${user.isAnonymous}` : 'signed out');
+            });
 
             isReady = true;
             console.log('[Firebase] ✅ Initialized successfully');
@@ -295,7 +303,8 @@ const FirebaseService = (() => {
         // Internal (for module refs)
         _authModule: null, _dbModule: null,
         // Status
-        get ready() { return isReady; }
+        get ready() { return isReady; },
+        get redirectUserReady() { return _redirectUserReady; }
     };
 })();
 

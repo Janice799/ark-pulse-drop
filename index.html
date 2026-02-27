@@ -109,7 +109,7 @@
             <div class="profile-area" id="profileArea">
                 <div class="profile-badge" id="profileBadge">
                     <div class="profile-avatar" id="profileAvatar">👤</div>
-                    <span class="profile-name" id="profileName">Guest</span>
+                    <span class="profile-name" id="profileName">Tap to Login</span>
                 </div>
                 <!-- Sign Out dropdown (hidden by default) -->
                 <div class="profile-dropdown" id="profileDropdown" style="display:none;">
@@ -662,9 +662,22 @@
                                     $('menuCoins').textContent = SkinShop.getCoins();
                                     console.log('[ARK] 🎁 Daily login bonus applied!');
                                 }
+
+                                // ★ FIX: If returning from Google redirect, auto-proceed
+                                if (FirebaseService.redirectUserReady) {
+                                    console.log('[ARK] 🔑 Google redirect completed — auto-proceeding');
+                                    const modal = $('loginModal');
+                                    if (modal && modal.style.display !== 'none') {
+                                        proceedToGame();
+                                    }
+                                }
                             }
+                        } else if (FirebaseService.redirectUserReady) {
+                            // Redirect just completed but restoredUser was null in initial listener
+                            // The onAuthStateChanged will fire with the user shortly
+                            console.log('[ARK] 🔑 Redirect ready but user pending — skipping anonymous');
                         } else {
-                            // No existing session — sign in anonymously
+                            // No existing session, no redirect — sign in anonymously
                             console.log('[ARK] 🔑 No session found, signing in anonymously');
                             await FirebaseService.signInAnon();
                         }
