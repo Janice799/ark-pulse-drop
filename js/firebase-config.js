@@ -158,7 +158,14 @@ const FirebaseService = (() => {
     }
 
     // ─── Auth: Callbacks ────────────────────────
-    function onAuthChange(cb) { onAuthChangeCbs.push(cb); }
+    function onAuthChange(cb) {
+        onAuthChangeCbs.push(cb);
+        // ★ CRITICAL FIX: Fire immediately with current state so callers
+        // don't miss the initial auth state that already fired during init()
+        if (isReady && currentUser !== undefined) {
+            try { cb(currentUser); } catch (e) { console.warn('[Firebase] onAuthChange callback error:', e); }
+        }
+    }
     function getUser() { return currentUser; }
     function isSignedIn() { return currentUser !== null; }
     function getUserName() {
