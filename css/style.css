@@ -2094,6 +2094,69 @@ body {
     }
 }
 
+/* ── In-app Browser Warning Banner ── */
+.inapp-browser-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.12), rgba(245, 158, 11, 0.08));
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    margin-top: 4px;
+}
+
+.inapp-warn-icon {
+    font-size: 28px;
+}
+
+.inapp-warn-text {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    color: #fb923c;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.inapp-open-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, #fb923c, #f59e0b);
+    color: #1a1400;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(251, 146, 60, 0.3);
+}
+
+.inapp-open-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 24px rgba(251, 146, 60, 0.45);
+}
+
+.inapp-open-btn:active {
+    transform: scale(0.98);
+}
+
+.inapp-warn-hint {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+}
+
 /* ── iframe Full Version Banner (login modal) ── */
 .login-fullver-btn {
     display: flex;

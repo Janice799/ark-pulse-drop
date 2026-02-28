@@ -24,6 +24,8 @@ const FirebaseService = (() => {
     let isReady = false;
     let onAuthChangeCbs = [];
     let _redirectUserReady = false; // Flag: redirect sign-in just completed
+    let _redirectPending = false; // Flag: redirect was initiated before page reload
+    const REDIRECT_FLAG = 'ark_pd_redirect_pending';
 
     // ─── Initialize ─────────────────────────────
     async function init() {
@@ -45,12 +47,16 @@ const FirebaseService = (() => {
             // ★ CRITICAL FIX: Process redirect result BEFORE registering
             // onAuthStateChanged to prevent race condition where anonymous
             // sign-in fires before redirect result is available.
+            _redirectPending = sessionStorage.getItem(REDIRECT_FLAG) === '1';
+            sessionStorage.removeItem(REDIRECT_FLAG); // Always clear
             try {
                 const redirectResult = await getRedirectResult(auth);
                 if (redirectResult && redirectResult.user) {
                     _redirectUserReady = true;
                     currentUser = redirectResult.user;
                     console.log('[Firebase] ✅ Redirect sign-in SUCCESS:', redirectResult.user.displayName);
+                } else if (_redirectPending) {
+                    console.log('[Firebase] ⚠️ Redirect was pending but no result (user cancelled?)');
                 } else {
                     console.log('[Firebase] No redirect result pending');
                 }
@@ -107,14 +113,38 @@ const FirebaseService = (() => {
         // Detect mobile devices (phones & tablets)
         const isMobile = /Mobi|Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
-        // Force redirect for: iframes, in-app browsers, ALL mobile browsers
-        if (isInIframe || isInAppBrowser || isMobile) {
-            const reason = isInIframe ? 'iframe' : isInAppBrowser ? 'in-app browser' : 'mobile';
+        // ── In-app browsers: open in external browser instead ──
+        // Google blocks OAuth in WebViews (403: disallowed_useragent)
+        if (isInAppBrowser && !isInIframe) {
+            console.log('[Firebase] 🌐 In-app browser detected → opening in external browser');
+            const currentUrl = window.location.href;
+            // Android: try intent:// to open in system browser
+            if (/Android/i.test(ua)) {
+                window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
+            }
+            // iOS/other: show guidance banner (handled in index.html)
+            // Fallback: still try redirect (works in some in-app browsers)
+            try {
+                sessionStorage.setItem(REDIRECT_FLAG, '1');
+                await signInWithRedirect(auth, provider);
+                return null;
+            } catch (err) {
+                sessionStorage.removeItem(REDIRECT_FLAG);
+                console.error('[Firebase] Redirect sign-in failed:', err);
+                return null;
+            }
+        }
+
+        // ── Mobile + iframe → always redirect ──
+        if (isInIframe || isMobile) {
+            const reason = isInIframe ? 'iframe' : 'mobile';
             console.log(`[Firebase] 🔄 ${reason} detected → using redirect`);
             try {
+                sessionStorage.setItem(REDIRECT_FLAG, '1');
                 await signInWithRedirect(auth, provider);
                 return null; // page will redirect
             } catch (err) {
+                sessionStorage.removeItem(REDIRECT_FLAG);
                 console.error('[Firebase] Redirect sign-in failed:', err);
                 return null;
             }
@@ -134,9 +164,11 @@ const FirebaseService = (() => {
                 err.code === 'auth/network-request-failed') {
                 console.warn('[Firebase] ⚠️ Popup failed, trying redirect...', err.code);
                 try {
+                    sessionStorage.setItem(REDIRECT_FLAG, '1');
                     await signInWithRedirect(auth, provider);
                     return null;
                 } catch (redirectErr) {
+                    sessionStorage.removeItem(REDIRECT_FLAG);
                     console.error('[Firebase] Redirect also failed:', redirectErr);
                     return null;
                 }
@@ -311,7 +343,8 @@ const FirebaseService = (() => {
         _authModule: null, _dbModule: null,
         // Status
         get ready() { return isReady; },
-        get redirectUserReady() { return _redirectUserReady; }
+        get redirectUserReady() { return _redirectUserReady; },
+        get redirectPending() { return _redirectPending; }
     };
 })();
 

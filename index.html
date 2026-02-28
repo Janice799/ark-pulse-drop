@@ -92,7 +92,16 @@
                     <span class="fullver-arrow">→</span>
                 </a>
 
-
+                <!-- In-app browser warning banner (Reddit, Instagram, etc.) -->
+                <div class="inapp-browser-banner" id="inappBrowserBanner" style="display:none;">
+                    <div class="inapp-warn-icon">⚠️</div>
+                    <div class="inapp-warn-text">This browser doesn't support Google Sign-In</div>
+                    <a class="inapp-open-btn" id="btnOpenExternal" href="https://ark-pulse-drop.web.app" target="_blank"
+                        rel="noopener">
+                        🌐 Open in Chrome / Safari
+                    </a>
+                    <div class="inapp-warn-hint">Or tap ⋯ menu → "Open in Browser"</div>
+                </div>
 
                 <!-- Sign Out -->
                 <button class="login-logout-btn" id="btnLogout" style="display:none;">
@@ -635,59 +644,29 @@
                 $('iframeFloatBanner').style.display = 'flex';
             }
 
+            // ─── In-app browser detection (Reddit, Instagram, etc.) ───
+            const _ua = navigator.userAgent || '';
+            const _isInAppBrowser = /FBAN|FBAV|Instagram|Line|KakaoTalk|NAVER|Reddit|Twitter|Snapchat|TikTok|Flipboard|SamsungBrowser|UCBrowser|MiuiBrowser|wv\b/i.test(_ua);
+            if (_isInAppBrowser && !isInIframe) {
+                console.log('[ARK] ⚠️ In-app browser detected → showing guidance banner');
+                $('btnGoogleLogin').style.display = 'none';
+                $('inappBrowserBanner').style.display = 'flex';
+            }
+
             (async () => {
                 try {
                     if (window.FirebaseService) {
                         await FirebaseService.init();
 
-                        // Wait for Firebase to restore existing auth session
-                        // onAuthStateChanged fires once immediately with the restored user (or null)
-                        const restoredUser = await new Promise((resolve) => {
-                            const unsub = FirebaseService.onAuthChange((user) => {
-                                resolve(user);
-                                // Note: we keep listening (don't unsub) for future auth changes
-                            });
-                        });
+                        // ★ FIX: Single unified auth listener (was double-registered before)
+                        let initialAuthResolved = false;
 
-                        if (restoredUser) {
-                            console.log('[ARK] 🔑 Session restored:', restoredUser.isAnonymous ? 'Anonymous' : restoredUser.displayName);
-                            updateProfileBadge(restoredUser);
-                            // Restore Google user name
-                            if (!restoredUser.isAnonymous && restoredUser.displayName) {
-                                setPlayerName(restoredUser.displayName, 'google');
-                                // Daily attendance check (non-blocking)
-                                try {
-                                    const att = await FirebaseService.dailyAttendanceCheck();
-                                    if (att.awarded && window.SkinShop) {
-                                        SkinShop.addCoins(50);
-                                        $('menuCoins').textContent = SkinShop.getCoins();
-                                        console.log('[ARK] 🎁 Daily login bonus applied!');
-                                    }
-                                } catch (attErr) {
-                                    console.warn('[ARK] Attendance check skipped:', attErr.message);
-                                }
-
-                                // ★ FIX: If returning from Google redirect, auto-proceed
-                                if (FirebaseService.redirectUserReady) {
-                                    console.log('[ARK] 🔑 Google redirect completed — auto-proceeding');
-                                    proceedToGame();
-                                }
-                            }
-                        } else if (FirebaseService.redirectUserReady) {
-                            // Redirect just completed but restoredUser was null in initial listener
-                            // The onAuthStateChanged will fire with the user shortly
-                            console.log('[ARK] 🔑 Redirect ready but user pending — skipping anonymous');
-                        } else {
-                            // No existing session, no redirect — sign in anonymously
-                            console.log('[ARK] 🔑 No session found, signing in anonymously');
-                            await FirebaseService.signInAnon();
-                        }
-
-                        // Continue listening for future auth changes (e.g. Google login mid-session)
                         FirebaseService.onAuthChange(async (user) => {
                             updateProfileBadge(user);
+
                             if (user && !user.isAnonymous && user.displayName) {
                                 setPlayerName(user.displayName, 'google');
+
                                 // Daily attendance check (non-blocking)
                                 try {
                                     const att = await FirebaseService.dailyAttendanceCheck();
@@ -699,11 +678,32 @@
                                 } catch (attErr) {
                                     console.warn('[ARK] Attendance check skipped:', attErr.message);
                                 }
-                                // Auto-proceed if login modal is visible
-                                const modal = $('loginModal');
-                                if (modal && modal.style.display !== 'none') {
-                                    console.log('[ARK] 🔑 Google auth detected — auto-proceeding');
+
+                                // ★ FIX: Auto-proceed on redirect return OR login modal visible
+                                // Previously only checked loginModal visibility, causing loop
+                                if (FirebaseService.redirectUserReady && !initialAuthResolved) {
+                                    console.log('[ARK] 🔑 Google redirect completed — auto-proceeding');
                                     proceedToGame();
+                                } else {
+                                    const modal = $('loginModal');
+                                    if (modal && modal.style.display !== 'none') {
+                                        console.log('[ARK] 🔑 Google auth detected — auto-proceeding');
+                                        proceedToGame();
+                                    }
+                                }
+                            }
+
+                            // Handle initial auth resolution
+                            if (!initialAuthResolved) {
+                                initialAuthResolved = true;
+                                if (user) {
+                                    console.log('[ARK] 🔑 Session restored:', user.isAnonymous ? 'Anonymous' : user.displayName);
+                                } else if (!FirebaseService.redirectUserReady && !FirebaseService.redirectPending) {
+                                    // No existing session, no redirect — sign in anonymously
+                                    console.log('[ARK] 🔑 No session found, signing in anonymously');
+                                    await FirebaseService.signInAnon();
+                                } else {
+                                    console.log('[ARK] 🔑 Redirect pending — skipping anonymous sign-in');
                                 }
                             }
                         });
